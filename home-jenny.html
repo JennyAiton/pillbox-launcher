@@ -356,6 +356,8 @@ function chkDue(p){ if(!CHECKIN[p]) return ""; const L = logOf(p, TODAY), c = L.
   if(now >= toMin("20:30")) return c.ev ? "" : "ev";
   if(!c.pm && now >= toMin("14:00")) return "pm"; return ""; }
 function chkKeep(k){ const v = id => (document.getElementById(id)||{}).value; k.hrs = v("chkHrs") ?? k.hrs; k.lat = v("chkLat") ?? k.lat; k.kg = v("chkKg") ?? k.kg; k.note = v("chkNote") ?? k.note; }
+function exSheet(){ if(!S.exOpen) return "";
+  return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--acc)">With your morning tablets</div><h3>Morning moves</h3><div class="small">A few minutes: tick each one as you finish it.</div>${exCard(logOf("jenny", TODAY))}<div class="mbtns"><button data-exclose="1">Done for now</button></div></div></div>`; }
 function chkSheet(){
   const k = S.chk; if(!k) return "";
   const rate = k.rate || {};
@@ -497,7 +499,7 @@ function banner(p){
 function pToday(){
   const p = S.who, cur = current(p), L = logOf(p, TODAY), pr = progress(p);
   const wk = L.wake;
-  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" && (L.alc || toMin(nowHM()) >= toMin("17:00")) ? `<button class="chip ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷${L.alc ? " "+esc(alcLab(p, L.alc)) : ""}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>${p === "jenny" && S.alcOpen ? `<div class="pad"><div class="card" style="margin-top:8px;background:rgba(0,0,0,.45)"><div class="k" style="color:var(--acc)">🍷 Drinks today</div><div class="lvl">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc||0) === v ? "on" : ""}" data-alcset="${v}">${t}</button>`).join("")}</div></div></div>` : ""}`;
+  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷${L.alc ? " "+esc(alcLab(p, L.alc)) : ""}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>${p === "jenny" && S.alcOpen ? `<div class="pad"><div class="card" style="margin-top:8px;background:rgba(0,0,0,.45)"><div class="k" style="color:var(--acc)">🍷 Drinks today</div><div class="lvl">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc||0) === v ? "on" : ""}" data-alcset="${v}">${t}</button>`).join("")}</div></div></div>` : ""}`;
   let main, act, bg;
   const morningWaiting = !wk && !S.sel[p] && slotsFor(p,TODAY).some(s => s.rel !== undefined && !L.done[s.id]) && toMin(nowHM()) < toMin(usualWake(p,TODAY)) + GRACE;
   if(morningWaiting){
@@ -521,7 +523,8 @@ function pToday(){
     const naT = noAlc(p, TODAY).filter(x => !L.done[x.s.id]); const naLine = naT.length ? `<div class="k" style="color:var(--warn);margin-top:6px">🍷 ${esc(naT.map(x => x.nm.replace(/ \d.*$/, "")).join(" and "))} night: best not to drink today</div>` : "";
     const bt = bloodTest(p, TODAY), btLine = bt ? `<div class="k" style="color:var(--warn);margin-top:6px">🩸 Blood test ${bt.k === 0 ? "today" : fmt(bt.d)}: no multivitamin until after</div>` : "";
     const cd = chkDue(p), chkLine = cd ? `<button class="chkbtn" data-chkopen="${cd}">📝 ${cd === "am" ? "How did you sleep? Morning check-in" : cd === "ev" ? "Before bed: evening check-in" : "Afternoon check-in"}</button>` : "";
-    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div>${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}${chkLine}</div>`;
+    const exN = EXS.filter(e => (L.ex||{})[e.k]).length, exLine = p === "jenny" && cur.id === "am" && exN < EXS.length ? `<button class="chkbtn" style="background:rgba(255,255,255,.14);color:var(--text);margin-left:6px" data-exopen="1">💪 Morning moves · ${exN} of ${EXS.length}</button>` : "";
+    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div>${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}${chkLine}${exLine}</div>`;
     const doneAt = L.done[cur.id];
     act = `<div class="act pad">${doneAt ? `<button class="pill done" data-undo="${cur.id}" id="undo_${cur.id}">${tick} Taken ${new Date(doneAt).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})} · undo</button>` : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(cur.btn||"I swallowed them")}</button>`}<button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button></div>`;
   }
@@ -790,7 +793,7 @@ function render(keepScroll){
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])() + skipModal() + reportHtml() + chkSheet();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])() + skipModal() + reportHtml() + chkSheet() + exSheet();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr);
   if(keepScroll) window.scrollTo(0, y);
@@ -854,7 +857,7 @@ document.addEventListener("click", e => {
     const lat = (document.getElementById("chkLat")||{}).value || "";
     saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, why:k.why, rate:k.rate, hrs:hrs ? +hrs : "", lat:lat ? +lat : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; if(k.k === "ev" && k.alc !== undefined) L.alc = k.alc; });
     if(k.k === "am" && k.p === "jenny" && k.alcY !== undefined){ const x = parse(TODAY); x.setDate(x.getDate()-1); saveLog(k.p, ymd(x), L => { if(k.alcY) L.alc = k.alcY; else delete L.alc; }); }
-    S.chk = null; render(true); toast("Saved ✓ Thank you"); }
+    const wasAm = k.k === "am" && k.p === "jenny"; S.chk = null; if(wasAm && EXS.some(e => !(logOf("jenny", TODAY).ex||{})[e.k])) S.exOpen = true; render(true); toast("Saved ✓ Thank you"); }
   else if(d.apptform !== undefined){ S.apptForm = d.apptform ? {p:d.apptform} : null; render(true); }
   else if(d.apptsave){ const v = id => ((document.getElementById(id)||{}).value || "").trim(); const doc = v("ap_doc") || v("ap_other"), date = v("ap_date");
     if(!doc || !date){ toast("Pick the doctor and the date"); return; }
@@ -865,6 +868,8 @@ document.addEventListener("click", e => {
     a.out = {sum:v("ao_sum"), meds:v("ao_meds"), tests:v("ao_tests"), next:v("ao_next"), at:new Date().toISOString(), by:window.ME||""};
     S.meta.appts = Object.assign({}, S.meta.appts, {[d.apptoutsave]: a}); S.apptOut = ""; saveMeta("appts"); toast("Saved ✓ It's in the record"); }
   else if(d.apptdel){ const A = Object.assign({}, S.meta.appts); A[d.apptdel] = Object.assign({}, A[d.apptdel], {st:"cancelled"}); S.meta.appts = A; saveMeta("appts"); }
+  else if(d.exopen){ S.exOpen = true; render(true); }
+  else if(d.exclose){ S.exOpen = false; render(true); }
   else if(d.exhow){ S.exHow = S.exHow === d.exhow ? "" : d.exhow; render(true); }
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
   else if(d.me){ const v = d.me; saveLog(S.who, TODAY, L => { L.me = v === "yes" ? new Date().toISOString() : "no"; }); toast(v === "yes" ? "💗" : "OK"); }
