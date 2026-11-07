@@ -646,7 +646,7 @@ function pPlan(){
 }
 function pShop(){
   const p = S.who;
-  return head(p, 2, "One-off buy · Clicks or Dis-Chem", "Shopping") + `<div class="pad"><div class="sec"><div class="list">${SHOP.map(([w,n,where,pr]) => `<div class="it" style="grid-template-columns:1fr auto"><div><div class="t">${esc(n)}</div><div class="x">${w} · ${where}</div></div><div class="serif" style="font-size:20px;font-weight:600;color:var(--acc)">${pr}</div></div>`).join("")}</div><div class="card small">Prices checked 7 Nov 2026. Michaela needs nothing new. Once you have something, tap "I have it now" on the Stock tab.</div></div></div>`;
+  return head(p, 2, "One-off buy · Clicks or Dis-Chem", "Shopping") + `<div class="pad"><div class="sec"><div class="list">${SHOP.map(([w,n,where,pr]) => `<div class="it" style="grid-template-columns:1fr auto"><div><div class="t">${esc(n)}</div><div class="x">${w} · ${where}</div></div><div class="serif" style="font-size:20px;font-weight:600;color:var(--acc)">${pr}</div></div>`).join("")}</div><div class="card small">Prices checked 7 Nov 2026. Michaela already has the rest at home. Once you have something, tap "I have it now" on the Stock tab.</div></div></div>`;
 }
 /* ---------------- let's get going ---------------- */
 function setupSteps(p){ return ["hi","wake", ...P[p].slots.map(s => "slot:"+s.id), "flags", "done"]; }
