@@ -50,6 +50,32 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .who button[aria-pressed="true"]{background:var(--wacc);color:var(--wink);opacity:1}
 .chip{background:rgba(0,0,0,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--edge);border-radius:20px;padding:6px 11px;font:700 11.5px var(--sans);white-space:nowrap}
 .chip.up{background:var(--acc);color:var(--ink);border-color:transparent}
+.skinsw{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.skinsw button{border:1px solid var(--edge);border-radius:16px;padding:12px 8px;background:rgba(255,255,255,.06);font:800 15px var(--sans);color:var(--text);display:grid;gap:3px;justify-items:center}
+.skinsw button span{font:600 11.5px var(--sans);opacity:.75}
+.skinsw button.on{background:var(--acc);color:var(--ink);border-color:transparent}
+.skinsw.sm button{padding:8px;font-size:13px}
+.skinbar{display:flex;gap:5px}.skinbar i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.14)}
+.skinbar i.on{background:var(--acc)}.skinbar i.sk{background:rgba(255,255,255,.35)}.skinbar i.now{box-shadow:0 0 0 2px var(--acc) inset;background:rgba(255,255,255,.08)}
+.skincur{border:2px solid var(--acc)}
+.skinn{font:600 30px/1.1 var(--serif);margin:6px 0 4px}
+.skinhow{font:500 15px/1.45 var(--sans);margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06)}
+.skbtns{display:flex;gap:8px;margin-top:14px}
+.skbtn{flex:1;border:0;border-radius:16px;padding:14px;background:var(--acc);color:var(--ink);font:800 15px var(--sans)}
+.skbtn.alt{flex:0 0 auto;background:rgba(255,255,255,.1);color:var(--text);font-weight:700;font-size:13px}
+.skinrow{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:9px 0;border:0;border-bottom:1px solid var(--edge);background:none;color:var(--text);font:600 14px var(--sans)}
+.skinrow .sn{flex:0 0 26px;height:26px;border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.1);font:800 12px var(--sans)}
+.skinrow.on .sn{background:var(--acc);color:var(--ink)}
+.skwk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:8px 0 4px;text-align:center}
+.skwk div{display:grid;gap:4px;justify-items:center;font:700 11px var(--sans);opacity:.85}
+.skwk i{width:16px;height:16px;border-radius:8px;background:rgba(255,255,255,.12)}.skwk i.on{background:var(--acc)}.skwk i.part{background:linear-gradient(90deg,var(--acc) 50%,rgba(255,255,255,.12) 50%)}
+.sked{padding:10px 0;border-bottom:1px solid var(--edge)}.sked .exin{display:block;width:100%;margin-top:6px;box-sizing:border-box}
+.skedh{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.skdays{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}.skdays button{border:1px solid var(--edge);border-radius:12px;padding:5px 9px;background:none;color:var(--text);font:700 12px var(--sans)}.skdays button.on{background:var(--acc);color:var(--ink);border-color:transparent}
+.skintoday{display:grid;gap:4px;width:100%;text-align:left;color:var(--text);font:700 15px var(--sans)}
+.foodai{border:2px solid var(--acc);margin-top:8px}
+.foodai table{width:100%;border-collapse:collapse;margin-top:8px;font:600 13px var(--sans)}.foodai td{padding:5px 0;border-bottom:1px solid var(--edge)}.foodai td:last-child{text-align:right;white-space:nowrap}
+.macro{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;text-align:center}.macro div{border-radius:12px;background:rgba(255,255,255,.07);padding:8px 2px;font:600 11px var(--sans)}.macro b{display:block;font:800 17px var(--sans);color:var(--acc)}
 .chip.wine{font-size:14px;padding:9px 14px;border:2px solid var(--acc)}
 .winebg{position:fixed;inset:0;z-index:59;background:rgba(0,0,0,.55);border:0}
 .card.winepick{position:fixed;left:50%;transform:translateX(-50%);width:min(430px,calc(100% - 28px));top:70px;z-index:60;background:#16181c;border:2px solid var(--acc);box-shadow:0 12px 40px rgba(0,0,0,.6)}
@@ -236,7 +262,7 @@ input[type=date],input[type=time]{font:600 12.5px var(--sans);color:var(--text);
 <div class="app" id="app"></div>
 <nav class="tb" id="tabs" role="tablist"></nav>
 <div class="toast" id="toast" role="status"></div>
-<input type="file" id="snap" accept="image/*" capture="environment" hidden>
+<input type="file" id="snap" accept="image/*" capture="environment" hidden><input type="file" id="foodsnap" accept="image/*" capture="environment" hidden>
 
 <script>
 /* ---------------- the plan (same as before) ---------------- */
@@ -474,11 +500,12 @@ const ICON = {
   fill:`<path d="M8 4h8v3H8zM7 7h10v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 13h10" stroke="currentColor" stroke-width="1.5"/>`,
   week:`<rect x="4" y="5" width="16" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 10h16M9 3v4M15 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
   plan:`<path d="M7 3h7l4 4v14H7z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 12h5M10 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  skin:`<path d="M12 3.5c3 4 5.5 6.8 5.5 10.3a5.5 5.5 0 0 1-11 0c0-3.5 2.5-6.3 5.5-10.3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
   shop:`<path d="M5 8h14l-1.4 11.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="1.5"/>`
 };
 function dueCount(){ let n = 0; for(const s of SCRIPTS){ const m = S.meta.scripts[s.id]||{}, d = m.d||s.d; if(d && !m.done && dayDiff(d,TODAY) <= 3) n++; } return n; }
 function paintTabs(){
-  const T = [["today","Today"],["fill","Stock"],["week","Week"],["plan","Plan"],["shop","Shop"]];
+  const T = [["today","Today"],["fill","Stock"],["week","Week"],["skin","Skin"],["plan","Plan"],["shop","Shop"]];
   const n = dueCount();
   document.getElementById("tabs").innerHTML = T.map(([id,l]) => `<button role="tab" id="tab_${id}" aria-selected="${S.tab===id}" data-tab="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[id]}</svg>${l}${id==="plan"&&n?` <b style="color:var(--bad)">•${n}</b>`:""}</button>`).join("");
 }
@@ -563,7 +590,7 @@ function pTodayMore(p){
   const ex = L.extra || [], av = AVOID[p] || [];
   { const sy = L.sym || [], fd = L.food || [], pick = S.symPick && S.symPick.p === p ? S.symPick : null;
     const rows = [...sy.map(x => ({at:x.at, h:`<b>${esc(symLab(x.s))}</b>${x.lvl ? ` · ${LVL[x.lvl]}` : ""}${x.note ? ` · <span class="small">${esc(x.note)}</span>` : ""}`, k:"sym", i:sy.indexOf(x)})),
-                  ...fd.map(x => ({at:x.at, h:`🍽 ${esc(x.t)}`, k:"food", i:fd.indexOf(x)}))].sort((a,b) => a.at < b.at ? 1 : -1);
+                  ...fd.map(x => ({at:x.at, h:`🍽 ${esc(x.t)}${x.kcal ? ` · <b>${x.kcal} kcal</b>` : ""}`, k:"food", i:fd.indexOf(x)}))].sort((a,b) => a.at < b.at ? 1 : -1);
     h += `<div class="sec"><h3>How are you feeling?</h3><div class="card"><div class="small">Tap anything you feel, as it happens. It builds a record to show the doctors.</div>
       <div class="symg">${symsOf(p).map(([id,lab,ic]) => `<button class="${pick && pick.s === id ? "on" : ""}" data-sym="${id}">${ic} ${lab}</button>`).join("")}</div>
       ${pick ? `<div style="margin-top:10px;font:700 13px var(--sans)">${esc(symLab(pick.s))}: how bad?</div><div class="lvl">${[1,2,3].map(n => `<button data-symlvl="${n}">${LVL[n]}</button>`).join("")}</div>
@@ -572,12 +599,13 @@ function pTodayMore(p){
       ${p === "michaela" ? `<div class="nums"><label>Weight today (kg)<input type="number" step="0.1" inputmode="decimal" data-num="kg" value="${L.kg || ""}" placeholder="kg"></label><label>Heart rate (beats/min)<input type="number" inputmode="numeric" data-num="hr" value="${L.hr || ""}" placeholder="optional"></label></div>` : ""}</div>
       ${p === "michaela" ? `<div class="card"><div class="k" style="color:var(--acc)">🍽 What I ate or drank</div><div class="small" style="margin-top:4px">Also a coffee, a drink or skipping a meal. Write it the way you'd tell a friend.</div>
       <div class="symg">${FOODQ.slice(0,7).map(f => `<button data-foodq="${esc(f)}">${esc(f)}</button>`).join("")}</div>
-      <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="foodIn" placeholder="e.g. iced coffee: espresso, fat-free milk, vanilla, caramel"><button class="ghostbtn" data-foodadd="1">Add</button></div></div>` : ""}
-      ${rows.length ? `<div class="card"><div class="k" style="color:var(--dim)">Today so far</div>${rows.map(r => `<div class="logr"><span class="tm">${new Date(r.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span>${r.h}</span><button class="lnk" data-logrm="${r.k}|${r.i}">remove</button></div>`).join("")}</div>` : ""}
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="foodIn" placeholder="e.g. iced coffee: espresso, fat-free milk, vanilla, caramel"><button class="ghostbtn" data-foodadd="1">Add</button></div><div class="skbtns"><button class="skbtn" data-foodcam="1">📷 Photo of my food · count the calories</button></div>${foodAiCard()}</div>` : ""}
+      ${rows.length ? `<div class="card"><div class="k" style="color:var(--dim)">Today so far${fd.some(x => x.kcal) ? ` · about ${fd.reduce((n, x) => n + (x.kcal || 0), 0)} kcal from photos` : ""}</div>${rows.map(r => `<div class="logr"><span class="tm">${new Date(r.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span>${r.h}</span><button class="lnk" data-logrm="${r.k}|${r.i}">remove</button></div>`).join("")}</div>` : ""}
       <button class="ghostbtn on" style="margin-top:4px" data-report="${p}">📋 Make a report for the doctor</button></div>`; }
   if(av.length) h += `<div class="sec"><h3>Took something else?</h3><div class="card"><div class="small">Tap it if you took it today. That's fine: it just means we know.</div><div class="chips" style="margin-top:8px">${av.map(([n]) => `<button class="chipb" data-extra="${esc(n)}">${esc(n)}</button>`).join("")}</div>
     <div style="display:flex;gap:8px;margin-top:10px"><input class="exin" id="exIn" placeholder="Something else? Name it"><button class="ghostbtn" data-extratxt="1">Add</button></div>
     ${ex.length ? `<div class="k" style="margin-top:12px;color:var(--warn)">Taken today</div>${ex.map((e,i) => { const w = (av.find(a => a[0] === e.n)||[])[1]; return `<div class="exr"><b>${esc(e.n)}</b> <span class="small">${new Date(e.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><button class="lnk" data-extrarm="${i}">remove</button>${w ? `<div class="small" style="margin-top:3px">${esc(w)}</div>` : ""}</div>`; }).join("")}` : ""}</div></div>`;
+  h += skinToday(p);
   const walks = [10,15,20,30];
   h += `<div class="sec"><h3>Move</h3><div class="card"><div class="k" style="color:var(--acc)">Walk today · 10–15 minutes</div><div class="chips" style="margin-top:8px">${walks.map(m => `<button class="chipb" aria-pressed="${L.walk===m}" data-walk="${m}" id="walk_${m}">${m} min</button>`).join("")}</div><div class="small" style="margin-top:6px">${L.walk ? "Logged. Lovely." : "Any pace counts. Tap again to clear."}</div></div>
     <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div>${p === "jenny" ? exCard(L) : ""}</div>`;
@@ -653,6 +681,92 @@ function pPlan(){
           ${au?`<div style="margin-top:8px;font:600 13px var(--sans);display:grid;gap:3px">${learned(lw,"Weekdays")}${learned(le,"Weekends")}</div>`:""}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><label class="small">${au?"Until then, weekdays":"Weekdays"}<br><input type="time" id="wk_${q}" data-usual="${q}|wk" value="${w.wk||WAKE[q]}"></label><label class="small">${au?"Until then, weekends":"Weekends"}<br><input type="time" id="we_${q}" data-usual="${q}|we" value="${w.we||w.wk||WAKE[q]}"></label></div></div>`; }).join("")}</div></div>
     <div class="sec"><h3>Your theme</h3><div class="card"><div class="small">${P[p].name}'s screens use:</div><div class="chips" style="margin-top:8px">${Object.entries(THEMES).map(([k,T]) => `<button class="chipb" aria-pressed="${themeOf(p)===k}" data-theme="${k}" id="th_${k}">${T.name}</button>`).join("")}</div></div></div></div>`;
+}
+/* ---------------- skin routine: one step at a time ---------------- */
+const SK_DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], SK_DOWL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const SKIN_SEED = {
+  jenny: {note:"Night = face only. Neck, chest and the backs of your hands get their products in the morning only.",
+    am:[{id:"s1",n:"Face wash",b:"DermaFix Brightening Cleanser",how:"Wet your face. Massage a pea-sized blob over face, neck and chest for about 30 seconds, then rinse and pat dry."},
+        {id:"s2",n:"Toner",b:"DermaFix Brightening Toner",how:"Wet a cotton pad and swipe it over face, neck and chest. Let it dry for a minute."},
+        {id:"s3",n:"Vitamin C serum",b:"DermaFix Ferulic + C + E",how:"3 to 4 drops. Press them into face, neck, chest and the backs of your hands."},
+        {id:"s4",n:"Moisturiser",b:"DermaFix Vitamin B Cream",how:"A small blob, smoothed over face, neck, chest and hands."},
+        {id:"s5",n:"Sunscreen",b:"DermaShield SPF50",how:"Last step, every morning. Two finger-lengths for face and neck, a bit more for chest and the backs of your hands."}],
+    pm:[{id:"n1",n:"Face wash",b:"DermaFix Brightening Cleanser",how:"Wet your face. Massage a pea-sized blob over your face for about 30 seconds, then rinse and pat dry."},
+        {id:"n2",n:"Toner",b:"DermaFix Brightening Toner",how:"Swipe a cotton pad over your face. Let it dry for a minute."},
+        {id:"n3",n:"Retinal",b:"DermaFix retinal",how:"A pea-sized amount for your whole face. Keep it well away from your eyes.",days:[1,3,5]},
+        {id:"n4",n:"Eye retinal",b:"DermaFix retinal eye",how:"A rice-grain amount, tapped gently along the eye bone.",days:[1,3,5]},
+        {id:"n5",n:"Copper serum",b:"DermaFix ACC Copper",how:"A thin layer over your face.",days:[2,4]},
+        {id:"n6",n:"Polish",b:"DermaFix DermaPolish",how:"Half a teaspoon of powder and a little water in your palm. Massage gently over your face for a minute, then rinse.",days:[6]},
+        {id:"n7",n:"Calming cream",b:"DermaFix HydraSooth SOS",how:"A generous layer over your face. If your skin is irritated, leave a thick layer on as a mask.",days:[6,0]},
+        {id:"n8",n:"Repair drops",b:"DermaFix RegenRx",how:"A few drops pressed into the red or dry patches on your face.",days:[0]},
+        {id:"n9",n:"Moisturiser",b:"DermaFix Vitamin B Cream",how:"A small blob smoothed over your face."},
+        {id:"n10",n:"Spot dab",b:"Zinc",how:"Dab a tiny bit on each pimple only.",opt:1}]},
+  michaela: {am:[], pm:[]}
+};
+const skinR = p => ((S.meta.skin||{})[p]) || SKIN_SEED[p] || {am:[], pm:[]};
+const skinClone = p => { const R = JSON.parse(JSON.stringify(skinR(p))); R.am = R.am || []; R.pm = R.pm || []; return R; };
+function saveSkin(p, R){ S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); saveMeta("skin"); }
+function skinDay(){ const d = new Date(); if(d.getHours() < 5) d.setDate(d.getDate()-1); return ymd(d); }
+function skinSlot(){ if(S.skinSlot) return S.skinSlot; const h = new Date().getHours(); return h >= 5 && h < 15 ? "am" : "pm"; }
+function skinSteps(p, slot, ds){ const w = parse(ds).getDay(); return (skinR(p)[slot]||[]).filter(x => !x.days || !x.days.length || x.days.includes(w)); }
+function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf(p, ds).skin||{})[slot]) || {}, need = st.filter(x => !x.opt);
+  return {st, mk, n: need.length, done: need.filter(x => mk[x.id]).length, cur: st.find(x => !mk[x.id])}; }
+function skinToday(p){
+  const ds = skinDay(), sl = skinSlot(), K = skinState(p, sl, ds), none = !(skinR(p).am||[]).length && !(skinR(p).pm||[]).length;
+  if(!K.st.length && !none) return "";
+  return `<div class="sec"><button class="card skintoday" data-tab="skin"><span class="k" style="color:var(--acc)">🧴 Skin · ${sl === "am" ? "morning" : "night"} routine</span>${none ? "List your products once, then tick them off" : K.cur ? `${K.done} of ${K.n} done · next: ${esc(K.cur.n)}` : "✨ All done"}</button></div>`;
+}
+function pSkin(){
+  const p = S.who, ds = skinDay(), slot = skinSlot(), R = skinR(p), K = skinState(p, slot, ds), lab = slot === "am" ? "Morning" : "Night";
+  const none = !(R.am||[]).length && !(R.pm||[]).length;
+  let h = head(p, 1, "One step at a time", P[p].name + "'s skin") + `<div class="pad"><div class="sec">`;
+  h += `<div class="skinsw">${[["am","☀ Morning"],["pm","🌙 Night"]].map(([k, l]) => { const k2 = skinState(p, k, ds); return `<button class="${slot === k ? "on" : ""}" data-skinslot="${k}">${l}<span>${k2.n ? (k2.done >= k2.n ? "✓ done" : k2.done + " of " + k2.n + " done") : "no steps"}</span></button>`; }).join("")}</div>`;
+  if(none){ h += `<div class="card skincur"><div class="skinn">List what you use</div><div class="small">Add your products in the order you put them on, morning and night. After that the app shows them one at a time, so you never wonder what's next.</div></div>`; if(!S.skinEdit) S.skinEdit = slot; }
+  else if(!K.st.length) h += `<div class="card small">No ${lab.toLowerCase()} steps ${slot === "pm" ? "for " + SK_DOWL[parse(ds).getDay()] : "yet"}. Add them under "Change my steps".</div>`;
+  else {
+    const bar = `<div class="skinbar">${K.st.map(x => `<i class="${K.mk[x.id] === "skip" ? "sk" : K.mk[x.id] ? "on" : ""}${K.cur && K.cur.id === x.id ? " now" : ""}"></i>`).join("")}</div>`;
+    if(K.cur){ const i = K.st.indexOf(K.cur);
+      h += `<div class="card skincur">${bar}<div class="k" style="color:var(--acc);margin-top:12px">${lab} · step ${i+1} of ${K.st.length}${K.cur.opt ? " · only if needed" : ""}</div><div class="skinn">${esc(K.cur.n)}</div>${K.cur.b ? `<div class="small">${esc(K.cur.b)}</div>` : ""}${K.cur.how ? `<div class="skinhow">${esc(K.cur.how)}</div>` : ""}
+        <div class="skbtns"><button class="skbtn" data-skindo="${slot}|${K.cur.id}">✓ Done</button><button class="skbtn alt" data-skinskip="${slot}|${K.cur.id}">${K.cur.opt ? "Not needed" : "Skip today"}</button></div></div>`;
+    } else h += `<div class="card skincur">${bar}<div class="skinn" style="margin-top:12px">✨ ${lab} routine done</div><div class="small">${slot === "am" ? "Lovely. See you tonight." : "Lovely. Sleep well."}</div></div>`;
+    h += `<div class="card"><div class="k" style="color:var(--dim)">${slot === "pm" ? "Tonight · " + SK_DOWL[parse(ds).getDay()] : "This morning"} · tap to tick or untick</div>${K.st.map((x, i) => `<button class="skinrow ${K.mk[x.id] ? "on" : ""}" data-skintog="${slot}|${x.id}"><span class="sn">${K.mk[x.id] === "skip" ? "–" : K.mk[x.id] ? "✓" : i+1}</span><span>${esc(x.n)}${x.b ? `<span class="small"> · ${esc(x.b)}</span>` : ""}</span></button>`).join("")}${R.note ? `<div class="small" style="margin-top:8px">${esc(R.note)}</div>` : ""}</div>`;
+    const days = [...Array(7)].map((_, i) => { const d = parse(ds); d.setDate(d.getDate() - 6 + i); return ymd(d); }), f = x => x.n && x.done >= x.n ? "on" : x.done ? "part" : "";
+    h += `<div class="card"><div class="k" style="color:var(--dim)">Last 7 days</div><div class="skwk">${days.map(d => `<div>${SK_DOW[parse(d).getDay()]}<i class="${f(skinState(p, "am", d))}"></i><i class="${f(skinState(p, "pm", d))}"></i></div>`).join("")}</div><div class="small">Top dot morning, bottom dot night.</div></div>`;
+  }
+  const ed = S.skinEdit;
+  h += `<button class="ghostbtn ${ed ? "on" : ""}" style="margin-top:4px" data-skinedit="${ed ? "" : slot}">${ed ? "Close" : "✏️ Change my steps"}</button>`;
+  if(ed){ const list = R[ed] || [];
+    h += `<div class="card"><div class="skinsw sm">${["am","pm"].map(k => `<button class="${ed === k ? "on" : ""}" data-skinedit="${k}">${k === "am" ? "☀ Morning" : "🌙 Night"}</button>`).join("")}</div>
+      ${list.map((x, i) => `<div class="sked"><div class="skedh"><b>${i+1}. ${esc(x.n)}</b><span>${i ? `<button class="lnk" data-skinmv="${ed}|${i}|-1" aria-label="Move up">↑ up</button>` : ""}${i < list.length-1 ? `<button class="lnk" data-skinmv="${ed}|${i}|1" aria-label="Move down">↓ down</button>` : ""}<button class="lnk" data-skinrm="${ed}|${i}">${S.skinRm === ed+"|"+i ? "tap again to remove" : "remove"}</button></span></div>
+        <input class="exin" data-skinf="${ed}|${i}|n" value="${esc(x.n)}" placeholder="What it is (e.g. Face wash)"><input class="exin" data-skinf="${ed}|${i}|b" value="${esc(x.b || "")}" placeholder="Brand or product (optional)"><input class="exin" data-skinf="${ed}|${i}|how" value="${esc(x.how || "")}" placeholder="How to use it (optional)">
+        ${ed === "pm" ? `<div class="small" style="margin-top:6px">Which nights? Nothing ticked = every night.</div><div class="skdays">${[1,2,3,4,5,6,0].map(w => `<button class="${(x.days || []).includes(w) ? "on" : ""}" data-skinday="${i}|${w}">${SK_DOW[w]}</button>`).join("")}</div>` : ""}</div>`).join("")}
+      <div class="sked"><b>Add a ${ed === "am" ? "morning" : "night"} step</b><input class="exin" id="skNewN" placeholder="What it is (e.g. Serum)"><input class="exin" id="skNewB" placeholder="Brand or product (optional)"><input class="exin" id="skNewH" placeholder="How to use it (optional)"><div class="skbtns"><button class="skbtn" data-skinadd="${ed}">+ Add it</button></div></div></div>`;
+  }
+  return h + `</div></div>`;
+}
+/* ---------------- food photo: Claude estimates the calories ---------------- */
+function foodAiCard(){
+  const F = S.foodAI; if(!F) return "";
+  if(F.st === "busy") return `<div class="card foodai"><div class="k" style="color:var(--acc)">📷 Looking at your photo…</div><div class="small" style="margin-top:4px">This takes about 10 seconds.</div></div>`;
+  if(F.st === "err") return `<div class="card foodai"><div class="k" style="color:var(--warn)">Couldn't read that photo</div><div class="small" style="margin-top:4px">${esc(F.msg)}</div><div class="skbtns"><button class="skbtn alt" data-foodaix="1">Close</button></div></div>`;
+  const r = F.r || {};
+  if(r.is_food === false) return `<div class="card foodai"><div class="k" style="color:var(--warn)">That doesn't look like food</div><div class="small" style="margin-top:4px">${esc(r.note || "Try again with the plate in the middle of the photo.")}</div><div class="skbtns"><button class="skbtn alt" data-foodaix="1">Close</button></div></div>`;
+  return `<div class="card foodai"><div class="k" style="color:var(--acc)">📷 Here's what I see · check it</div>
+    <input class="exin" id="foodAiT" style="display:block;width:100%;box-sizing:border-box;margin-top:8px" value="${esc(r.title || "")}">
+    <table>${(r.items || []).map(x => `<tr><td>${esc(x.name)}<span class="small"> · ${esc(x.portion)}</span></td><td>${x.kcal} kcal</td></tr>`).join("")}</table>
+    <div class="macro"><div><b><input id="foodAiK" type="number" inputmode="numeric" value="${r.kcal || 0}" style="width:60px;background:none;border:0;border-bottom:1px solid var(--edge);color:var(--acc);font:800 17px var(--sans);text-align:center"></b>kcal</div><div><b>${r.protein_g || 0} g</b>protein</div><div><b>${r.carbs_g || 0} g</b>carbs</div><div><b>${r.fat_g || 0} g</b>fat</div></div>
+    ${r.note ? `<div class="small" style="margin-top:8px">${esc(r.note)}</div>` : ""}
+    <div class="small" style="margin-top:6px">A rough guess from the photo. Change the name or the calories if you know better.</div>
+    <div class="skbtns"><button class="skbtn" data-foodaisave="1">Add to my diary</button><button class="skbtn alt" data-foodaix="1">Cancel</button></div></div>`;
+}
+function shrinkTo(file, max){
+  return new Promise((ok, bad) => { const img = new Image(); img.onload = () => { const s = Math.min(1, max/Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : bad(new Error("no image")), "image/jpeg", .8); URL.revokeObjectURL(img.src); }; img.onerror = bad; img.src = URL.createObjectURL(file); });
+}
+async function foodAsk(file){
+  if(!window.foodAI) throw {msg: "Food photos only work in the Pillbox app on your phone."};
+  const blob = await shrinkTo(file, 1024);
+  const b64 = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = bad; r.readAsDataURL(blob); });
+  return window.foodAI(b64);
 }
 function pShop(){
   const p = S.who;
@@ -781,7 +895,7 @@ function weekText(){
     for(let i = 6; i >= 0; i--){ const d = new Date(); d.setDate(d.getDate()-i); const ds = ymd(d), L = logOf(p, ds);
       const bits = slotsFor(p, ds).map(s => { const sk = itemsFor(p, s, ds).filter(([n]) => (L.skip||{})[s.id+"|"+n]).map(([n]) => n);
         return `${s.lab}: ${L.done[s.id] ? "taken "+new Date(L.done[s.id]).toTimeString().slice(0,5) : "not ticked"}${sk.length ? " (skipped "+sk.join(", ")+")" : ""}`; });
-      const sy = (L.sym||[]).map(y => symLab(y.s)+(y.lvl ? " ("+LVL[y.lvl]+")" : "")+(y.note ? ": "+y.note : "")+" "+new Date(y.at).toTimeString().slice(0,5)), fd = (L.food||[]).map(f => f.t+" "+new Date(f.at).toTimeString().slice(0,5));
+      const sy = (L.sym||[]).map(y => symLab(y.s)+(y.lvl ? " ("+LVL[y.lvl]+")" : "")+(y.note ? ": "+y.note : "")+" "+new Date(y.at).toTimeString().slice(0,5)), fd = (L.food||[]).map(f => f.t+(f.kcal ? " ("+f.kcal+" kcal)" : "")+" "+new Date(f.at).toTimeString().slice(0,5));
       out.push(`${ds}${L.wake ? " up "+L.wake : ""}${L.kg ? " | "+L.kg+" kg" : ""}${L.hr ? " | pulse "+L.hr : ""}${sy.length ? " | felt: "+sy.join(", ") : ""}${fd.length ? " | ate/drank: "+fd.join(", ") : ""}`);
       const ck = L.chk || {}, rr = x => rateOf(p).filter(q => (x.rate||{})[q[0]] !== undefined).map(q => q[1].replace(/^\S+ /,"")+" "+RLAB[q[2]][x.rate[q[0]]]).join(", ")+(x.why && x.why.length ? " (why: "+x.why.join(", ")+")" : "");
       if(L.alc) out.push(`   alcohol: ${alcLab(p, L.alc)}`);
@@ -804,7 +918,7 @@ function render(keepScroll){
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, skin:pSkin, plan:pPlan, shop:pShop}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr);
   if(keepScroll) window.scrollTo(0, y);
@@ -884,6 +998,20 @@ document.addEventListener("click", e => {
   else if(d.exhow){ S.exHow = S.exHow === d.exhow ? "" : d.exhow; render(true); }
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
   else if(d.me){ const v = d.me; saveLog(S.who, TODAY, L => { L.me = v === "yes" ? new Date().toISOString() : "no"; }); toast(v === "yes" ? "💗" : "OK"); }
+  else if(d.skinslot){ S.skinSlot = d.skinslot; render(true); }
+  else if(d.skindo || d.skinskip || d.skintog){ const v = d.skindo || d.skinskip || d.skintog, i = v.indexOf("|"), sl = v.slice(0, i), id = v.slice(i+1), p = S.who, ds = skinDay();
+    saveLog(p, ds, L => { L.skin = Object.assign({am:{}, pm:{}}, L.skin); L.skin[sl] = Object.assign({}, L.skin[sl]); if(d.skintog){ if(L.skin[sl][id]) delete L.skin[sl][id]; else L.skin[sl][id] = new Date().toISOString(); } else L.skin[sl][id] = d.skinskip ? "skip" : new Date().toISOString(); });
+    if(!d.skintog){ const K = skinState(p, sl, ds); toast(K.cur ? "✓ Next: " + K.cur.n : "✨ All done"); if(!K.cur) window.scrollTo({top:0, behavior:"smooth"}); } }
+  else if(d.skinedit !== undefined){ S.skinEdit = d.skinedit; S.skinRm = ""; render(true); }
+  else if(d.skinmv){ const [sl, i, dir] = d.skinmv.split("|"), R = skinClone(S.who), a = R[sl], j = +i + +dir; if(j < 0 || j >= a.length) return; [a[+i], a[j]] = [a[j], a[+i]]; saveSkin(S.who, R); }
+  else if(d.skinrm){ if(S.skinRm !== d.skinrm){ S.skinRm = d.skinrm; render(true); return; } const [sl, i] = d.skinrm.split("|"), R = skinClone(S.who); R[sl].splice(+i, 1); S.skinRm = ""; saveSkin(S.who, R); toast("Removed"); }
+  else if(d.skinday){ const [i, w] = d.skinday.split("|").map(Number), R = skinClone(S.who), x = R.pm[i]; if(!x) return; x.days = (x.days || []).includes(w) ? x.days.filter(y => y !== w) : (x.days || []).concat(w); saveSkin(S.who, R); }
+  else if(d.skinadd){ const sl = d.skinadd, v = id => ((document.getElementById(id) || {}).value || "").trim(), n = v("skNewN"); if(!n){ toast("Type what it is first"); return; }
+    const R = skinClone(S.who); R[sl].push({id: "k" + Date.now().toString(36), n, b: v("skNewB"), how: v("skNewH")}); saveSkin(S.who, R); toast("Added ✓"); }
+  else if(d.foodcam){ document.getElementById("foodsnap").click(); }
+  else if(d.foodaix){ S.foodAI = null; render(true); }
+  else if(d.foodaisave){ const r = (S.foodAI || {}).r || {}, t = ((document.getElementById("foodAiT") || {}).value || r.title || "Meal").trim(), k = Math.round(+((document.getElementById("foodAiK") || {}).value || r.kcal || 0));
+    S.foodAI = null; saveLog(S.who, TODAY, L => { L.food = (L.food || []).concat({t, at: new Date().toISOString(), kcal: k || undefined, prot: r.protein_g, carb: r.carbs_g, fat: r.fat_g, ai: 1}); }); toast("Added ✓"); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
   else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
@@ -928,6 +1056,7 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target;
+  if(t.dataset.skinf){ const [sl, i, f] = t.dataset.skinf.split("|"), R = skinClone(S.who); if(!R[sl][+i]) return; R[sl][+i][f] = t.value.trim(); saveSkin(S.who, R); return; }
   if(t.dataset.num){ const k = t.dataset.num, v = t.value.trim(); saveLog(S.who, TODAY, L => { if(v === "") delete L[k]; else L[k] = +v; }); toast("Saved ✓"); return; }
   if(t.dataset.stock){ const i = t.dataset.stock.indexOf("|"), q = t.dataset.stock.slice(0, i), nm = t.dataset.stock.slice(i+1); if(t.value === "") return;
     const st = Object.assign({}, S.meta.stock); st[q] = Object.assign({}, st[q], {[nm]: {n: Math.max(0, Math.round(+t.value)), at: new Date().toISOString(), by: window.ME || ""}});
@@ -944,6 +1073,13 @@ let assets = null, snapFor = "";
 function shrink(file){
   return new Promise((ok, bad) => { const img = new Image(); img.onload = () => { const s = Math.min(1, 600/Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : bad(new Error("no image")), "image/jpeg", .82); URL.revokeObjectURL(img.src); }; img.onerror = bad; img.src = URL.createObjectURL(file); });
 }
+document.getElementById("foodsnap").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if(!f) return;
+  S.foodAI = {st: "busy"}; render(true);
+  try { const r = await foodAsk(f); S.foodAI = {st: "ok", r}; }
+  catch(err){ S.foodAI = {st: "err", msg: (err && err.msg) || "Something went wrong. Try again in a minute."}; }
+  render(true);
+});
 document.getElementById("snap").addEventListener("change", async e => {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if(!f || !snapFor || !assets) return;
   const nm = snapFor; snapFor = ""; toast("Saving the photo…");
@@ -958,6 +1094,14 @@ setInterval(() => { if(window.__planReady && !document.activeElement || !["INPUT
 
 /* ---------------- Supabase: sign in, then load and listen ---------------- */
 const SB = supabase.createClient(SB_URL, SB_KEY);
+window.foodAI = async b64 => {
+  const r = await SB.functions.invoke("food-photo", {body: {img: b64}});
+  if(r.error){ let m = ""; const st = r.error.context && r.error.context.status;
+    try { m = (await r.error.context.json()).error || ""; } catch(_){}
+    if(st === 404) m = "Food photos aren't switched on yet. Jenny has one setup step to do in Supabase.";
+    throw {msg: m || "The calorie helper didn't answer. Check the internet and try again."}; }
+  return r.data;
+};
 function mkDb(){
   return {
     doc(path){
