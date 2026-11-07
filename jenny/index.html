@@ -558,6 +558,11 @@ function weekText(){
       const bits = slotsFor(p, ds).map(s => { const sk = itemsFor(p, s, ds).filter(([n]) => (L.skip||{})[s.id+"|"+n]).map(([n]) => n);
         return `${s.lab}: ${L.done[s.id] ? "taken "+new Date(L.done[s.id]).toTimeString().slice(0,5) : "not ticked"}${sk.length ? " (skipped "+sk.join(", ")+")" : ""}`; });
       out.push(`${ds}${L.wake ? " up "+L.wake : ""}: ${bits.join("; ")}${(L.extra||[]).length ? " | also took: "+L.extra.map(e => e.n+" "+new Date(e.at).toTimeString().slice(0,5)).join(", ") : ""}${L.walk ? " | walk "+L.walk+" min" : ""}`); }
+    const st = setupOf(p);
+    out.push(`Let's get going: ${st.done ? "done "+st.done.slice(0,10) : "not finished"}`);
+    for(const [k, a] of Object.entries(st.items||{})) if(a.v && a.v !== "yes") out.push(`- ${k.replace("|", ": ")} -> ${a.v === "no" ? "not any more" : "different"}${a.note ? " ("+a.note+")" : ""}`);
+    for(const [k, v] of Object.entries(st.flags||{})) if(v) out.push(`- note ${k}: ${v}`);
+    if(st.note) out.push(`- anything we missed: ${st.note}`);
     out.push("Stock:"); for(const r of stockRows(p)) out.push(`- ${r.nm}: ${missing(p,r.nm) ? "not bought yet" : r.left === null ? "not counted" : r.left+" "+r.unit+(r.days !== null ? " (about "+r.days+" days)" : "")}`);
   }
   return out.join("\n");
