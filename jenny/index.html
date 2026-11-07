@@ -318,6 +318,7 @@ function stockRows(p){ return stockItems(p).map(it => { const r = (((S.meta.stoc
 function noAlc(p, date){ return slotsFor(p, date).flatMap(s => itemsFor(p, s, date).filter(it => (it[2]||{}).noalc).map(it => ({s, nm: it[0]}))); }
 function noAlcCard(p){ const na = noAlc(p, TODAY); if(!na.length) return ""; const L = logOf(p, TODAY); if(na.every(x => L.done[x.s.id])) return "";
   const short = na.map(x => esc(x.nm.replace(/ \d.*$/, ""))).join(" and ");
+  if(L.alc) return `<div class="card" style="margin-top:14px;border-left:4px solid var(--bad)"><div class="k" style="color:var(--bad)">🍷 You've had a drink today</div><div style="margin-top:6px;font:600 13.5px var(--sans)">Skip the ${short} tonight: tap "Didn't take one?" at ${esc(na[0].s.lab)}. That's the safe choice.</div></div>`;
   return `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">🍷 Tonight is a ${short} night</div><div style="margin-top:6px;font:600 13.5px var(--sans)">Best not to drink today. If you do have a drink, skip the ${short} tonight: tap "Didn't take one?" at ${esc(na[0].s.lab)}.</div></div>`; }
 /* a booked blood test (date typed on the Plan tab): items marked blood:n are left out for n days before it */
 function bloodTest(p, date){
@@ -329,27 +330,37 @@ function bloodCard(p){ const b = bloodTest(p, TODAY); if(!b) return "";
   const what = P[p].slots.flatMap(s => s.items).filter(it => (it[2]||{}).blood).map(it => esc(it[0]));
   return `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">🩸 Blood test ${b.k === 0 ? "today" : "on "+fmt(b.d)}</div><div style="margin-top:6px;font:600 13.5px var(--sans)">No ${what.join(" or ")} until after the test (it changes the thyroid result). It's off today's list; it comes back after.</div></div>`; }
 /* symptom diary: what she feels, how bad, when; bloating asks what came before */
-const SYMS = [["bloated","Bloated","🎈"],["ankles","Swollen ankles","🦶"],["heart","Heart racing","💓"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["cramps","Cramps","⚡"],["constip","Constipated","🚫"],["nausea","Nauseous","🤢"],["hot","Feeling hot","🔥"],["anxious","Anxious","🌀"],["head","Headache / migraine","🤕"],["back","Back pain","🦴"]];
+const SYMS = [["bloated","Bloated","🎈"],["ankles","Swollen ankles","🦶"],["heart","Heart racing","💓"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["cramps","Cramps","⚡"],["constip","Constipated","🚫"],["nausea","Nauseous","🤢"],["hot","Feeling hot","🔥"],["anxious","Anxious","🌀"],["head","Headache / migraine","🤕"],["back","Back pain","🦴"],["irrit","Irritable","😤"],["foggy","Foggy / flat","🌫"],["legs","Restless legs","🦵"]];
 const LVL = ["", "A bit", "Bad", "Very bad"];
 const symLab = id => (SYMS.find(x => x[0] === id) || [id, id])[1];
 const FOODQ = ["Coffee with milk", "Iced coffee with syrup", "Sweet drink", "Water", "Meal", "Snack", "Alcohol", "Nothing yet"];
 /* morning and afternoon check-ins: how she slept, and how body and mood feel, so changes show over time */
-const CHECKIN = {michaela: true};
+const CHECKIN = {michaela: true, jenny: true};
 const SLEEPQ = ["Fell asleep easily","Took long to fall asleep","Slept well","Woke every few hours","Woke at 3 and stayed awake","Slept only 4 hours or less","Overheated / sweating","Restless legs","Bad dreams","Back pain woke me","Needed the toilet","Woke up tired"];
 const RATE = [["bloat","🎈 Bloating",0],["back","🦴 Back",0],["legs","🦶 Ankles / legs swollen",0],["stomach","🌿 Stomach / cramps",0],["heart","💓 Heart racing",0],["head","🤕 Headache",0],["energy","⚡ Energy",1],["mood","🌤 Mood",1]];
-const RLAB = [["None","A bit","Bad","Very bad"],["Good","OK","Low","Very low"]];
+const RLAB = [["None","A bit","Bad","Very bad"],["Good","OK","Low","Very low"],["Full chipper self","OK","Flat / foggy","Low"]];
+/* Jenny: falling asleep and mood are her things */
+const SLEEPQ_J = ["Fell asleep easily","Took long to fall asleep","Mind racing at bedtime","Restless legs","Used the weighted blanket","Woke in the night","Slept well once asleep","Woke up refreshed","Woke up groggy"];
+const RATE_J = [["mood","🌤 Mood",2],["fog","🌫 Foggy head",0],["irrit","😤 Irritable",0],["anx","🌀 Anxious",0],["energy","⚡ Energy",1],["focus","🎯 Focus",1]];
+const WHYQ = ["Slept badly","Work stress","Too much caffeine","Ritalin late or missed","Wearing off","Period / hormones","Drinks yesterday","Hungry / skipped a meal","Conflict","Noise / people","Not sure"];
+const ALC = ["None","1–2 drinks","3–4 drinks","5+ drinks"];
+const rateOf = p => p === "jenny" ? RATE_J : RATE;
+const sleepOf = p => p === "jenny" ? SLEEPQ_J : SLEEPQ;
 function chkDue(p){ if(!CHECKIN[p]) return ""; const L = logOf(p, TODAY), c = L.chk || {}, now = toMin(nowHM());
   if(!c.am && (L.wake || now >= toMin(usualWake(p, TODAY)))) return "am";
   if(now >= toMin("20:30")) return c.ev ? "" : "ev";
   if(!c.pm && now >= toMin("14:00")) return "pm"; return ""; }
+function chkKeep(k){ const v = id => (document.getElementById(id)||{}).value; k.hrs = v("chkHrs") ?? k.hrs; k.lat = v("chkLat") ?? k.lat; k.kg = v("chkKg") ?? k.kg; k.note = v("chkNote") ?? k.note; }
 function chkSheet(){
   const k = S.chk; if(!k) return "";
   const rate = k.rate || {};
   return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--warn)">${k.k === "am" ? "Good morning" : k.k === "ev" ? "Before bed" : "Afternoon check-in"}</div><h3>${k.k === "am" ? "How did you sleep?" : k.k === "ev" ? "How was today?" : "How are you feeling now?"}</h3>
-    ${k.k === "am" ? `<div class="small">Tap everything that fits last night.</div><div class="symg">${SLEEPQ.map(q => `<button class="${(k.sleep||[]).includes(q) ? "on" : ""}" data-chksleep="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-      <div class="nums"><label>Hours slept (about)<input type="number" step="0.5" inputmode="decimal" id="chkHrs" value="${esc(k.hrs||"")}"></label><label>Weight this morning (kg)<input type="number" step="0.1" inputmode="decimal" id="chkKg" value="${esc(k.kg||logOf(k.p,TODAY).kg||"")}"></label></div>
+    ${k.k === "am" ? `<div class="small">Tap everything that fits last night.</div><div class="symg">${sleepOf(k.p).map(q => `<button class="${(k.sleep||[]).includes(q) ? "on" : ""}" data-chksleep="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+      <div class="nums"><label>Hours slept (about)<input type="number" step="0.5" inputmode="decimal" id="chkHrs" value="${esc(k.hrs||"")}"></label><label>Took to fall asleep (minutes)<input type="number" inputmode="numeric" id="chkLat" value="${esc(k.lat||"")}"></label>${k.p === "michaela" ? `<label>Weight this morning (kg)<input type="number" step="0.1" inputmode="decimal" id="chkKg" value="${esc(k.kg||logOf(k.p,TODAY).kg||"")}"></label>` : ""}</div>
       <div style="font:700 15px var(--sans);margin:16px 0 4px">And how do you feel this morning?</div>` : ""}
-    ${RATE.map(([id, lab, sc]) => `<div class="rrow"><div class="rl">${lab}</div><div class="rsc">${RLAB[sc].map((t, v) => `<button class="v${v} ${rate[id] === v ? "on" : ""}" data-chkrate="${id}|${v}">${t}</button>`).join("")}</div></div>`).join("")}
+    ${rateOf(k.p).map(([id, lab, sc]) => `<div class="rrow"><div class="rl">${lab}</div><div class="rsc">${RLAB[sc].map((t, v) => `<button class="v${v} ${rate[id] === v ? "on" : ""}" data-chkrate="${id}|${v}">${t}</button>`).join("")}</div></div>`).join("")}
+    ${(rate.irrit || rate.anx || rate.mood >= 2 || rate.fog >= 2) ? `<div style="font:700 14px var(--sans);margin:14px 0 4px">What might be behind it?</div><div class="symg">${WHYQ.map(q => `<button class="${(k.why||[]).includes(q) ? "on" : ""}" data-chkwhy="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
+    ${k.k === "ev" ? `<div class="rrow"><div class="rl">🍷 Alcohol today</div><div class="rsc">${ALC.map((t, v) => `<button class="v${v} ${k.alc === v ? "on" : ""}" data-chkalc="${v}">${t}</button>`).join("")}</div></div>` : ""}
     <div style="margin-top:10px"><input class="exin" style="width:100%" id="chkNote" placeholder="Anything else? (optional)" value="${esc(k.note||"")}"></div>
     <div class="mbtns"><button data-chksave="1">Save</button><button data-chkclose="1">Later</button></div></div></div>`;
 }
@@ -470,7 +481,7 @@ function pTodayMore(p){
     const lab = {done:"Taken",late:"Overdue",now:"Now",later:"Later"}[st];
     return `<button class="rowi" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${st}">${lab}</span></button>`; }).join("")}</div>`;
   h = bloodCard(p) + noAlcCard(p) + h;
-  if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+RATE.filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
+  if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${x.lat ? " · asleep after "+x.lat+" min" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+rateOf(p).filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+(x.why && x.why.length ? " · why: "+esc(x.why.join(", ")) : "")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
     h += `<div class="sec"><h3>Check-ins</h3><div class="card">${line(c.am, "Morning") || `<div class="small">Morning check-in not done yet.</div>`}${line(c.pm, "Afternoon") || `<div class="small" style="margin-top:6px">Afternoon check-in from 14:00.</div>`}${line(c.ev, "Evening") || `<div class="small" style="margin-top:6px">Evening check-in from 20:30, before bed.</div>`}<div class="chips" style="margin-top:8px">${!c.am ? `<button class="chkbtn" data-chkopen="am">📝 Morning check-in</button>` : ""}${!c.pm ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="pm">📝 Afternoon</button>` : ""}${!c.ev ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="ev">📝 Evening</button>` : ""}</div></div></div>`; }
   const oL = logOf(other(p), TODAY);
   if(oL.wake && !L.wake) h = `<div class="card upline" style="margin-top:14px">☀ ${esc(P[other(p)].name)} is up since ${oL.wake}</div>` + h;
@@ -538,7 +549,8 @@ function pWeek(){
   let full = 0, walksN = 0;
   const cols = days.map(d => { const sl = slotsFor(p,d).filter(s => s.day===undefined && !s.rifaxOnly), L = logOf(p,d); if(d<=TODAY && sl.length && sl.every(s=>L.done[s.id])) full++; if(L.walk) walksN++; return {d, L}; });
   const grid = rows.map(s => cols.map(({d,L}) => { const done = L.done[s.id], fut = d > TODAY; return `<div class="c" style="${d===TODAY&&!done?"outline:2px solid var(--acc);outline-offset:1px":""}">${fut?"":`<i class="${done?"":"grey"}" style="background-image:url(${photo(p,phIdx(slotTime(p,s,d)))})"></i>`}</div>`; }).join("")).join("");
-  return head(p, 3, "The last 7 days", "This week") + `<div class="pad"><div class="sec">
+  const alcRow = `<div class="card"><div class="k" style="color:var(--acc)">🍷 Alcohol days</div><div class="small" style="margin-top:4px">Tap a day to say how much: none, 1–2, 3–4, 5+.</div><div class="symg" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${cols.map(({d,L}) => `<button class="${L.alc ? "on" : ""}" data-alcday="${d}" ${d > TODAY ? "disabled" : ""} style="padding:7px 0;border-radius:12px;display:grid;gap:2px;justify-items:center"><span style="font-size:11px">${fmt(d,{weekday:"short"})}</span><span>${L.alc ? ["","1–2","3–4","5+"][L.alc] : "·"}</span></button>`).join("")}</div></div>`;
+  return head(p, 3, "The last 7 days", "This week") + `<div class="pad"><div class="sec">${alcRow}
     <div class="card"><div class="mos">${cols.map(({d}) => `<div class="d">${fmt(d,{weekday:"short"})}</div>`).join("")}${grid}${cols.map(({L}) => `<div class="d" style="color:var(--acc)">${L.walk?L.walk+"′":"·"}</div>`).join("")}</div><div class="small" style="margin-top:10px;text-align:center">Dawn at the top, night at the bottom · colour = taken · ′ = walk minutes</div></div>
     <div class="card" style="display:grid;grid-template-columns:1fr 1fr;text-align:center"><div><div class="serif" style="font-size:40px;font-weight:600;line-height:1;color:var(--acc)">${full}<span style="font-size:22px;color:var(--dim)">/7</span></div><div class="small">days in full colour</div></div><div style="border-left:1px solid var(--edge)"><div class="serif" style="font-size:40px;font-weight:600;line-height:1;color:var(--acc)">${walksN}<span style="font-size:22px;color:var(--dim)">/7</span></div><div class="small">days with a walk</div></div></div>
   </div></div>`;
@@ -634,11 +646,11 @@ const waUp = p => "https://wa.me/?text=" + encodeURIComponent(`☀ I'm up! Come 
 function reportHtml(){
   const p = S.report; if(!p) return "";
   const days = []; for(let i = 29; i >= 0; i--){ const d = new Date(); d.setDate(d.getDate()-i); days.push(ymd(d)); }
-  const used = days.map(ds => ({ds, L: logOf(p, ds)})).filter(x => x.L.chk || (x.L.sym||[]).length || (x.L.food||[]).length || x.L.kg || x.L.hr || Object.keys(x.L.skip||{}).length || (x.L.extra||[]).length);
+  const used = days.map(ds => ({ds, L: logOf(p, ds)})).filter(x => x.L.chk || x.L.alc || (x.L.sym||[]).length || (x.L.food||[]).length || x.L.kg || x.L.hr || Object.keys(x.L.skip||{}).length || (x.L.extra||[]).length);
   const tm = iso => new Date(iso).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"});
   const count = {}; used.forEach(x => (x.L.sym||[]).forEach(y => { count[y.s] = (count[y.s]||0) + 1; }));
   const kgs = used.filter(x => x.L.kg).map(x => [x.ds, +x.L.kg]);
-  const rows = used.map(({ds, L}) => `<tr><td>${fmt(ds)}</td><td>${(() => { const c = L.chk || {}, r = x => RATE.filter(q => (x.rate||{})[q[0]] !== undefined).map(q => q[1].replace(/^\S+ /,"")+" "+RLAB[q[2]][x.rate[q[0]]].toLowerCase()).join(", "); return [c.am ? `<b>Night:</b> ${esc((c.am.sleep||[]).join(", "))}${c.am.hrs ? " ("+c.am.hrs+" h)" : ""}<br><b>Morning:</b> ${esc(r(c.am))}` : "", c.pm ? `<b>Afternoon:</b> ${esc(r(c.pm))}` : "", c.ev ? `<b>Evening:</b> ${esc(r(c.ev))}` : ""].filter(Boolean).join("<br>"); })()}</td><td>${(L.sym||[]).map(y => `${tm(y.at)} ${esc(symLab(y.s))}${y.lvl ? " ("+LVL[y.lvl].toLowerCase()+")" : ""}${y.note ? ": "+esc(y.note) : ""}`).join("<br>")}</td><td>${(L.food||[]).map(f => `${tm(f.at)} ${esc(f.t)}`).join("<br>")}</td><td>${L.kg ? L.kg+" kg" : ""}${L.hr ? `<br>${L.hr} bpm` : ""}</td><td>${Object.keys(L.skip||{}).map(k => "skipped "+esc(k.split("|")[1])).concat((L.extra||[]).map(e => "also took "+esc(e.n))).join("<br>")}</td></tr>`).join("");
+  const rows = used.map(({ds, L}) => `<tr><td>${fmt(ds)}</td><td>${(() => { const c = L.chk || {}, r = x => rateOf(p).filter(q => (x.rate||{})[q[0]] !== undefined).map(q => q[1].replace(/^\S+ /,"")+" "+RLAB[q[2]][x.rate[q[0]]].toLowerCase()).join(", ")+(x.why && x.why.length ? " (why: "+x.why.join(", ")+")" : ""); return [c.am ? `<b>Night:</b> ${esc((c.am.sleep||[]).join(", "))}${c.am.hrs ? " ("+c.am.hrs+" h)" : ""}${c.am.lat ? ", asleep after "+c.am.lat+" min" : ""}<br><b>Morning:</b> ${esc(r(c.am))}` : "", c.pm ? `<b>Afternoon:</b> ${esc(r(c.pm))}` : "", c.ev ? `<b>Evening:</b> ${esc(r(c.ev))}` : "", L.alc ? `<b>Alcohol:</b> ${ALC[L.alc]}` : ""].filter(Boolean).join("<br>"); })()}</td><td>${(L.sym||[]).map(y => `${tm(y.at)} ${esc(symLab(y.s))}${y.lvl ? " ("+LVL[y.lvl].toLowerCase()+")" : ""}${y.note ? ": "+esc(y.note) : ""}`).join("<br>")}</td><td>${(L.food||[]).map(f => `${tm(f.at)} ${esc(f.t)}`).join("<br>")}</td><td>${L.kg ? L.kg+" kg" : ""}${L.hr ? `<br>${L.hr} bpm` : ""}</td><td>${Object.keys(L.skip||{}).map(k => "skipped "+esc(k.split("|")[1])).concat((L.extra||[]).map(e => "also took "+esc(e.n))).join("<br>")}</td></tr>`).join("");
   return `<div class="report"><div class="rb"><button data-print="1">Print or save as PDF</button><button data-report="">Close</button></div>
     <h1>${esc(P[p].name)}: symptom record</h1><div>Last 30 days, from Our Pillbox · made ${new Date().toLocaleDateString("en-ZA")}</div>
     ${Object.keys(count).length ? `<p><b>How often:</b> ${Object.entries(count).sort((a,b) => b[1]-a[1]).map(([k,n]) => `${esc(symLab(k))} ${n}×`).join(" · ")}</p>` : ""}
@@ -662,8 +674,9 @@ function weekText(){
         return `${s.lab}: ${L.done[s.id] ? "taken "+new Date(L.done[s.id]).toTimeString().slice(0,5) : "not ticked"}${sk.length ? " (skipped "+sk.join(", ")+")" : ""}`; });
       const sy = (L.sym||[]).map(y => symLab(y.s)+(y.lvl ? " ("+LVL[y.lvl]+")" : "")+(y.note ? ": "+y.note : "")+" "+new Date(y.at).toTimeString().slice(0,5)), fd = (L.food||[]).map(f => f.t+" "+new Date(f.at).toTimeString().slice(0,5));
       out.push(`${ds}${L.wake ? " up "+L.wake : ""}${L.kg ? " | "+L.kg+" kg" : ""}${L.hr ? " | pulse "+L.hr : ""}${sy.length ? " | felt: "+sy.join(", ") : ""}${fd.length ? " | ate/drank: "+fd.join(", ") : ""}`);
-      const ck = L.chk || {}, rr = x => RATE.filter(q => (x.rate||{})[q[0]] !== undefined).map(q => q[1].replace(/^\S+ /,"")+" "+RLAB[q[2]][x.rate[q[0]]]).join(", ");
-      if(ck.am) out.push(`   night: ${(ck.am.sleep||[]).join(", ")}${ck.am.hrs ? " ("+ck.am.hrs+" h)" : ""} | morning: ${rr(ck.am)}`);
+      const ck = L.chk || {}, rr = x => rateOf(p).filter(q => (x.rate||{})[q[0]] !== undefined).map(q => q[1].replace(/^\S+ /,"")+" "+RLAB[q[2]][x.rate[q[0]]]).join(", ")+(x.why && x.why.length ? " (why: "+x.why.join(", ")+")" : "");
+      if(L.alc) out.push(`   alcohol: ${ALC[L.alc]}`);
+      if(ck.am) out.push(`   night: ${(ck.am.sleep||[]).join(", ")}${ck.am.hrs ? " ("+ck.am.hrs+" h)" : ""}${ck.am.lat ? ", asleep after "+ck.am.lat+" min" : ""} | morning: ${rr(ck.am)}`);
       if(ck.pm) out.push(`   afternoon: ${rr(ck.pm)}`);
       if(ck.ev) out.push(`   evening: ${rr(ck.ev)}`);
       out.push(`   ${bits.join("; ")}${(L.extra||[]).length ? " | also took: "+L.extra.map(e => e.n+" "+new Date(e.at).toTimeString().slice(0,5)).join(", ") : ""}${L.walk ? " | walk "+L.walk+" min" : ""}`); }
@@ -736,13 +749,16 @@ document.addEventListener("click", e => {
     const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
     if(M[mp][nm]) delete M[mp][nm]; else M[mp][nm] = new Date().toISOString();
     S.meta.settings = Object.assign({}, S.meta.settings, {missing: M}); saveMeta("settings"); toast(M[mp][nm] ? "Hidden until you buy it" : "Back on your list ✓"); }
-  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; S.chk = {p:S.who, k:d.chkopen, sleep:(was.sleep||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", note:was.note||""}; render(true); }
-  else if(d.chksleep){ const k = S.chk; if(!k) return; const q = d.chksleep; k.hrs = (document.getElementById("chkHrs")||{}).value || k.hrs; k.kg = (document.getElementById("chkKg")||{}).value || k.kg; k.note = (document.getElementById("chkNote")||{}).value || k.note; k.sleep = k.sleep.includes(q) ? k.sleep.filter(x => x !== q) : k.sleep.concat(q); render(true); }
-  else if(d.chkrate){ const k = S.chk; if(!k) return; const [id, v] = d.chkrate.split("|"); k.hrs = (document.getElementById("chkHrs")||{}).value || k.hrs; k.kg = (document.getElementById("chkKg")||{}).value || k.kg; k.note = (document.getElementById("chkNote")||{}).value || k.note; if(k.rate[id] === +v) delete k.rate[id]; else k.rate[id] = +v; render(true); }
+  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; S.chk = {p:S.who, k:d.chkopen, sleep:(was.sleep||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
+  else if(d.chkwhy || d.chkalc !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); if(d.chkwhy){ const q = d.chkwhy; k.why = k.why.includes(q) ? k.why.filter(x => x !== q) : k.why.concat(q); } else k.alc = k.alc === +d.chkalc ? undefined : +d.chkalc; render(true); }
+  else if(d.chksleep){ const k = S.chk; if(!k) return; const q = d.chksleep; chkKeep(k); k.sleep = k.sleep.includes(q) ? k.sleep.filter(x => x !== q) : k.sleep.concat(q); render(true); }
+  else if(d.chkrate){ const k = S.chk; if(!k) return; const [id, v] = d.chkrate.split("|"); chkKeep(k); if(k.rate[id] === +v) delete k.rate[id]; else k.rate[id] = +v; render(true); }
   else if(d.chkclose){ S.chk = null; render(true); }
   else if(d.chksave){ const k = S.chk; if(!k) return; const hrs = (document.getElementById("chkHrs")||{}).value || "", kg = (document.getElementById("chkKg")||{}).value || "", note = ((document.getElementById("chkNote")||{}).value || "").trim();
-    saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, rate:k.rate, hrs:hrs ? +hrs : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; });
+    const lat = (document.getElementById("chkLat")||{}).value || "";
+    saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, why:k.why, rate:k.rate, hrs:hrs ? +hrs : "", lat:lat ? +lat : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; if(k.k === "ev" && k.alc !== undefined) L.alc = k.alc; });
     S.chk = null; render(true); toast("Saved ✓ Thank you"); }
+  else if(d.alcday){ const ds = d.alcday; saveLog(S.who, ds, L => { L.alc = ((L.alc||0) + 1) % 4; if(!L.alc) delete L.alc; }); }
   else if(d.sym){ S.symPick = S.symPick && S.symPick.s === d.sym ? null : {p:S.who, s:d.sym, food:[]}; render(true); }
   else if(d.symfood){ const f = d.symfood, k = S.symPick; if(k){ k.food = k.food.includes(f) ? k.food.filter(x => x !== f) : k.food.concat(f); render(true); } }
   else if(d.symcancel){ S.symPick = null; render(true); }
