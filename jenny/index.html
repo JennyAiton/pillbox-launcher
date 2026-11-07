@@ -272,7 +272,7 @@ const missing = (p, nm) => !!((((S.meta.settings||{}).missing)||{})[p]||{})[nm];
 /* stock: a count typed in once, minus everything ticked since (skips don't count) */
 const unitOf = q => /spray/i.test(q) ? "sprays" : /sachet/i.test(q) ? "sachets" : /scoop/i.test(q) ? "scoops" : /inject/i.test(q) ? "doses" : /scalp|foam/i.test(q) ? "uses" : "tablets";
 const amtOf = (q, o) => (o && o.n) || +((/^(\d+)/.exec(q)||[])[1]) || 1;
-function stockItems(p){ const m = {}; for(const s of P[p].slots){ if(s.btn === "On my face") continue; for(const [nm,q] of s.items){ if(!m[nm]) m[nm] = {nm, unit:unitOf(q)}; } } return Object.values(m); }
+function stockItems(p){ const m = {}; for(const s of P[p].slots){ if(s.btn === "On my face") continue; for(const [nm,q,o] of s.items){ if(!m[nm]) m[nm] = {nm, unit:unitOf(q), blood:(o||{}).blood}; } } return Object.values(m); }
 function perDay(p, nm){ let tot = 0; for(let i = 0; i < 14; i++){ const d = new Date(); d.setDate(d.getDate()+i); const ds = ymd(d); for(const s of slotsFor(p, ds)) for(const [n,q,o] of itemsFor(p, s, ds)) if(n === nm) tot += amtOf(q, o); } return tot/14; }
 function usedSince(p, nm, at){
   let n = 0;
@@ -290,11 +290,21 @@ function noAlc(p, date){ return slotsFor(p, date).flatMap(s => itemsFor(p, s, da
 function noAlcCard(p){ const na = noAlc(p, TODAY); if(!na.length) return ""; const L = logOf(p, TODAY); if(na.every(x => L.done[x.s.id])) return "";
   const short = na.map(x => esc(x.nm.replace(/ \d.*$/, ""))).join(" and ");
   return `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">🍷 Tonight is a ${short} night</div><div style="margin-top:6px;font:600 13.5px var(--sans)">Best not to drink today. If you do have a drink, skip the ${short} tonight: tap "Didn't take one?" at ${esc(na[0].s.lab)}.</div></div>`; }
+/* a booked blood test (date typed on the Plan tab): items marked blood:n are left out for n days before it */
+function bloodTest(p, date){
+  for(const c of CHECKS){ if(!c.blood || c.w !== (p === "jenny" ? "j" : "m")) continue; const m = (S.meta.checks||{})[c.id] || {};
+    if(!m.d || m.done) continue; const k = dayDiff(m.d, date); if(k >= 0 && k <= 3) return {d: m.d, k}; }
+  return null;
+}
+function bloodCard(p){ const b = bloodTest(p, TODAY); if(!b) return "";
+  const what = P[p].slots.flatMap(s => s.items).filter(it => (it[2]||{}).blood).map(it => esc(it[0]));
+  return `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">🩸 Blood test ${b.k === 0 ? "today" : "on "+fmt(b.d)}</div><div style="margin-top:6px;font:600 13.5px var(--sans)">No ${what.join(" or ")} until after the test (it changes the thyroid result). It's off today's list; it comes back after.</div></div>`; }
 function itemsFor(p, s, date){
   const k = dayDiff(date, START);
   return s.items.filter(it => { const o = it[2] || {};
     if(ansOf(p, s, it[0]).v === "no") return false;
     if(missing(p, it[0])) return false;
+    if(o.blood && bloodTest(p, date)) return false;
     if(o.rifax && !rifaxOn(date)) return false;
     if(o.alt !== undefined){ if(k < 0) return false; if(((k % 2)+2)%2 !== o.alt) return false; }
     return true; });
@@ -384,7 +394,8 @@ function pToday(){
     const also = cur.jar && out.length ? `<div class="also">Also: ${out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · ")}</div>` : (cur.jar && cur.note ? `<div class="also">${esc(cur.note)}</div>` : "");
     const skipBits = cur.btn === "On my face" || !its.length ? "" : `<button class="skiplink" data-skipopen="${cur.id}">${S.skipOpen === cur.id ? "Close" : "Didn't take one?"}</button>${S.skipOpen === cur.id ? `<div class="skipl">${its.map(([nm]) => `<button data-skip="${esc(cur.id+"|"+nm)}">${(L.skip||{})[cur.id+"|"+nm] ? "↩ " : ""}${esc(nm)}</button>`).join("")}</div>` : ""}`;
     const naT = noAlc(p, TODAY).filter(x => !L.done[x.s.id]); const naLine = naT.length ? `<div class="k" style="color:var(--warn);margin-top:6px">🍷 ${esc(naT.map(x => x.nm.replace(/ \d.*$/, "")).join(" and "))} night: best not to drink today</div>` : "";
-    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div>${naLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}</div>`;
+    const bt = bloodTest(p, TODAY), btLine = bt ? `<div class="k" style="color:var(--warn);margin-top:6px">🩸 Blood test ${bt.k === 0 ? "today" : fmt(bt.d)}: no multivitamin until after</div>` : "";
+    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div>${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}</div>`;
     const doneAt = L.done[cur.id];
     act = `<div class="act pad">${doneAt ? `<button class="pill done" data-undo="${cur.id}" id="undo_${cur.id}">${tick} Taken ${new Date(doneAt).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})} · undo</button>` : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(cur.btn||"I swallowed them")}</button>`}<button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button></div>`;
   }
@@ -403,7 +414,7 @@ function pTodayMore(p){
   let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${sl.map(s => { const tm = slotTime(p,s,TODAY), st = slotState(p,s,TODAY), its = itemsFor(p,s,TODAY);
     const lab = {done:"Taken",late:"Overdue",now:"Now",later:"Later"}[st];
     return `<button class="rowi" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${st}">${lab}</span></button>`; }).join("")}</div>`;
-  h = noAlcCard(p) + h;
+  h = bloodCard(p) + noAlcCard(p) + h;
   const oL = logOf(other(p), TODAY);
   if(oL.wake && !L.wake) h = `<div class="card upline" style="margin-top:14px">☀ ${esc(P[other(p)].name)} is up since ${oL.wake}</div>` + h;
   else if(oL.wake && L.wake) h = `<div class="card upline" style="margin-top:14px">☀ You're both up · ${esc(P[other(p)].name)} since ${oL.wake}</div>` + h;
@@ -435,7 +446,7 @@ function stockSec(p){
   return orderHtml() + `<div class="sec"><h3>${P[p].name}'s stock</h3><div class="small">Count everything you have (boxes plus the container) and type the number. It goes down by itself as tablets are ticked. Tap the other name at the top to count theirs.</div>
     ${rows.map(r => { const col = r.days === null ? "var(--dim)" : r.days <= 7 ? "var(--bad)" : r.days <= 14 ? "var(--warn)" : "var(--acc)", pct = r.days === null ? 0 : Math.min(1, r.days/30);
       const note = missing(p, r.nm) ? "Not bought yet" : r.left === null ? "Not counted yet" : r.days === null ? `${r.left} ${r.unit} left` : r.days <= 0 ? "Run out: order now" : `About ${r.days} days left${r.days<=7?" · order now":r.days<=14?" · order soon":""}`;
-      return `<div class="card"><div class="stkh"><div><b>${esc(r.nm)}</b><div class="small">${r.pd ? `${+r.pd.toFixed(1)} ${r.unit} a day` : "not every day"}${r.r ? ` · counted ${fmt(r.r.at.slice(0,10))}${r.r.by ? " by "+esc(r.r.by) : ""}` : ""}</div></div><label class="stkin"><input type="number" inputmode="numeric" min="0" placeholder="count" aria-label="${esc(r.nm)} count" data-stock="${esc(p+"|"+r.nm)}" value="${r.left === null ? "" : r.left}">${r.unit}</label></div><div class="left"><i style="width:${pct*100}%;background:${col}"></i></div><div class="small" style="color:${col};margin-top:6px">${note}</div></div>`; }).join("")}</div>`;
+      return `<div class="card"><div class="stkh"><div><b>${esc(r.nm)}</b><div class="small">${r.blood ? `<span style="color:var(--warn)">Stop ${r.blood} days before blood tests</span><br>` : ""}${r.pd ? `${+r.pd.toFixed(1)} ${r.unit} a day` : "not every day"}${r.r ? ` · counted ${fmt(r.r.at.slice(0,10))}${r.r.by ? " by "+esc(r.r.by) : ""}` : ""}</div></div><label class="stkin"><input type="number" inputmode="numeric" min="0" placeholder="count" aria-label="${esc(r.nm)} count" data-stock="${esc(p+"|"+r.nm)}" value="${r.left === null ? "" : r.left}">${r.unit}</label></div><div class="left"><i style="width:${pct*100}%;background:${col}"></i></div><div class="small" style="color:${col};margin-top:6px">${note}</div></div>`; }).join("")}</div>`;
 }
 function pFill(){
   const p = S.who, jars = P[p].slots.filter(s => s.jar);
