@@ -362,6 +362,7 @@ function chkSheet(){
   return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--warn)">${k.k === "am" ? "Good morning" : k.k === "ev" ? "Before bed" : "Afternoon check-in"}</div><h3>${k.k === "am" ? "How did you sleep?" : k.k === "ev" ? "How was today?" : "How are you feeling now?"}</h3>
     ${k.k === "am" ? `<div class="small">Tap everything that fits last night.</div><div class="symg">${sleepOf(k.p).map(q => `<button class="${(k.sleep||[]).includes(q) ? "on" : ""}" data-chksleep="${esc(q)}">${esc(q)}</button>`).join("")}</div>
       <div class="nums"><label>Hours slept (about)<input type="number" step="0.5" inputmode="decimal" id="chkHrs" value="${esc(k.hrs||"")}"></label><label>Took to fall asleep (minutes)<input type="number" inputmode="numeric" id="chkLat" value="${esc(k.lat||"")}"></label>${k.p === "michaela" ? `<label>Weight this morning (kg)<input type="number" step="0.1" inputmode="decimal" id="chkKg" value="${esc(k.kg||logOf(k.p,TODAY).kg||"")}"></label>` : ""}</div>
+      ${k.p === "jenny" ? `<div class="rrow"><div class="rl">🍷 Drinks last night</div><div class="rsc" style="grid-template-columns:repeat(3,1fr)">${alcOpts(k.p).map(([v, t]) => `<button class="v${Math.min(v,3)} ${k.alcY === v ? "on" : ""}" data-chkalcy="${v}">${t}</button>`).join("")}</div></div>` : ""}
       <div style="font:700 15px var(--sans);margin:16px 0 4px">And how do you feel this morning?</div>` : ""}
     ${rateOf(k.p).map(([id, lab, sc]) => `<div class="rrow"><div class="rl">${lab}</div><div class="rsc">${RLAB[sc].map((t, v) => `<button class="v${v} ${rate[id] === v ? "on" : ""}" data-chkrate="${id}|${v}">${t}</button>`).join("")}</div></div>`).join("")}
     ${(rate.irrit || rate.anx || rate.mood >= 2 || rate.fog >= 2) ? `<div style="font:700 14px var(--sans);margin:14px 0 4px">What might be behind it?</div><div class="symg">${WHYQ.map(q => `<button class="${(k.why||[]).includes(q) ? "on" : ""}" data-chkwhy="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
@@ -466,7 +467,7 @@ function banner(p){
 function pToday(){
   const p = S.who, cur = current(p), L = logOf(p, TODAY), pr = progress(p);
   const wk = L.wake;
-  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷${L.alc ? " "+esc(alcLab(p, L.alc)) : ""}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>${p === "jenny" && S.alcOpen ? `<div class="pad"><div class="card" style="margin-top:8px;background:rgba(0,0,0,.45)"><div class="k" style="color:var(--acc)">🍷 Drinks today</div><div class="lvl">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc||0) === v ? "on" : ""}" data-alcset="${v}">${t}</button>`).join("")}</div></div></div>` : ""}`;
+  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" && (L.alc || toMin(nowHM()) >= toMin("17:00")) ? `<button class="chip ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷${L.alc ? " "+esc(alcLab(p, L.alc)) : ""}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>${p === "jenny" && S.alcOpen ? `<div class="pad"><div class="card" style="margin-top:8px;background:rgba(0,0,0,.45)"><div class="k" style="color:var(--acc)">🍷 Drinks today</div><div class="lvl">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc||0) === v ? "on" : ""}" data-alcset="${v}">${t}</button>`).join("")}</div></div></div>` : ""}`;
   let main, act, bg;
   const morningWaiting = !wk && !S.sel[p] && slotsFor(p,TODAY).some(s => s.rel !== undefined && !L.done[s.id]) && toMin(nowHM()) < toMin(usualWake(p,TODAY)) + GRACE;
   if(morningWaiting){
@@ -813,7 +814,8 @@ document.addEventListener("click", e => {
     const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
     if(M[mp][nm]) delete M[mp][nm]; else M[mp][nm] = new Date().toISOString();
     S.meta.settings = Object.assign({}, S.meta.settings, {missing: M}); saveMeta("settings"); toast(M[mp][nm] ? "Hidden until you buy it" : "Back on your list ✓"); }
-  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; S.chk = {p:S.who, k:d.chkopen, sleep:(was.sleep||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
+  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(); S.chk = {p:S.who, k:d.chkopen, alcY:logOf(S.who, yd).alc || 0, sleep:(was.sleep||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
+  else if(d.chkalcy !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); k.alcY = +d.chkalcy; render(true); }
   else if(d.chkwhy || d.chkalc !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); if(d.chkwhy){ const q = d.chkwhy; k.why = k.why.includes(q) ? k.why.filter(x => x !== q) : k.why.concat(q); } else k.alc = k.alc === +d.chkalc ? undefined : +d.chkalc; render(true); }
   else if(d.chksleep){ const k = S.chk; if(!k) return; const q = d.chksleep; chkKeep(k); k.sleep = k.sleep.includes(q) ? k.sleep.filter(x => x !== q) : k.sleep.concat(q); render(true); }
   else if(d.chkrate){ const k = S.chk; if(!k) return; const [id, v] = d.chkrate.split("|"); chkKeep(k); if(k.rate[id] === +v) delete k.rate[id]; else k.rate[id] = +v; render(true); }
@@ -821,6 +823,7 @@ document.addEventListener("click", e => {
   else if(d.chksave){ const k = S.chk; if(!k) return; const hrs = (document.getElementById("chkHrs")||{}).value || "", kg = (document.getElementById("chkKg")||{}).value || "", note = ((document.getElementById("chkNote")||{}).value || "").trim();
     const lat = (document.getElementById("chkLat")||{}).value || "";
     saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, why:k.why, rate:k.rate, hrs:hrs ? +hrs : "", lat:lat ? +lat : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; if(k.k === "ev" && k.alc !== undefined) L.alc = k.alc; });
+    if(k.k === "am" && k.p === "jenny" && k.alcY !== undefined){ const x = parse(TODAY); x.setDate(x.getDate()-1); saveLog(k.p, ymd(x), L => { if(k.alcY) L.alc = k.alcY; else delete L.alc; }); }
     S.chk = null; render(true); toast("Saved ✓ Thank you"); }
   else if(d.apptform !== undefined){ S.apptForm = d.apptform ? {p:d.apptform} : null; render(true); }
   else if(d.apptsave){ const v = id => ((document.getElementById(id)||{}).value || "").trim(); const doc = v("ap_doc") || v("ap_other"), date = v("ap_date");
