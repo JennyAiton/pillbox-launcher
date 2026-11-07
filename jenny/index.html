@@ -392,6 +392,29 @@ function apptSec(p){
     ${f && f.p === p ? `<div class="card" style="display:grid;gap:8px"><select class="exin" id="ap_doc">${DOCS[p].map(d => `<option>${esc(d)}</option>`).join("")}<option value="">Someone else…</option></select><input class="exin" id="ap_other" placeholder="Doctor's name (if someone else)"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input class="exin" type="date" id="ap_date"><input class="exin" type="time" id="ap_time"></div><input class="exin" id="ap_why" placeholder="What it's for (optional)"><div class="chips"><button class="ghostbtn on" data-apptsave="${p}">Save the appointment</button><button class="lnk" data-apptform="">cancel</button></div></div>` : `<button class="ghostbtn on" style="margin-top:8px" data-apptform="${p}">＋ Add an appointment</button>`}
     ${up.map(row).join("")}${past.slice(0, 4).map(row).join("")}</div>`;
 }
+const EXS = [
+ {k:"curl", t:"Bicep curls", n:"10 × 4 kg", how:["Stand tall, a weight in each hand, palms facing forward.","Keep your elbows tucked against your sides.","Curl the weights up to your shoulders, then lower slowly (count to 3)."],
+  a:[[43,72,43,100],[77,72,77,100]], b:[[43,72,52,56],[77,72,68,56]]},
+ {k:"press", t:"Shoulder press", n:"10 × 4 kg", how:["Hold the weights at shoulder height, elbows out to the sides.","Push straight up until your arms are long (don't lock the elbows).","Lower back to your shoulders slowly. Keep your tummy tight."],
+  a:[[30,52,30,32],[90,52,90,32]], b:[[43,25,43,5],[77,25,77,5]]},
+ {k:"tricep", t:"Tricep extensions", n:"10 × 4 kg", how:["Hold one weight with both hands above your head.","Keep your elbows pointing up and close to your ears.","Lower the weight behind your head, then straighten your arms again."],
+  one:1, a:[[52,8,57,27],[68,8,63,27]], b:[[53,23,57,3],[67,23,63,3]]},
+ {k:"squats", t:"Squats", n:"10", how:["Feet shoulder-width apart, arms out in front.","Sit back as if onto a chair, knees over your toes.","Stand up through your heels."]},
+ {k:"push", t:"Push-ups", n:"10 (knees down is fine)", how:["Hands under your shoulders, on your knees or toes.","Lower your chest towards the floor, body in a straight line.","Push back up."]}
+];
+function exFig(arms, x, one){ const g = (x1,y1,x2,y2) => `<line x1="${x+x1}" y1="${y1+10}" x2="${x+x2}" y2="${y2+10}"/>`;
+  const [l, r] = arms, w = one ? `<rect x="${x+(l[2]+r[2])/2-10}" y="${(l[3]+r[3])/2+10-4}" width="20" height="8" rx="2" fill="var(--acc)"/>` : "";
+  return `${w}<g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none">${g(60,35,60,100)}${g(45,45,75,45)}${g(60,100,50,160)}${g(60,100,70,160)}${g(45,45,l[0],l[1])}${g(l[0],l[1],l[2],l[3])}${g(75,45,r[0],r[1])}${g(r[0],r[1],r[2],r[3])}<circle cx="${x+60}" cy="${25+10}" r="10" fill="#1b211e"/></g>
+    ${one ? "" : `<g fill="var(--acc)">${[l, r].map(h => `<rect x="${x+h[2]-7}" y="${h[3]+10-3}" width="14" height="6" rx="2"/>`).join("")}</g>`}`; }
+function exSvg(e){ if(!e.a) return "";
+  return `<svg viewBox="0 0 300 190" width="100%" style="max-width:300px;color:var(--text)" aria-label="${esc(e.t)}, start and finish">${exFig(e.a, 0, e.one)}<text x="60" y="186" text-anchor="middle" font-size="12" fill="currentColor" font-family="sans-serif">start</text>
+    <path d="M128 95h40m-10-8 10 8-10 8" stroke="var(--acc)" stroke-width="3" fill="none"/>${exFig(e.b, 175, e.one)}<text x="235" y="186" text-anchor="middle" font-size="12" fill="currentColor" font-family="sans-serif">finish</text></svg>`; }
+function exCard(L){
+  const ex = L.ex || {}, done = EXS.filter(e => ex[e.k]).length;
+  return `<div class="card"><div class="k" style="color:var(--acc)">💪 Arms &amp; body · ${done} of ${EXS.length} done</div><div class="small" style="margin-top:4px">Tap to tick. Tap "how" for the picture.</div>
+    ${EXS.map(e => `<div class="logr" style="align-items:center"><button class="chipb" style="flex:1;text-align:left" aria-pressed="${!!ex[e.k]}" data-ex="${e.k}">${ex[e.k] ? "✓ " : ""}<b>${esc(e.t)}</b> · ${esc(e.n)}</button><button class="lnk" data-exhow="${e.k}">${S.exHow === e.k ? "close" : "how"}</button></div>
+      ${S.exHow === e.k ? `<div style="padding:8px 0 4px">${exSvg(e)}<ol style="margin:6px 0 0;padding-left:18px;font:600 13px/1.45 var(--sans)">${e.how.map(h => `<li>${esc(h)}</li>`).join("")}</ol><button class="lnk" data-exhow="${e.k}" style="margin-top:6px">close ▲</button></div>` : ""}`).join("")}</div>`;
+}
 function itemsFor(p, s, date){
   const k = dayDiff(date, START);
   return s.items.filter(it => { const o = it[2] || {};
@@ -536,7 +559,7 @@ function pTodayMore(p){
     ${ex.length ? `<div class="k" style="margin-top:12px;color:var(--warn)">Taken today</div>${ex.map((e,i) => { const w = (av.find(a => a[0] === e.n)||[])[1]; return `<div class="exr"><b>${esc(e.n)}</b> <span class="small">${new Date(e.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><button class="lnk" data-extrarm="${i}">remove</button>${w ? `<div class="small" style="margin-top:3px">${esc(w)}</div>` : ""}</div>`; }).join("")}` : ""}</div></div>`;
   const walks = [10,15,20,30];
   h += `<div class="sec"><h3>Move</h3><div class="card"><div class="k" style="color:var(--acc)">Walk today · 10–15 minutes</div><div class="chips" style="margin-top:8px">${walks.map(m => `<button class="chipb" aria-pressed="${L.walk===m}" data-walk="${m}" id="walk_${m}">${m} min</button>`).join("")}</div><div class="small" style="margin-top:6px">${L.walk ? "Logged. Lovely." : "Any pace counts. Tap again to clear."}</div></div>
-    <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div>${p === "jenny" ? `<div class="card"><div class="k" style="color:var(--acc)">💪 Arms &amp; body · a few minutes</div><div class="chips" style="margin-top:8px">${[["arms","Arms · 4 kg, 10 of each"],["squats","10 squats"],["push","10 push-ups"]].map(([k,t]) => `<button class="chipb" aria-pressed="${!!(L.ex||{})[k]}" data-ex="${k}">${(L.ex||{})[k] ? "✓ " : ""}${t}</button>`).join("")}</div><div class="small" style="margin-top:6px">Curls, shoulder press, side raises, tricep extensions: 10 each. Tick what you did.</div></div>` : ""}</div>`;
+    <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div>${p === "jenny" ? exCard(L) : ""}</div>`;
   const lateS = P[p].slots.find(x => latestOf(p, x) && tooLate(p, x, TODAY)), lateRit = !!lateS;
   h += `<div class="sec"><h3>Wake-up time</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="small">${L.wake?`Up at ${L.wake} today. Forgot to tap? Fix the time here.`:`Not up yet today (usually ${usualWake(p,TODAY)}). Your usual times are on the Plan tab.`}</div><input type="time" id="wakeIn" data-wake="1" aria-label="Woke up at" value="${L.wake||""}"></div>${lateRit?`<div class="card small" style="border-color:var(--warn)">A late start today would put your second dose after ${lateS ? latestOf(p, lateS) : "17:00"}, so it's left out today. Nothing after 5.</div>`:""}</div>`;
   if(p === "michaela"){
@@ -835,6 +858,7 @@ document.addEventListener("click", e => {
     a.out = {sum:v("ao_sum"), meds:v("ao_meds"), tests:v("ao_tests"), next:v("ao_next"), at:new Date().toISOString(), by:window.ME||""};
     S.meta.appts = Object.assign({}, S.meta.appts, {[d.apptoutsave]: a}); S.apptOut = ""; saveMeta("appts"); toast("Saved ✓ It's in the record"); }
   else if(d.apptdel){ const A = Object.assign({}, S.meta.appts); A[d.apptdel] = Object.assign({}, A[d.apptdel], {st:"cancelled"}); S.meta.appts = A; saveMeta("appts"); }
+  else if(d.exhow){ S.exHow = S.exHow === d.exhow ? "" : d.exhow; render(true); }
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
   else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(v) L.alc = v; else delete L.alc; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "Noted"); }
