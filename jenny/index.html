@@ -124,6 +124,27 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .it .t{font:600 18px/1.15 var(--serif)} .it .x{font:600 11.5px var(--sans);color:var(--dim)}
 .it .acts{display:grid;gap:5px;justify-items:end}
 .wtag{display:inline-block;font:800 9.5px var(--sans);border-radius:8px;padding:1px 7px;margin-right:6px;vertical-align:2px}
+.stkh{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.stkin{display:flex;align-items:center;gap:6px;font:600 12px var(--sans);color:var(--dim)}
+.stkin input,.exin{width:86px;font:700 16px var(--sans);color:var(--text);background:rgba(255,255,255,.08);border:1px solid var(--edge);border-radius:10px;padding:8px}
+.exin{width:auto;flex:1;font-size:14px}
+.ordr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--edge);font:600 13.5px var(--sans)}
+.ordr:last-child{border-bottom:0}
+.fish button.skipd{opacity:.55;text-decoration:line-through}
+.skiplink{margin-top:8px;font:700 12px var(--sans);color:var(--text);opacity:.85;text-decoration:underline;background:none;border:0;padding:0}
+.skipl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.skipl button{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);border-radius:16px;padding:6px 11px;font:700 12px var(--sans);color:#fff}
+.exr{padding:8px 0;border-top:1px solid var(--edge);font:600 13.5px var(--sans)}
+.lnk{background:none;border:0;color:var(--acc);font:700 12px var(--sans);text-decoration:underline;padding:0 0 0 6px}
+.modal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:20px}
+.mcard{max-width:420px;width:100%;background:#151a1d;border:1px solid var(--edge);border-left:5px solid var(--warn);border-radius:20px;padding:18px}
+.mcard h3{font:600 28px var(--serif);margin:4px 0 8px}
+.mcard p{font:600 14.5px/1.5 var(--sans);margin:0 0 10px}
+.mbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.mbtns button,.mbtns a{flex:1;text-align:center;text-decoration:none;padding:12px;border-radius:999px;font:800 14px var(--sans);border:1px solid var(--edge);background:rgba(255,255,255,.06);color:var(--text)}
+.mbtns button:first-child,.mbtns a:first-child{background:var(--acc);color:var(--ink);border-color:transparent}
+.upline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 0;font:700 13px var(--sans)}
+.upline a{color:var(--ink);background:var(--acc);border-radius:999px;padding:6px 12px;text-decoration:none;font:800 12.5px var(--sans)}
 input[type=date],input[type=time]{font:600 12.5px var(--sans);color:var(--text);background:rgba(255,255,255,.08);border:1px solid var(--edge);border-radius:10px;padding:6px 8px;color-scheme:dark}
 .status{font:600 11px var(--sans);color:var(--dim);text-align:center;padding:10px}
 .status.err{color:var(--bad)}
@@ -189,10 +210,10 @@ const THEMES = {
   lotus:{name:"Lotus pond", acc:"#ff8fbf", ink:"#3a0d22"}
 };
 const P = {jenny:{name:"Jenny", theme:"lotus", slots:[]}, michaela:{name:"Michaela", theme:"jungle", slots:[]}};
-const STOPPED = {}, SCRIPTS = [], CHECKS = [], FLAGS = {}, SHOP = [];
+const STOPPED = {}, SCRIPTS = [], CHECKS = [], FLAGS = {}, SHOP = [], SKIP = {}, AVOID = {};
 function applyPlan(x){
   for(const k in x.P) Object.assign(P[k], x.P[k]);
-  Object.assign(STOPPED, x.STOPPED); Object.assign(FLAGS, x.FLAGS);
+  Object.assign(STOPPED, x.STOPPED); Object.assign(FLAGS, x.FLAGS); Object.assign(SKIP, x.SKIP||{}); Object.assign(AVOID, x.AVOID||{});
   SCRIPTS.splice(0, SCRIPTS.length, ...x.SCRIPTS); CHECKS.splice(0, CHECKS.length, ...x.CHECKS); SHOP.splice(0, SHOP.length, ...x.SHOP);
   window.__planReady = true;
 }
@@ -248,6 +269,23 @@ const GRACE = 180; // minutes after the usual wake-up time before a not-yet-up m
 const setupOf = p => ((S.meta.setup||{})[p]) || {};
 const ansOf = (p, s, name) => (setupOf(p).items||{})[s.id+"|"+name] || {};
 const missing = (p, nm) => !!((((S.meta.settings||{}).missing)||{})[p]||{})[nm];
+/* stock: a count typed in once, minus everything ticked since (skips don't count) */
+const unitOf = q => /spray/i.test(q) ? "sprays" : /sachet/i.test(q) ? "sachets" : /scoop/i.test(q) ? "scoops" : /inject/i.test(q) ? "doses" : /scalp|foam/i.test(q) ? "uses" : "tablets";
+const amtOf = (q, o) => (o && o.n) || +((/^(\d+)/.exec(q)||[])[1]) || 1;
+function stockItems(p){ const m = {}; for(const s of P[p].slots){ if(s.btn === "On my face") continue; for(const [nm,q] of s.items){ if(!m[nm]) m[nm] = {nm, unit:unitOf(q)}; } } return Object.values(m); }
+function perDay(p, nm){ let tot = 0; for(let i = 0; i < 14; i++){ const d = new Date(); d.setDate(d.getDate()+i); const ds = ymd(d); for(const s of slotsFor(p, ds)) for(const [n,q,o] of itemsFor(p, s, ds)) if(n === nm) tot += amtOf(q, o); } return tot/14; }
+function usedSince(p, nm, at){
+  let n = 0;
+  for(const L of Object.values(S.log)){ if(L.person !== p || L.date < at.slice(0,10)) continue;
+    for(const s of P[p].slots){ const it = s.items.find(i => i[0] === nm); if(!it) continue;
+      const key = s.id+"|"+nm, own = (L.items||{})[key];
+      if((L.skip||{})[key]) continue;
+      if(!own && !itemsFor(p, s, L.date).some(i => i[0] === nm)) continue;
+      const t = own || L.done[s.id]; if(t && t > at) n += amtOf(it[1], it[2]); } }
+  return n;
+}
+function stockRows(p){ return stockItems(p).map(it => { const r = (((S.meta.stock||{})[p])||{})[it.nm], pd = perDay(p, it.nm), left = r ? Math.max(0, r.n - usedSince(p, it.nm, r.at)) : null;
+  return Object.assign({}, it, {r, pd, left, days: left === null || !pd ? null : Math.floor(left/pd)}); }); }
 function itemsFor(p, s, date){
   const k = dayDiff(date, START);
   return s.items.filter(it => { const o = it[2] || {};
@@ -289,7 +327,7 @@ const ICON = {
 };
 function dueCount(){ let n = 0; for(const s of SCRIPTS){ const m = S.meta.scripts[s.id]||{}, d = m.d||s.d; if(d && !m.done && dayDiff(d,TODAY) <= 3) n++; } return n; }
 function paintTabs(){
-  const T = [["today","Today"],["fill","Top up"],["week","Week"],["plan","Plan"],["shop","Shop"]];
+  const T = [["today","Today"],["fill","Stock"],["week","Week"],["plan","Plan"],["shop","Shop"]];
   const n = dueCount();
   document.getElementById("tabs").innerHTML = T.map(([id,l]) => `<button role="tab" id="tab_${id}" aria-selected="${S.tab===id}" data-tab="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[id]}</svg>${l}${id==="plan"&&n?` <b style="color:var(--bad)">•${n}</b>`:""}</button>`).join("");
 }
@@ -338,9 +376,10 @@ function pToday(){
     const n = inJar.reduce((a,i) => a + ((i[2]||{}).n||0), 0);
     const tg = o => (o && o.confirm ? '<span class="tag">CONFIRM MON</span>' : "") + (o && o.food ? ` <span class="food">${esc(o.food)}</span>` : "");
     const lead = st==="late" ? `<span style="color:var(--bad)">Overdue · ${tm}</span>` : st==="done" ? `Taken · ${tm}` : st==="now" ? `Now · ${tm}` : `Next · ${tm}`;
-    const what = cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · fish out ${n}</div><div class="fish">${inJar.map(([nm,q,o]) => fishChip(nm, q, o, cur.id, !!L.done[cur.id] || !!(L.items||{})[cur.id+"|"+nm])).join("")}</div><div class="fishtip">Tap each one as you take it</div>` : (cur.note ? esc(cur.note) : out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · "));
+    const what = cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · fish out ${n}</div><div class="fish">${inJar.map(([nm,q,o]) => fishChip(nm, q, o, cur.id, !!L.done[cur.id] || !!(L.items||{})[cur.id+"|"+nm], !!(L.skip||{})[cur.id+"|"+nm])).join("")}</div><div class="fishtip">Tap each one as you take it</div>` : (cur.note ? esc(cur.note) : out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · "));
     const also = cur.jar && out.length ? `<div class="also">Also: ${out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · ")}</div>` : (cur.jar && cur.note ? `<div class="also">${esc(cur.note)}</div>` : "");
-    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div><div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}</div>`;
+    const skipBits = cur.btn === "On my face" || !its.length ? "" : `<button class="skiplink" data-skipopen="${cur.id}">${S.skipOpen === cur.id ? "Close" : "Didn't take one?"}</button>${S.skipOpen === cur.id ? `<div class="skipl">${its.map(([nm]) => `<button data-skip="${esc(cur.id+"|"+nm)}">${(L.skip||{})[cur.id+"|"+nm] ? "↩ " : ""}${esc(nm)}</button>`).join("")}</div>` : ""}`;
+    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div><div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}</div>`;
     const doneAt = L.done[cur.id];
     act = `<div class="act pad">${doneAt ? `<button class="pill done" data-undo="${cur.id}" id="undo_${cur.id}">${tick} Taken ${new Date(doneAt).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})} · undo</button>` : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(cur.btn||"I swallowed them")}</button>`}<button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button></div>`;
   }
@@ -348,9 +387,9 @@ function pToday(){
   return hero + `<div class="pad">${pTodayMore(p)}</div>`;
 }
 const pillImg = nm => (S.pimg||{})[nm] || "";
-function fishChip(nm, q, o, slot, on){
+function fishChip(nm, q, o, slot, on, sk){
   const im = pillImg(nm);
-  return `<button class="${on?"took":""}" data-take="${esc(slot+"|"+nm)}" aria-pressed="${on?"true":"false"}" title="${on?"Taken - tap to undo":"Tap when you've taken it"}"><span class="ph" style="${im&&!on?`background-image:url(${im})`:""}">${on?"✓":im?"":"💊"}</span>${esc(nm.replace(/ \d.*$/,""))}${q!=="1"?` <span class="x">×${esc(q)}</span>`:""}${o&&o.confirm?'<span class="tag">CONFIRM</span>':""}${o&&o.food?`<span class="food">${esc(o.food)}</span>`:""}</button>`;
+  return `<button class="${sk?"skipd":on?"took":""}" data-take="${esc(slot+"|"+nm)}" aria-pressed="${on?"true":"false"}" title="${on?"Taken - tap to undo":"Tap when you've taken it"}"><span class="ph" style="${im&&!on?`background-image:url(${im})`:""}">${on?"✓":im?"":"💊"}</span>${esc(nm.replace(/ \d.*$/,""))}${q!=="1"?` <span class="x">×${esc(q)}</span>`:""}${o&&o.confirm?'<span class="tag">CONFIRM</span>':""}${o&&o.food?`<span class="food">${esc(o.food)}</span>`:""}</button>`;
 }
 const SUPPLY = 30; // a container is topped up with a month's supply
 function topLeft(p, slotId){ const f = (S.meta.refill||{})[p+"|"+slotId]; if(!f) return null; return SUPPLY - dayDiff(TODAY, f.slice(0,10)); }
@@ -359,6 +398,13 @@ function pTodayMore(p){
   let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${sl.map(s => { const tm = slotTime(p,s,TODAY), st = slotState(p,s,TODAY), its = itemsFor(p,s,TODAY);
     const lab = {done:"Taken",late:"Overdue",now:"Now",later:"Later"}[st];
     return `<button class="rowi" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${st}">${lab}</span></button>`; }).join("")}</div>`;
+  const oL = logOf(other(p), TODAY);
+  if(oL.wake && !L.wake) h = `<div class="card upline" style="margin-top:14px">☀ ${esc(P[other(p)].name)} is up since ${oL.wake}</div>` + h;
+  else if(oL.wake && L.wake) h = `<div class="card upline" style="margin-top:14px">☀ You're both up · ${esc(P[other(p)].name)} since ${oL.wake}</div>` + h;
+  const ex = L.extra || [], av = AVOID[p] || [];
+  h += `<div class="sec"><h3>Took something else?</h3><div class="card"><div class="small">Tap it if you took it today. That's fine: it just means we know.</div><div class="chips" style="margin-top:8px">${av.map(([n]) => `<button class="chipb" data-extra="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+    <div style="display:flex;gap:8px;margin-top:10px"><input class="exin" id="exIn" placeholder="Something else? Name it"><button class="ghostbtn" data-extratxt="1">Add</button></div>
+    ${ex.length ? `<div class="k" style="margin-top:12px;color:var(--warn)">Taken today</div>${ex.map((e,i) => { const w = (av.find(a => a[0] === e.n)||[])[1]; return `<div class="exr"><b>${esc(e.n)}</b> <span class="small">${new Date(e.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><button class="lnk" data-extrarm="${i}">remove</button>${w ? `<div class="small" style="margin-top:3px">${esc(w)}</div>` : ""}</div>`; }).join("")}` : ""}</div></div>`;
   const walks = [10,15,20,30];
   h += `<div class="sec"><h3>Move</h3><div class="card"><div class="k" style="color:var(--acc)">Walk today · 10–15 minutes</div><div class="chips" style="margin-top:8px">${walks.map(m => `<button class="chipb" aria-pressed="${L.walk===m}" data-walk="${m}" id="walk_${m}">${m} min</button>`).join("")}</div><div class="small" style="margin-top:6px">${L.walk ? "Logged. Lovely." : "Any pace counts. Tap again to clear."}</div></div>
     <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div></div>`;
@@ -372,9 +418,22 @@ function pTodayMore(p){
   return h + `<div class="status" id="status">Connecting…</div>`;
 }
 function head(p, idx, eyebrow, title){ return `<div class="head"><div class="bg" style="background-image:url(${photo(p,idx)})"></div><div class="shade"></div><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
+function orderHtml(){
+  const rows = [], uncounted = [];
+  for(const q of ["michaela","jenny"]) for(const r of stockRows(q)){ if(missing(q, r.nm)) continue; if(r.left === null) uncounted.push(q); else if(r.days !== null && r.days <= 14) rows.push([q, r]); }
+  rows.sort((a,b) => a[1].days - b[1].days);
+  return `<div class="sec"><h3>To order</h3>${rows.length ? `<div class="card">${rows.map(([q,r]) => { const T = THEMES[themeOf(q)]; return `<div class="ordr"><span class="wtag" style="background:${T.acc};color:${T.ink}">${P[q].name}</span><b>${esc(r.nm)}</b><span style="margin-left:auto;color:${r.days<=7?"var(--bad)":"var(--warn)"}">${r.days<=0?"run out":`${r.days} day${r.days===1?"":"s"} left`}</span></div>`; }).join("")}</div>` : `<div class="card small">${uncounted.length ? "Nothing low that we know of yet. Count what you have below, and the app warns you two weeks before anything runs out." : "Nothing running low. 👍"}</div>`}</div>`;
+}
+function stockSec(p){
+  const rows = stockRows(p);
+  return orderHtml() + `<div class="sec"><h3>${P[p].name}'s stock</h3><div class="small">Count everything you have (boxes plus the container) and type the number. It goes down by itself as tablets are ticked. Tap the other name at the top to count theirs.</div>
+    ${rows.map(r => { const col = r.days === null ? "var(--dim)" : r.days <= 7 ? "var(--bad)" : r.days <= 14 ? "var(--warn)" : "var(--acc)", pct = r.days === null ? 0 : Math.min(1, r.days/30);
+      const note = missing(p, r.nm) ? "Not bought yet" : r.left === null ? "Not counted yet" : r.days === null ? `${r.left} ${r.unit} left` : r.days <= 0 ? "Run out: order now" : `About ${r.days} days left${r.days<=7?" · order now":r.days<=14?" · order soon":""}`;
+      return `<div class="card"><div class="stkh"><div><b>${esc(r.nm)}</b><div class="small">${r.pd ? `${+r.pd.toFixed(1)} ${r.unit} a day` : "not every day"}${r.r ? ` · counted ${fmt(r.r.at.slice(0,10))}${r.r.by ? " by "+esc(r.r.by) : ""}` : ""}</div></div><label class="stkin"><input type="number" inputmode="numeric" min="0" placeholder="count" aria-label="${esc(r.nm)} count" data-stock="${esc(p+"|"+r.nm)}" value="${r.left === null ? "" : r.left}">${r.unit}</label></div><div class="left"><i style="width:${pct*100}%;background:${col}"></i></div><div class="small" style="color:${col};margin-top:6px">${note}</div></div>`; }).join("")}</div>`;
+}
 function pFill(){
   const p = S.who, jars = P[p].slots.filter(s => s.jar);
-  return head(p, 2, "One container per time of day", "Top up") + `<div class="pad"><div class="sec">
+  return head(p, 2, "What we have, and what to order", "Stock") + `<div class="pad">${stockSec(p)}<div class="sec"><h3>The containers</h3>
     <div class="card small">Each container holds <b style="color:var(--text)">a month of every tablet for that time</b>, loose together. At that time, fish out one of each (two where it says ×2). Tap a 📷 to photograph one tablet, so you can always see what you're looking for.</div>
     ${jars.map(s => { const its = s.items.filter(i => !(i[2]||{}).out), tot = its.reduce((a,i)=>a+i[2].n,0), left = topLeft(p, s.id);
       const pct = left === null ? 0 : Math.max(0, Math.min(1, left/SUPPLY)), col = left === null ? "var(--dim)" : left <= 5 ? "var(--bad)" : left <= 10 ? "var(--warn)" : "var(--acc)";
@@ -411,7 +470,7 @@ function pPlan(){
   const st = setupOf(p), F = FLAGS[p] || [];
   const open = F.filter(f => ["still","ask"].includes((st.flags||{})[f.id]));
   const setupCard = `<div class="sec"><h3>Your medicines</h3><div class="card">${st.done ? `<div class="small">Checked ${fmt(st.done.slice(0,10))}.${open.length?" Still to sort out:":" Nothing open."}</div>${open.map(f => `<div style="margin-top:8px;font:600 13px var(--sans)"><span style="color:${f.lv==="red"?"var(--bad)":"var(--warn)"}">●</span> ${esc(f.t)}${f.who?` <span class="small">· ${esc(f.who)}</span>`:""}</div>`).join("")}` : `<div class="small">Not checked yet.</div>`}<button class="ghostbtn on" style="margin-top:12px" data-setgo="${p}" id="setagain">🌱 ${st.done?"Go through it again":"Let's get going"}</button></div></div>`;
-  return head(p, 4, "Scripts and check-ups", "Coming up") + `<div class="pad">${setupCard}<div class="sec"><h3>Scripts</h3><div class="small">Red = due now, amber = this week. A last repeat always gets a reminder to ask the doctor for a new script.</div><div class="list">${sc.map(s => listItem(s,"scripts")).join("")}</div></div>
+  return head(p, 4, "Scripts and check-ups", "Coming up") + `<div class="pad">${setupCard}<div class="sec"><h3>Ask Claude</h3><div class="card"><div class="small">Copies both your last 7 days, what was skipped, anything else taken, and the stock, so you can paste it to Claude.</div><button class="ghostbtn on" style="margin-top:10px" data-copyweek="1" id="copyweek">Copy my week for Claude</button></div></div><div class="sec"><h3>Scripts</h3><div class="small">Red = due now, amber = this week. A last repeat always gets a reminder to ask the doctor for a new script.</div><div class="list">${sc.map(s => listItem(s,"scripts")).join("")}</div></div>
     <div class="sec"><h3>Check-ups</h3><div class="small">The date is a "book by" date. Change it to the appointment once booked, and tap Went afterwards.</div><div class="list">${CHECKS.map(c => listItem(c,"checks")).join("")}</div></div>
     <div class="sec"><h3>Usual wake-up times</h3><div class="card"><div class="small">Morning containers always wait for "I'm up". The usual time is only for the Good morning screen and to know when a morning has really been missed (3 hours after it). The app learns it from your "I'm up" taps over the last 3 weeks, once it has 3 mornings of each kind.</div>
       ${["michaela","jenny"].map(q => { const w = ((S.meta.settings||{}).wake||{})[q] || {}; const T = THEMES[themeOf(q)], au = autoWake(q), lw = learnedWake(q,false), le = learnedWake(q,true);
@@ -483,13 +542,33 @@ function saveSetup(p, change){
   change(cur); cur.at = new Date().toISOString(); all[p] = cur; S.meta.setup = all; saveMeta("setup");
 }
 let lastStatus = "Connecting…", lastErr = false;
+const waUp = p => "https://wa.me/?text=" + encodeURIComponent(`☀ I'm up! Come say good morning when you're awake 💛`);
+function skipModal(){
+  if(S.upNote){ const o = P[other(S.who)].name;
+    return `<div class="modal" role="dialog" aria-modal="true"><div class="mcard" style="border-left-color:var(--acc)"><div class="k" style="color:var(--acc)">Good morning ☀</div><h3>Let ${esc(o)} know?</h3><p>If ${esc(o)} is awake in the other room, a WhatsApp buzzes their phone so you can have the morning together. If they're still asleep, it just waits for them.</p><div class="mbtns"><a href="${waUp(S.who)}" target="_blank" rel="noopener" data-upnote="0">Tell ${esc(o)} on WhatsApp</a><button data-upnote="0">Not now</button></div></div></div>`; }
+  const k = S.skipInfo; if(!k) return "";
+  const nm = k.slice(k.indexOf("|")+1);
+  return `<div class="modal" role="dialog" aria-modal="true"><div class="mcard"><div class="k" style="color:var(--warn)">Not taken today</div><h3>${esc(nm)}</h3><p>${esc(SKIP[nm] || "We don't have notes for this one yet. Ask the pharmacist what missing it means.")}</p><div class="small">General guidance, not medical advice. If you're unsure, ask your doctor or pharmacist.</div><div class="mbtns"><button data-skipok="1">I understand</button><button data-skipundo="${esc(k)}">Undo, I'll take it</button></div></div></div>`;
+}
+function weekText(){
+  const out = [`Our Pillbox, copied ${new Date().toLocaleString("en-ZA")}`];
+  for(const p of ["jenny","michaela"]){
+    out.push("", `== ${P[p].name} ==`);
+    for(let i = 6; i >= 0; i--){ const d = new Date(); d.setDate(d.getDate()-i); const ds = ymd(d), L = logOf(p, ds);
+      const bits = slotsFor(p, ds).map(s => { const sk = itemsFor(p, s, ds).filter(([n]) => (L.skip||{})[s.id+"|"+n]).map(([n]) => n);
+        return `${s.lab}: ${L.done[s.id] ? "taken "+new Date(L.done[s.id]).toTimeString().slice(0,5) : "not ticked"}${sk.length ? " (skipped "+sk.join(", ")+")" : ""}`; });
+      out.push(`${ds}${L.wake ? " up "+L.wake : ""}: ${bits.join("; ")}${(L.extra||[]).length ? " | also took: "+L.extra.map(e => e.n+" "+new Date(e.at).toTimeString().slice(0,5)).join(", ") : ""}${L.walk ? " | walk "+L.walk+" min" : ""}`); }
+    out.push("Stock:"); for(const r of stockRows(p)) out.push(`- ${r.nm}: ${missing(p,r.nm) ? "not bought yet" : r.left === null ? "not counted" : r.left+" "+r.unit+(r.days !== null ? " (about "+r.days+" days)" : "")}`);
+  }
+  return out.join("\n");
+}
 function render(keepScroll){
   TODAY = ymd(new Date());
   const T = THEMES[themeOf(S.who)];
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])() + skipModal();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr);
   if(keepScroll) window.scrollTo(0, y);
@@ -535,16 +614,31 @@ document.addEventListener("click", e => {
   else if(d.take){ const i = d.take.indexOf("|"), slot = d.take.slice(0, i), nm = d.take.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); let all = false, auto = false;
     saveLog(S.who, TODAY, L => { L.items = L.items || {}; const k = slot+"|"+nm;
       if(L.done[slot]){ delete L.done[slot]; for(const [n] of itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out)) L.items[slot+"|"+n] = L.items[slot+"|"+n] || new Date().toISOString(); delete L.items[k]; return; }
-      if(L.items[k]) delete L.items[k]; else L.items[k] = new Date().toISOString();
-      all = itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out).every(([n]) => L.items[slot+"|"+n]);
+      if(L.skip && L.skip[k]){ delete L.skip[k]; L.items[k] = new Date().toISOString(); } else if(L.items[k]) delete L.items[k]; else L.items[k] = new Date().toISOString();
+      all = itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out).every(([n]) => L.items[slot+"|"+n] || (L.skip||{})[slot+"|"+n]);
       if(all){ L.done[slot] = new Date().toISOString(); if(!L.wake && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); auto = true; } } });
     if(all){ delete S.sel[S.who]; render(true); toast(auto ? `All taken ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : "All taken ✓"); } }
   else if(d.miss){ const i = d.miss.indexOf("|"), mp = d.miss.slice(0, i), nm = d.miss.slice(i+1);
     const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
     if(M[mp][nm]) delete M[mp][nm]; else M[mp][nm] = new Date().toISOString();
     S.meta.settings = Object.assign({}, S.meta.settings, {missing: M}); saveMeta("settings"); toast(M[mp][nm] ? "Hidden until you buy it" : "Back on your list ✓"); }
+  else if(d.skipopen){ S.skipOpen = S.skipOpen === d.skipopen ? "" : d.skipopen; render(true); }
+  else if(d.skip){ const i = d.skip.indexOf("|"), slot = d.skip.slice(0, i), sl = P[S.who].slots.find(x => x.id === slot); let was = false;
+    saveLog(S.who, TODAY, L => { L.skip = L.skip || {}; L.items = L.items || {};
+      if(L.skip[d.skip]){ delete L.skip[d.skip]; was = true; return; }
+      L.skip[d.skip] = new Date().toISOString(); delete L.items[d.skip];
+      const res = itemsFor(S.who, sl, TODAY).every(([n]) => L.skip[slot+"|"+n] || L.items[slot+"|"+n] || (L.done[slot] && !L.skip[slot+"|"+n]));
+      if(res && !L.done[slot]) L.done[slot] = new Date().toISOString(); });
+    S.skipOpen = ""; if(!was) S.skipInfo = d.skip; render(true); if(was) toast("Back on today's list"); }
+  else if(d.skipok){ S.skipInfo = ""; render(true); }
+  else if(d.skipundo){ const k = d.skipundo; saveLog(S.who, TODAY, L => { if(L.skip) delete L.skip[k]; }); S.skipInfo = ""; render(true); toast("OK, it's back on your list"); }
+  else if(d.upnote !== undefined){ S.upNote = false; render(true); }
+  else if(d.extra){ const n = d.extra; saveLog(S.who, TODAY, L => { L.extra = (L.extra||[]).concat({n, at:new Date().toISOString()}); }); toast("Noted, thank you for telling us"); }
+  else if(d.extratxt){ const el = document.getElementById("exIn"), n = (el && el.value || "").trim(); if(!n){ toast("Type what you took first"); return; } saveLog(S.who, TODAY, L => { L.extra = (L.extra||[]).concat({n, at:new Date().toISOString()}); }); toast("Noted, thank you for telling us"); }
+  else if(d.extrarm){ const i = +d.extrarm; saveLog(S.who, TODAY, L => { L.extra = (L.extra||[]).filter((_,j) => j !== i); }); }
+  else if(d.copyweek){ const t = weekText(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied: paste it to Claude"), () => { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); toast("Copied: paste it to Claude"); }catch(_){ toast("Couldn't copy"); } ta.remove(); }); }
   else if(d.undo){ saveLog(S.who, TODAY, L => { delete L.done[d.undo]; if(L.items) for(const k of Object.keys(L.items)) if(k.startsWith(d.undo+"|")) delete L.items[k]; }); }
-  else if(d.up){ saveLog(S.who, TODAY, L => { L.wake = nowHM(); }); toast("Good morning ☀"); }
+  else if(d.up){ saveLog(S.who, TODAY, L => { L.wake = nowHM(); }); if(!logOf(other(S.who), TODAY).wake){ S.upNote = true; render(true); } else toast("Good morning ☀ " + P[other(S.who)].name + " is up too"); }
   else if(d.walk){ const m = +d.walk; saveLog(S.who, TODAY, L => { L.walk = L.walk === m ? 0 : m; }); }
   else if(d.physio){ saveLog(S.who, TODAY, L => { L.physio = L.physio ? "" : new Date().toISOString(); }); }
   else if(d.remind){ const [p, slot] = d.remind.split("|"); remind(p, slot); }
@@ -558,6 +652,9 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target;
+  if(t.dataset.stock){ const i = t.dataset.stock.indexOf("|"), q = t.dataset.stock.slice(0, i), nm = t.dataset.stock.slice(i+1); if(t.value === "") return;
+    const st = Object.assign({}, S.meta.stock); st[q] = Object.assign({}, st[q], {[nm]: {n: Math.max(0, Math.round(+t.value)), at: new Date().toISOString(), by: window.ME || ""}});
+    S.meta.stock = st; saveMeta("stock"); toast("Count saved ✓"); return; }
   if(t.dataset.wake){ if(t.value) saveLog(S.who, TODAY, L => { L.wake = t.value; }); return; }
   if(t.dataset.ansnote){ const [p, sid, nm] = t.dataset.ansnote.split("|"); saveSetup(p, c => { const key = sid+"|"+nm; c.items[key] = Object.assign({}, c.items[key], {v:"diff", note:t.value}); }); return; }
   if(t.dataset.setnote){ const p = t.dataset.setnote; saveSetup(p, c => { c.note = t.value; }); return; }
@@ -617,13 +714,13 @@ const _render = render; render = (...a) => { if(window.__planReady) _render(...a
 async function start(session){
   document.getElementById("login").style.display = "none";
   const mine = EMAILS[(session.user.email||"").toLowerCase()];
-  if(mine) S.who = mine;
+  if(mine){ S.who = mine; window.ME = mine === "jenny" ? "Jenny" : "Michaela"; }
   const pl = await SB.from("docs").select("data").eq("coll","plan").eq("id","plan").maybeSingle();
   if(pl.error || !pl.data){ status("Can't load your plan - check the internet", true); document.getElementById("login").style.display = "grid"; document.getElementById("loginMsg").textContent = "Signed in, but the plan didn't load. Try again."; return; }
   applyPlan(pl.data.data); render();
   db = mkDb();
   const to = setTimeout(() => status("Can't reach saved ticks yet", true), 10000);
-  const from = (() => { const d = new Date(); d.setDate(d.getDate()-22); return ymd(d); })();
+  const from = (() => { const d = new Date(); d.setDate(d.getDate()-60); return ymd(d); })();
   db.collection("log").where("date", ">=", from).onSnapshot(snap => {
     for(const doc of snap.docs) S.log[doc.id] = JSON.parse(JSON.stringify(doc.data()));
     clearTimeout(to); status("Saved"); render(true);
