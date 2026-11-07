@@ -57,7 +57,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .skinsw.sm button{padding:8px;font-size:13px}
 .skinbar{display:flex;gap:5px}.skinbar i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.14)}
 .skinbar i.on{background:var(--acc)}.skinbar i.sk{background:rgba(255,255,255,.35)}.skinbar i.now{box-shadow:0 0 0 2px var(--acc) inset;background:rgba(255,255,255,.08)}
-.skincur{border:2px solid var(--acc)}
+.skincur{border:2px solid var(--acc);scroll-margin-top:10px}
+.head.short{height:150px}.head.short h2{font-size:36px}
+.skincur.pop{animation:skpop .45s ease}
+@keyframes skpop{0%{transform:scale(.96);opacity:.4}60%{transform:scale(1.02);opacity:1}100%{transform:scale(1)}}
+.skjust{display:flex;align-items:center;gap:8px;margin:-2px 0 10px;padding:8px 12px;border-radius:12px;background:var(--acc);color:var(--ink);font:800 14px var(--sans);animation:skpop .45s ease}
+@media (prefers-reduced-motion:reduce){.skincur.pop,.skjust{animation:none}}
 .skinn{font:600 30px/1.1 var(--serif);margin:6px 0 4px}
 .skinhow{font:500 15px/1.45 var(--sans);margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06)}
 .skbtns{display:flex;gap:8px;margin-top:14px}
@@ -711,6 +716,7 @@ function skinSlot(){ if(S.skinSlot) return S.skinSlot; const h = new Date().getH
 function skinSteps(p, slot, ds){ const w = parse(ds).getDay(); return (skinR(p)[slot]||[]).filter(x => !x.days || !x.days.length || x.days.includes(w)); }
 function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf(p, ds).skin||{})[slot]) || {}, need = st.filter(x => !x.opt);
   return {st, mk, n: need.length, done: need.filter(x => mk[x.id]).length, cur: st.find(x => !mk[x.id])}; }
+function skinJump(){ requestAnimationFrame(() => { const c = document.querySelector(".skincur"); if(c) c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); }); }
 function skinToday(p){
   const ds = skinDay(), sl = skinSlot(), K = skinState(p, sl, ds), none = !(skinR(p).am||[]).length && !(skinR(p).pm||[]).length;
   if(!K.st.length && !none) return "";
@@ -719,16 +725,17 @@ function skinToday(p){
 function pSkin(){
   const p = S.who, ds = skinDay(), slot = skinSlot(), R = skinR(p), K = skinState(p, slot, ds), lab = slot === "am" ? "Morning" : "Night";
   const none = !(R.am||[]).length && !(R.pm||[]).length;
-  let h = head(p, 1, "One step at a time", P[p].name + "'s skin") + `<div class="pad"><div class="sec">`;
+  let h = head(p, 1, "One step at a time", P[p].name + "'s skin").replace('class="head"', 'class="head short"') + `<div class="pad"><div class="sec">`;
   h += `<div class="skinsw">${[["am","☀ Morning"],["pm","🌙 Night"]].map(([k, l]) => { const k2 = skinState(p, k, ds); return `<button class="${slot === k ? "on" : ""}" data-skinslot="${k}">${l}<span>${k2.n ? (k2.done >= k2.n ? "✓ done" : k2.done + " of " + k2.n + " done") : "no steps"}</span></button>`; }).join("")}</div>`;
   if(none){ h += `<div class="card skincur"><div class="skinn">List what you use</div><div class="small">Add your products in the order you put them on, morning and night. After that the app shows them one at a time, so you never wonder what's next.</div></div>`; if(!S.skinEdit) S.skinEdit = slot; }
   else if(!K.st.length) h += `<div class="card small">No ${lab.toLowerCase()} steps ${slot === "pm" ? "for " + SK_DOWL[parse(ds).getDay()] : "yet"}. Add them under "Change my steps".</div>`;
   else {
     const bar = `<div class="skinbar">${K.st.map(x => `<i class="${K.mk[x.id] === "skip" ? "sk" : K.mk[x.id] ? "on" : ""}${K.cur && K.cur.id === x.id ? " now" : ""}"></i>`).join("")}</div>`;
     if(K.cur){ const i = K.st.indexOf(K.cur);
-      h += `<div class="card skincur">${bar}<div class="k" style="color:var(--acc);margin-top:12px">${lab} · step ${i+1} of ${K.st.length}${K.cur.opt ? " · only if needed" : ""}</div><div class="skinn">${esc(K.cur.n)}</div>${K.cur.b ? `<div class="small">${esc(K.cur.b)}</div>` : ""}${K.cur.how ? `<div class="skinhow">${esc(K.cur.how)}</div>` : ""}
+      const J = S.skinJust && Date.now() - S.skinJust.at < 6000 ? S.skinJust : null;
+      h += `<div class="card skincur ${J ? "pop" : ""}">${J ? `<div class="skjust">✓ ${esc(J.n)} ${J.skip ? "skipped" : "done"} · next up 👇</div>` : ""}${bar}<div class="k" style="color:var(--acc);margin-top:12px">${lab} · step ${i+1} of ${K.st.length}${K.cur.opt ? " · only if needed" : ""}</div><div class="skinn">${esc(K.cur.n)}</div>${K.cur.b ? `<div class="small">${esc(K.cur.b)}</div>` : ""}${K.cur.how ? `<div class="skinhow">${esc(K.cur.how)}</div>` : ""}
         <div class="skbtns"><button class="skbtn" data-skindo="${slot}|${K.cur.id}">✓ Done</button><button class="skbtn alt" data-skinskip="${slot}|${K.cur.id}">${K.cur.opt ? "Not needed" : "Skip today"}</button></div></div>`;
-    } else h += `<div class="card skincur">${bar}<div class="skinn" style="margin-top:12px">✨ ${lab} routine done</div><div class="small">${slot === "am" ? "Lovely. See you tonight." : "Lovely. Sleep well."}</div></div>`;
+    } else h += `<div class="card skincur pop">${bar}<div class="skinn" style="margin-top:12px">✨ ${lab} routine done</div><div class="small">${slot === "am" ? "Lovely. See you tonight." : "Lovely. Sleep well."}</div></div>`;
     h += `<div class="card"><div class="k" style="color:var(--dim)">${slot === "pm" ? "Tonight · " + SK_DOWL[parse(ds).getDay()] : "This morning"} · tap to tick or untick</div>${K.st.map((x, i) => `<button class="skinrow ${K.mk[x.id] ? "on" : ""}" data-skintog="${slot}|${x.id}"><span class="sn">${K.mk[x.id] === "skip" ? "–" : K.mk[x.id] ? "✓" : i+1}</span><span>${esc(x.n)}${x.b ? `<span class="small"> · ${esc(x.b)}</span>` : ""}</span></button>`).join("")}${R.note ? `<div class="small" style="margin-top:8px">${esc(R.note)}</div>` : ""}</div>`;
     const days = [...Array(7)].map((_, i) => { const d = parse(ds); d.setDate(d.getDate() - 6 + i); return ymd(d); }), f = x => x.n && x.done >= x.n ? "on" : x.done ? "part" : "";
     h += `<div class="card"><div class="k" style="color:var(--dim)">Last 7 days</div><div class="skwk">${days.map(d => `<div>${SK_DOW[parse(d).getDay()]}<i class="${f(skinState(p, "am", d))}"></i><i class="${f(skinState(p, "pm", d))}"></i></div>`).join("")}</div><div class="small">Top dot morning, bottom dot night.</div></div>`;
@@ -954,7 +961,7 @@ document.addEventListener("click", e => {
   if(d.flag){ const [p, id, v] = d.flag.split("|"); saveSetup(p, c => { c.flags[id] = c.flags[id]===v ? "" : v; }); return; }
   if(d.setdone){ const p = d.setdone; saveSetup(p, c => { c.done = new Date().toISOString(); }); S.setup = null; S.who = p; S.tab = "today"; render(); window.scrollTo(0,0); toast("All set ✓ Thank you!"); return; }
   if(d.who){ S.who = d.who; try{localStorage.setItem("pillbox.who", S.who)}catch(_){}; render(); }
-  else if(d.tab){ S.tab = d.tab; render(); window.scrollTo(0,0); }
+  else if(d.tab){ S.tab = d.tab; render(); window.scrollTo(0,0); if(d.tab === "skin") skinJump(); }
   else if(d.sel){ S.sel[S.who] = d.sel; render(!d.top); if(d.top) window.scrollTo({top:0, behavior:"smooth"}); }
   else if(d.done){ const sl = P[S.who].slots.find(x => x.id === d.done); let auto = false;
     saveLog(S.who, TODAY, L => { L.done[d.done] = new Date().toISOString();
@@ -998,10 +1005,13 @@ document.addEventListener("click", e => {
   else if(d.exhow){ S.exHow = S.exHow === d.exhow ? "" : d.exhow; render(true); }
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
   else if(d.me){ const v = d.me; saveLog(S.who, TODAY, L => { L.me = v === "yes" ? new Date().toISOString() : "no"; }); toast(v === "yes" ? "💗" : "OK"); }
-  else if(d.skinslot){ S.skinSlot = d.skinslot; render(true); }
+  else if(d.skinslot){ S.skinSlot = d.skinslot; render(true); skinJump(); }
   else if(d.skindo || d.skinskip || d.skintog){ const v = d.skindo || d.skinskip || d.skintog, i = v.indexOf("|"), sl = v.slice(0, i), id = v.slice(i+1), p = S.who, ds = skinDay();
     saveLog(p, ds, L => { L.skin = Object.assign({am:{}, pm:{}}, L.skin); L.skin[sl] = Object.assign({}, L.skin[sl]); if(d.skintog){ if(L.skin[sl][id]) delete L.skin[sl][id]; else L.skin[sl][id] = new Date().toISOString(); } else L.skin[sl][id] = d.skinskip ? "skip" : new Date().toISOString(); });
-    if(!d.skintog){ const K = skinState(p, sl, ds); toast(K.cur ? "✓ Next: " + K.cur.n : "✨ All done"); if(!K.cur) window.scrollTo({top:0, behavior:"smooth"}); } }
+    const K = skinState(p, sl, ds), was = (skinR(p)[sl] || []).find(x => x.id === id);
+    if(!d.skintog && was){ S.skinJust = {n: was.n, skip: !!d.skinskip, at: Date.now()}; render(true); clearTimeout(S.skinJt); S.skinJt = setTimeout(() => { if(S.tab === "skin" && !document.querySelector(".sked input:focus")) render(true); }, 6100); }
+    if(!K.cur && !d.skintog) toast("✨ " + (sl === "am" ? "Morning" : "Night") + " routine done");
+    skinJump(); }
   else if(d.skinedit !== undefined){ S.skinEdit = d.skinedit; S.skinRm = ""; render(true); }
   else if(d.skinmv){ const [sl, i, dir] = d.skinmv.split("|"), R = skinClone(S.who), a = R[sl], j = +i + +dir; if(j < 0 || j >= a.length) return; [a[+i], a[j]] = [a[j], a[+i]]; saveSkin(S.who, R); }
   else if(d.skinrm){ if(S.skinRm !== d.skinrm){ S.skinRm = d.skinrm; render(true); return; } const [sl, i] = d.skinrm.split("|"), R = skinClone(S.who); R[sl].splice(+i, 1); S.skinRm = ""; saveSkin(S.who, R); toast("Removed"); }
