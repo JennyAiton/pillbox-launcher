@@ -7,7 +7,7 @@
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
 </head><body>
 
-<div id="login" hidden style="position:fixed;inset:0;z-index:99;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.75)),url(t/lotus/1.jpg) center/cover">
+<div id="login" style="position:fixed;inset:0;z-index:99;display:none;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.75)),url(t/lotus/1.jpg) center/cover">
  <form id="loginForm" style="width:100%;max-width:340px;background:rgba(20,20,20,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:24px;color:#fff;font-family:Manrope,system-ui,sans-serif">
   <div style="font:600 40px 'Cormorant Garamond',Georgia,serif;line-height:1">Pillbox</div>
   <p style="opacity:.8;margin:6px 0 18px">Sign in once on this phone.</p>
@@ -593,11 +593,11 @@ function mkDb(){
 assets = {};
 const _render = render; render = (...a) => { if(window.__planReady) _render(...a); };
 async function start(session){
-  document.getElementById("login").hidden = true;
+  document.getElementById("login").style.display = "none";
   const mine = EMAILS[(session.user.email||"").toLowerCase()];
   if(mine) S.who = mine;
   const pl = await SB.from("docs").select("data").eq("coll","plan").eq("id","plan").maybeSingle();
-  if(pl.error || !pl.data){ status("Can't load your plan - check the internet", true); document.getElementById("login").hidden = false; document.getElementById("loginMsg").textContent = "Signed in, but the plan didn't load. Try again."; return; }
+  if(pl.error || !pl.data){ status("Can't load your plan - check the internet", true); document.getElementById("login").style.display = "grid"; document.getElementById("loginMsg").textContent = "Signed in, but the plan didn't load. Try again."; return; }
   applyPlan(pl.data.data); render();
   db = mkDb();
   const to = setTimeout(() => status("Can't reach saved ticks yet", true), 10000);
@@ -626,7 +626,7 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
   if(error){ msg.textContent = "That didn't work. Check the email and password."; return; }
   msg.textContent = ""; start(data.session);
 });
-SB.auth.getSession().then(({ data }) => { if(data.session) start(data.session); else document.getElementById("login").hidden = false; });
+SB.auth.getSession().then(({ data }) => { if(data.session) start(data.session); else document.getElementById("login").style.display = "grid"; });
 
 </script>
 
