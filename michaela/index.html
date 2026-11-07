@@ -286,6 +286,10 @@ function usedSince(p, nm, at){
 }
 function stockRows(p){ return stockItems(p).map(it => { const r = (((S.meta.stock||{})[p])||{})[it.nm], pd = perDay(p, it.nm), left = r ? Math.max(0, r.n - usedSince(p, it.nm, r.at)) : null;
   return Object.assign({}, it, {r, pd, left, days: left === null || !pd ? null : Math.floor(left/pd)}); }); }
+function noAlc(p, date){ return slotsFor(p, date).flatMap(s => itemsFor(p, s, date).filter(it => (it[2]||{}).noalc).map(it => ({s, nm: it[0]}))); }
+function noAlcCard(p){ const na = noAlc(p, TODAY); if(!na.length) return ""; const L = logOf(p, TODAY); if(na.every(x => L.done[x.s.id])) return "";
+  const short = na.map(x => esc(x.nm.replace(/ \d.*$/, ""))).join(" and ");
+  return `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">🍷 Tonight is a ${short} night</div><div style="margin-top:6px;font:600 13.5px var(--sans)">Best not to drink today. If you do have a drink, skip the ${short} tonight: tap "Didn't take one?" at ${esc(na[0].s.lab)}.</div></div>`; }
 function itemsFor(p, s, date){
   const k = dayDiff(date, START);
   return s.items.filter(it => { const o = it[2] || {};
@@ -379,7 +383,8 @@ function pToday(){
     const what = cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · fish out ${n}</div><div class="fish">${inJar.map(([nm,q,o]) => fishChip(nm, q, o, cur.id, !!L.done[cur.id] || !!(L.items||{})[cur.id+"|"+nm], !!(L.skip||{})[cur.id+"|"+nm])).join("")}</div><div class="fishtip">Tap each one as you take it</div>` : (cur.note ? esc(cur.note) : out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · "));
     const also = cur.jar && out.length ? `<div class="also">Also: ${out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · ")}</div>` : (cur.jar && cur.note ? `<div class="also">${esc(cur.note)}</div>` : "");
     const skipBits = cur.btn === "On my face" || !its.length ? "" : `<button class="skiplink" data-skipopen="${cur.id}">${S.skipOpen === cur.id ? "Close" : "Didn't take one?"}</button>${S.skipOpen === cur.id ? `<div class="skipl">${its.map(([nm]) => `<button data-skip="${esc(cur.id+"|"+nm)}">${(L.skip||{})[cur.id+"|"+nm] ? "↩ " : ""}${esc(nm)}</button>`).join("")}</div>` : ""}`;
-    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div><div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}</div>`;
+    const naT = noAlc(p, TODAY).filter(x => !L.done[x.s.id]); const naLine = naT.length ? `<div class="k" style="color:var(--warn);margin-top:6px">🍷 ${esc(naT.map(x => x.nm.replace(/ \d.*$/, "")).join(" and "))} night: best not to drink today</div>` : "";
+    main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div>${naLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}</div>`;
     const doneAt = L.done[cur.id];
     act = `<div class="act pad">${doneAt ? `<button class="pill done" data-undo="${cur.id}" id="undo_${cur.id}">${tick} Taken ${new Date(doneAt).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})} · undo</button>` : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(cur.btn||"I swallowed them")}</button>`}<button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button></div>`;
   }
@@ -398,6 +403,7 @@ function pTodayMore(p){
   let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${sl.map(s => { const tm = slotTime(p,s,TODAY), st = slotState(p,s,TODAY), its = itemsFor(p,s,TODAY);
     const lab = {done:"Taken",late:"Overdue",now:"Now",later:"Later"}[st];
     return `<button class="rowi" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${st}">${lab}</span></button>`; }).join("")}</div>`;
+  h = noAlcCard(p) + h;
   const oL = logOf(other(p), TODAY);
   if(oL.wake && !L.wake) h = `<div class="card upline" style="margin-top:14px">☀ ${esc(P[other(p)].name)} is up since ${oL.wake}</div>` + h;
   else if(oL.wake && L.wake) h = `<div class="card upline" style="margin-top:14px">☀ You're both up · ${esc(P[other(p)].name)} since ${oL.wake}</div>` + h;
