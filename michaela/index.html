@@ -135,6 +135,10 @@ input[type=date],input[type=time]{font:600 12.5px var(--sans);color:var(--text);
 .fish button{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:22px;padding:3px 11px 3px 3px;font:700 12.5px var(--sans);color:#fff}
 .fish .ph{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15) center/cover no-repeat;display:grid;place-items:center;font-size:13px;flex:none;border:1.5px solid var(--acc)}
 .fish .x{color:var(--acc);font-weight:800}
+.fish button.took{background:var(--acc);color:var(--ink);border-color:var(--acc)}
+.fish button.took .ph{background:rgba(0,0,0,.15);color:var(--ink);border-color:var(--ink);font-weight:800}
+.fish button.took .x{color:var(--ink)}
+.fishtip{font:600 11px var(--sans);opacity:.7;margin-top:6px}
 .fishhd{font:700 10px var(--sans);letter-spacing:1.6px;text-transform:uppercase;margin-top:10px;color:var(--acc)}
 .med{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--edge)}
 .med:last-child{border-bottom:0}
@@ -233,14 +237,22 @@ function usualWake(p, date){
   return (weekend ? w.we : w.wk) || WAKE[p];
 }
 const isUp = (p, date) => !!logOf(p, date).wake;
-function slotTime(p, s, date){ if(s.rel === undefined) return s.t; return toHM(toMin(logOf(p,date).wake || usualWake(p,date)) + s.rel); }
+function slotTime(p, s, date){
+  if(s.rel === undefined) return s.t;
+  // a later dose counts from when the one before it was actually taken, not from waking
+  const L = logOf(p, date), prev = P[p].slots.filter(x => x.rel !== undefined && x.rel < s.rel && L.done[x.id]).sort((a,b) => b.rel - a.rel)[0];
+  if(prev){ const t = new Date(L.done[prev.id]); return toHM(t.getHours()*60 + t.getMinutes() + s.rel - prev.rel); }
+  return toHM(toMin(L.wake || usualWake(p,date)) + s.rel);
+}
 const GRACE = 180; // minutes after the usual wake-up time before a not-yet-up morning counts as missed
 const setupOf = p => ((S.meta.setup||{})[p]) || {};
 const ansOf = (p, s, name) => (setupOf(p).items||{})[s.id+"|"+name] || {};
+const missing = (p, nm) => !!((((S.meta.settings||{}).missing)||{})[p]||{})[nm];
 function itemsFor(p, s, date){
   const k = dayDiff(date, START);
   return s.items.filter(it => { const o = it[2] || {};
     if(ansOf(p, s, it[0]).v === "no") return false;
+    if(missing(p, it[0])) return false;
     if(o.rifax && !rifaxOn(date)) return false;
     if(o.alt !== undefined){ if(k < 0) return false; if(((k % 2)+2)%2 !== o.alt) return false; }
     return true; });
@@ -313,7 +325,7 @@ function pToday(){
   const morningWaiting = !wk && !S.sel[p] && slotsFor(p,TODAY).some(s => s.rel !== undefined && !L.done[s.id]) && toMin(nowHM()) < toMin(usualWake(p,TODAY)) + GRACE;
   if(morningWaiting){
     bg = photo(p,1);
-    main = `<div class="main pad"><div class="k" style="color:var(--acc)">Usually up around ${usualWake(p,TODAY)}</div><div class="big">Good<br>morning</div><div class="what">Tap when you're up. Your morning containers start from then${p==="jenny"?", and your second dose comes 4 hours later":""}.</div></div>`;
+    main = `<div class="main pad"><div class="k" style="color:var(--acc)">Usually up around ${usualWake(p,TODAY)}</div><div class="big">Good<br>morning</div><div class="what">Tap when you're up. Your morning containers start from then${p==="jenny"?", and your second dose comes 4 hours after you take the first":""}.</div></div>`;
     act = `<div class="act pad"><button class="pill" data-up="1" id="upbig">☀ I'm up</button><button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button></div>`;
   } else if(!cur){
     bg = photo(p,5);
@@ -326,7 +338,7 @@ function pToday(){
     const n = inJar.reduce((a,i) => a + ((i[2]||{}).n||0), 0);
     const tg = o => (o && o.confirm ? '<span class="tag">CONFIRM MON</span>' : "") + (o && o.food ? ` <span class="food">${esc(o.food)}</span>` : "");
     const lead = st==="late" ? `<span style="color:var(--bad)">Overdue · ${tm}</span>` : st==="done" ? `Taken · ${tm}` : st==="now" ? `Now · ${tm}` : `Next · ${tm}`;
-    const what = cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · fish out ${n}</div><div class="fish">${inJar.map(([nm,q,o]) => fishChip(nm, q, o)).join("")}</div>` : (cur.note ? esc(cur.note) : out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · "));
+    const what = cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · fish out ${n}</div><div class="fish">${inJar.map(([nm,q,o]) => fishChip(nm, q, o, cur.id, !!L.done[cur.id] || !!(L.items||{})[cur.id+"|"+nm])).join("")}</div><div class="fishtip">Tap each one as you take it</div>` : (cur.note ? esc(cur.note) : out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · "));
     const also = cur.jar && out.length ? `<div class="also">Also: ${out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · ")}</div>` : (cur.jar && cur.note ? `<div class="also">${esc(cur.note)}</div>` : "");
     main = `<div class="main pad"><div class="k" style="color:var(--acc)">${lead}</div><div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}</div>`;
     const doneAt = L.done[cur.id];
@@ -336,9 +348,9 @@ function pToday(){
   return hero + `<div class="pad">${pTodayMore(p)}</div>`;
 }
 const pillImg = nm => (S.pimg||{})[nm] || "";
-function fishChip(nm, q, o){
+function fishChip(nm, q, o, slot, on){
   const im = pillImg(nm);
-  return `<button data-photo="${esc(nm)}" title="${im?"Change the photo":"Add a photo of this tablet"}"><span class="ph" style="${im?`background-image:url(${im})`:""}">${im?"":"📷"}</span>${esc(nm.replace(/ \d.*$/,""))}${q!=="1"?` <span class="x">×${esc(q)}</span>`:""}${o&&o.confirm?'<span class="tag">CONFIRM</span>':""}${o&&o.food?`<span class="food">${esc(o.food)}</span>`:""}</button>`;
+  return `<button class="${on?"took":""}" data-take="${esc(slot+"|"+nm)}" aria-pressed="${on?"true":"false"}" title="${on?"Taken - tap to undo":"Tap when you've taken it"}"><span class="ph" style="${im&&!on?`background-image:url(${im})`:""}">${on?"✓":im?"":"💊"}</span>${esc(nm.replace(/ \d.*$/,""))}${q!=="1"?` <span class="x">×${esc(q)}</span>`:""}${o&&o.confirm?'<span class="tag">CONFIRM</span>':""}${o&&o.food?`<span class="food">${esc(o.food)}</span>`:""}</button>`;
 }
 const SUPPLY = 30; // a container is topped up with a month's supply
 function topLeft(p, slotId){ const f = (S.meta.refill||{})[p+"|"+slotId]; if(!f) return null; return SUPPLY - dayDiff(TODAY, f.slice(0,10)); }
@@ -367,7 +379,7 @@ function pFill(){
     ${jars.map(s => { const its = s.items.filter(i => !(i[2]||{}).out), tot = its.reduce((a,i)=>a+i[2].n,0), left = topLeft(p, s.id);
       const pct = left === null ? 0 : Math.max(0, Math.min(1, left/SUPPLY)), col = left === null ? "var(--dim)" : left <= 5 ? "var(--bad)" : left <= 10 ? "var(--warn)" : "var(--acc)";
       return `<div class="lab"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="lt">${esc(s.jl)}</span><span class="small">${s.rel===undefined?`about ${s.t}`:s.rel===0?"as soon as you're up":s.rel===30?"30 min after waking":"4 h after the first"} · ${tot} a day</span></div>
-        ${its.map(([nm,q,o]) => { const im = pillImg(nm); return `<div class="med"><button class="ph ${im?"has":""}" data-photo="${esc(nm)}" style="${im?`background-image:url(${im})`:""}" aria-label="Photo of ${esc(nm)}">${im?"":"📷<br>add photo"}</button><div><b>${esc(nm)}</b>${o.confirm?'<span class="tag">CONFIRM MON</span>':""}<div class="small">fish out ${o.n} each time${o.food?" · "+esc(o.food):""}</div></div><div class="n">${o.n*SUPPLY}<span>for 30 days</span></div></div>`; }).join("")}
+        ${its.map(([nm,q,o]) => { const im = pillImg(nm); return `<div class="med"><button class="ph ${im?"has":""}" data-photo="${esc(nm)}" style="${im?`background-image:url(${im})`:""}" aria-label="Photo of ${esc(nm)}">${im?"":"📷<br>add photo"}</button><div><b>${esc(nm)}</b>${o.confirm?'<span class="tag">CONFIRM MON</span>':""}<div class="small">${missing(p,nm)?"Not bought yet · hidden from Today":`fish out ${o.n} each time${o.food?" · "+esc(o.food):""}`}</div><button class="ghostbtn ${missing(p,nm)?"on":""}" style="margin-top:6px" data-miss="${esc(p+"|"+nm)}">${missing(p,nm)?"I have it now":"Don't have it yet"}</button></div><div class="n">${o.n*SUPPLY}<span>for 30 days</span></div></div>`; }).join("")}
         <div class="left"><i style="width:${pct*100}%;background:${col}"></i></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px"><span class="small" style="color:${col}">${left === null ? "Not topped up in the app yet" : left <= 0 ? "Probably empty: top up now" : `About ${left} day${left>1?"s":""} left`}</span><button class="ghostbtn ${left!==null&&left>10?"":"on"}" data-topup="${p}|${s.id}" id="top_${s.id}">I topped it up</button></div></div>`; }).join("")}
     <div class="card small">Before you pour tablets out of their foil, ask the pharmacist which ones must stay in the packet (some go soft in the air). Keep each person's containers apart, lids closed, somewhere dry and dark, and keep the boxes for the pharmacy labels. Sprays, sachets, injections, bottles and tubes stay in their own packaging.${p==="jenny"?" Keep your 4-hours-later container with you.":""}</div>
@@ -520,7 +532,18 @@ document.addEventListener("click", e => {
       // forgot "I'm up"? ticking a morning container counts as getting up
       if(!L.wake && sl && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); auto = true; } });
     delete S.sel[S.who]; render(true); toast(auto ? `Taken ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : "Taken ✓"); }
-  else if(d.undo){ saveLog(S.who, TODAY, L => { delete L.done[d.undo]; }); }
+  else if(d.take){ const i = d.take.indexOf("|"), slot = d.take.slice(0, i), nm = d.take.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); let all = false, auto = false;
+    saveLog(S.who, TODAY, L => { L.items = L.items || {}; const k = slot+"|"+nm;
+      if(L.done[slot]){ delete L.done[slot]; for(const [n] of itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out)) L.items[slot+"|"+n] = L.items[slot+"|"+n] || new Date().toISOString(); delete L.items[k]; return; }
+      if(L.items[k]) delete L.items[k]; else L.items[k] = new Date().toISOString();
+      all = itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out).every(([n]) => L.items[slot+"|"+n]);
+      if(all){ L.done[slot] = new Date().toISOString(); if(!L.wake && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); auto = true; } } });
+    if(all){ delete S.sel[S.who]; render(true); toast(auto ? `All taken ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : "All taken ✓"); } }
+  else if(d.miss){ const i = d.miss.indexOf("|"), mp = d.miss.slice(0, i), nm = d.miss.slice(i+1);
+    const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
+    if(M[mp][nm]) delete M[mp][nm]; else M[mp][nm] = new Date().toISOString();
+    S.meta.settings = Object.assign({}, S.meta.settings, {missing: M}); saveMeta("settings"); toast(M[mp][nm] ? "Hidden until you buy it" : "Back on your list ✓"); }
+  else if(d.undo){ saveLog(S.who, TODAY, L => { delete L.done[d.undo]; if(L.items) for(const k of Object.keys(L.items)) if(k.startsWith(d.undo+"|")) delete L.items[k]; }); }
   else if(d.up){ saveLog(S.who, TODAY, L => { L.wake = nowHM(); }); toast("Good morning ☀"); }
   else if(d.walk){ const m = +d.walk; saveLog(S.who, TODAY, L => { L.walk = L.walk === m ? 0 : m; }); }
   else if(d.physio){ saveLog(S.who, TODAY, L => { L.physio = L.physio ? "" : new Date().toISOString(); }); }
