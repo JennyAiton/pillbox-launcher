@@ -8,7 +8,9 @@ a.btn{display:inline-block;margin-top:14px;padding:14px 30px;border-radius:999px
 .how{margin-top:26px;background:rgba(255,255,255,.1);border-radius:18px;padding:14px 16px;text-align:left;font:600 15px/1.5 system-ui,sans-serif}.how ol{margin:6px 0 0;padding-left:20px}</style></head>
 <body><main><img src="icon-512.png" alt="Pillbox icon"><h1>Pillbox</h1><p id="msg">Michaela's pillbox</p>
 <a class="btn" id="go" href="https://claude.ai/artifact/TN1UG3vTWWQ4FFwhk1qi7L#michaela">Open Pillbox</a>
-<div class="how" id="how">Put this icon on your home screen:<ol><li>Tap <b>⋮</b> (top right in Chrome).</li><li>Tap <b>Add to Home screen</b> or <b>Install app</b>.</li><li>Tap <b>Install</b> or <b>Add</b>.</li></ol>On iPhone: Safari, <b>Share</b>, <b>Add to Home Screen</b>.</div></main>
+<div class="how" id="how">Put this icon on your home screen:<ol><li>Tap <b>⋮</b> (top right in Chrome).</li><li>Tap <b>Add to Home screen</b>.</li><li>Choose <b>Create shortcut</b>, then <b>Add</b>.</li></ol>On iPhone: Safari, <b>Share</b>, <b>Add to Home Screen</b>.</div></main>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-var h=/[?&]home=1/.test(location.search)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+var seen=false;try{seen=localStorage.getItem('pillbox.seen')==='1';localStorage.setItem('pillbox.seen','1')}catch(e){}
+// First visit shows the steps; after that (the home-screen shortcut) it goes straight to the app. ?how=1 shows the steps again.
+var h=!/[?&]how=1/.test(location.search)&&(/[?&]home=1/.test(location.search)||seen||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
 if(h){document.getElementById('msg').textContent='Opening your pillbox…';document.getElementById('how').hidden=true;location.replace(document.getElementById('go').href);}</script></body></html>
