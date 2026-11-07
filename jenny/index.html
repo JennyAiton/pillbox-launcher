@@ -50,6 +50,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .who button[aria-pressed="true"]{background:var(--wacc);color:var(--wink);opacity:1}
 .chip{background:rgba(0,0,0,.3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--edge);border-radius:20px;padding:6px 11px;font:700 11.5px var(--sans);white-space:nowrap}
 .chip.up{background:var(--acc);color:var(--ink);border-color:transparent}
+.chip.wine{font-size:14px;padding:9px 14px;border:2px solid var(--acc)}
+.winebg{position:fixed;inset:0;z-index:59;background:rgba(0,0,0,.55);border:0}
+.card.winepick{position:fixed;left:50%;transform:translateX(-50%);width:min(430px,calc(100% - 28px));top:70px;z-index:60;background:#16181c;border:2px solid var(--acc);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.wineg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.wineg button{display:grid;justify-items:center;gap:4px;padding:14px 6px;border-radius:16px;border:1px solid var(--edge);background:rgba(255,255,255,.08);font:700 13.5px var(--sans);color:var(--text);line-height:1.2;text-align:center}
+.wineg button span{font-size:30px}
+.wineg button.on{background:var(--acc);color:var(--ink);border-color:transparent}
 .arc{position:absolute;left:0;right:0;top:calc(60px + env(safe-area-inset-top,0px));height:128px;z-index:4}
 .arc svg{position:absolute;inset:0;width:100%;height:100%}
 .dotp{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.35);padding:0}
@@ -336,7 +343,7 @@ const SYMS_J = [["irrit","Irritable","😤"],["anxious","Anxious","🌀"],["fogg
 const symsOf = p => p === "jenny" ? SYMS_J : SYMS;
 const symLab = id => (SYMS.concat(SYMS_J).find(x => x[0] === id) || [id, id])[1];
 /* drinks: Michaela counts them, Jenny just says moderate or a big night */
-const alcOpts = p => p === "jenny" ? [[0,"None"],[1,"🍷 Moderate"],[3,"🍾 Balls to the walls"]] : ALC.map((t, v) => [v, t]);
+const alcOpts = p => p === "jenny" ? [[0,"🚫 No drinks"],[1,"🍷 Moderate"],[3,"🍾 Balls to the walls"]] : ALC.map((t, v) => [v, t]);
 const alcLab = (p, v) => (alcOpts(p).find(o => o[0] === v) || [v, ALC[v] || ""])[1].replace(/^\S+ (?=[A-Z])/, "");
 const FOODQ = ["Coffee with milk", "Iced coffee with syrup", "Sweet drink", "Water", "Meal", "Snack", "Alcohol", "Nothing yet"];
 /* morning and afternoon check-ins: how she slept, and how body and mood feel, so changes show over time */
@@ -351,10 +358,13 @@ const WHYQ = ["Slept badly","Work stress","Too much caffeine","Medicine late or 
 const ALC = ["None","1–2 drinks","3–4 drinks","5+ drinks"];
 const rateOf = p => p === "jenny" ? RATE_J : RATE;
 const sleepOf = p => p === "jenny" ? SLEEPQ_J : SLEEPQ;
+const pmChk = p => p !== "jenny" || slotsFor(p, TODAY).some(s => s.id === "noon");
+function wineSheet(){ const p = S.who; if(p !== "jenny" || !S.alcOpen || S.tab !== "today") return ""; const L = logOf(p, TODAY);
+  return `<button class="winebg" data-alcopen="1" aria-label="Close"></button><div class="card winepick"><div class="k" style="color:var(--acc)">🍷 Drinks today · tap one</div><div class="wineg">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc ?? -1) === v ? "on" : ""}" data-alcset="${v}"><span>${t.split(" ")[0]}</span>${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div><div class="small" style="margin-top:8px">Just a note next to your sleep. No judging, ever. Tap again to change it.</div></div>`; }
 function chkDue(p){ if(!CHECKIN[p]) return ""; const L = logOf(p, TODAY), c = L.chk || {}, now = toMin(nowHM());
   if(!c.am && (L.wake || now >= toMin(usualWake(p, TODAY)))) return "am";
   if(now >= toMin("20:30")) return c.ev ? "" : "ev";
-  if(!c.pm && now >= toMin("14:00")) return "pm"; return ""; }
+  if(!c.pm && pmChk(p) && now >= toMin("14:00")) return "pm"; return ""; }
 function chkKeep(k){ const v = id => (document.getElementById(id)||{}).value; k.hrs = v("chkHrs") ?? k.hrs; k.lat = v("chkLat") ?? k.lat; k.kg = v("chkKg") ?? k.kg; k.note = v("chkNote") ?? k.note; }
 function exSheet(){ if(!S.exOpen) return "";
   return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--acc)">With your morning tablets</div><h3>Morning moves</h3><div class="small">A few minutes: tick each one as you finish it.</div>${exCard(logOf("jenny", TODAY))}<div class="mbtns"><button data-exclose="1">Done for now</button></div></div></div>`; }
@@ -499,7 +509,7 @@ function banner(p){
 function pToday(){
   const p = S.who, cur = current(p), L = logOf(p, TODAY), pr = progress(p);
   const wk = L.wake;
-  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷${L.alc ? " "+esc(alcLab(p, L.alc)) : ""}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>${p === "jenny" && S.alcOpen ? `<div class="pad"><div class="card" style="margin-top:8px;background:rgba(0,0,0,.45)"><div class="k" style="color:var(--acc)">🍷 Drinks today</div><div class="lvl">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc||0) === v ? "on" : ""}" data-alcset="${v}">${t}</button>`).join("")}</div></div></div>` : ""}`;
+  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip wine ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷 ${L.alc ? esc(alcLab(p, L.alc)) : L.alc === 0 ? "None" : "Drinks?"}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>`;
   let main, act, bg;
   const morningWaiting = !wk && !S.sel[p] && slotsFor(p,TODAY).some(s => s.rel !== undefined && !L.done[s.id]) && toMin(nowHM()) < toMin(usualWake(p,TODAY)) + GRACE;
   if(morningWaiting){
@@ -546,7 +556,7 @@ function pTodayMore(p){
     return `<button class="rowi" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${st}">${lab}</span></button>`; }).join("")}</div>`;
   h = meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
   if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${x.lat ? " · asleep after "+x.lat+" min" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+rateOf(p).filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+(x.why && x.why.length ? " · why: "+esc(x.why.join(", ")) : "")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
-    h += `<div class="sec"><h3>Check-ins</h3><div class="card">${line(c.am, "Morning") || `<div class="small">Morning check-in not done yet.</div>`}${line(c.pm, "Afternoon") || `<div class="small" style="margin-top:6px">Afternoon check-in from 14:00.</div>`}${line(c.ev, "Evening") || `<div class="small" style="margin-top:6px">Evening check-in from 20:30, before bed.</div>`}<div class="chips" style="margin-top:8px">${!c.am ? `<button class="chkbtn" data-chkopen="am">📝 Morning check-in</button>` : ""}${!c.pm ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="pm">📝 Afternoon</button>` : ""}${!c.ev ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="ev">📝 Evening</button>` : ""}</div></div></div>`; }
+    h += `<div class="sec"><h3>Check-ins</h3><div class="card">${line(c.am, "Morning") || `<div class="small">Morning check-in not done yet.</div>`}${line(c.pm, "Afternoon") || (pmChk(p) ? `<div class="small" style="margin-top:6px">Afternoon check-in from 14:00.</div>` : "")}${line(c.ev, "Evening") || `<div class="small" style="margin-top:6px">Evening check-in from 20:30, before bed.</div>`}<div class="chips" style="margin-top:8px">${!c.am ? `<button class="chkbtn" data-chkopen="am">📝 Morning check-in</button>` : ""}${!c.pm && pmChk(p) ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="pm">📝 Afternoon</button>` : ""}${!c.ev ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="ev">📝 Evening</button>` : ""}</div></div></div>`; }
   const oL = logOf(other(p), TODAY);
   if(oL.wake && !L.wake) h = `<div class="card upline" style="margin-top:14px">☀ ${esc(P[other(p)].name)} is up since ${oL.wake}</div>` + h;
   else if(oL.wake && L.wake) h = `<div class="card upline" style="margin-top:14px">☀ You're both up · ${esc(P[other(p)].name)} since ${oL.wake}</div>` + h;
@@ -794,7 +804,7 @@ function render(keepScroll){
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])() + skipModal() + reportHtml() + chkSheet() + exSheet();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, plan:pPlan, shop:pShop}[S.tab])() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr);
   if(keepScroll) window.scrollTo(0, y);
@@ -875,7 +885,7 @@ document.addEventListener("click", e => {
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
   else if(d.me){ const v = d.me; saveLog(S.who, TODAY, L => { L.me = v === "yes" ? new Date().toISOString() : "no"; }); toast(v === "yes" ? "💗" : "OK"); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
-  else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(v) L.alc = v; else delete L.alc; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "Noted"); }
+  else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
   else if(d.sym){ S.symPick = S.symPick && S.symPick.s === d.sym ? null : {p:S.who, s:d.sym, food:[]}; render(true); }
   else if(d.symfood){ const f = d.symfood, k = S.symPick; if(k){ k.food = k.food.includes(f) ? k.food.filter(x => x !== f) : k.food.concat(f); render(true); } }
