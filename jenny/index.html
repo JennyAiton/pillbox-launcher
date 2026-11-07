@@ -579,8 +579,7 @@ document.getElementById("snap").addEventListener("change", async e => {
   } catch(err){ toast(err && err.code === "too_large" ? "That photo is too big" : "The photo didn't save, try again"); }
 });
 
-render();
-setInterval(() => { if(!document.activeElement || !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)) render(true); }, 60000);
+setInterval(() => { if(window.__planReady && !document.activeElement || !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)) render(true); }, 60000);
 
 
 /* ---------------- Supabase: sign in, then load and listen ---------------- */
