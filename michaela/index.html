@@ -332,7 +332,12 @@ function bloodCard(p){ const b = bloodTest(p, TODAY); if(!b) return "";
 /* symptom diary: what she feels, how bad, when; bloating asks what came before */
 const SYMS = [["bloated","Bloated","🎈"],["ankles","Swollen ankles","🦶"],["heart","Heart racing","💓"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["cramps","Cramps","⚡"],["constip","Constipated","🚫"],["nausea","Nauseous","🤢"],["hot","Feeling hot","🔥"],["anxious","Anxious","🌀"],["head","Headache / migraine","🤕"],["back","Back pain","🦴"],["irrit","Irritable","😤"],["foggy","Foggy / flat","🌫"],["legs","Restless legs","🦵"]];
 const LVL = ["", "A bit", "Bad", "Very bad"];
-const symLab = id => (SYMS.find(x => x[0] === id) || [id, id])[1];
+const SYMS_J = [["irrit","Irritable","😤"],["anxious","Anxious","🌀"],["foggy","Foggy / flat","🌫"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["legs","Restless legs","🦵"],["head","Headache","🤕"]];
+const symsOf = p => p === "jenny" ? SYMS_J : SYMS;
+const symLab = id => (SYMS.concat(SYMS_J).find(x => x[0] === id) || [id, id])[1];
+/* drinks: Michaela counts them, Jenny just says moderate or a big night */
+const alcOpts = p => p === "jenny" ? [[0,"None"],[1,"🍷 Moderate"],[3,"🍾 Balls to the walls"]] : ALC.map((t, v) => [v, t]);
+const alcLab = (p, v) => (alcOpts(p).find(o => o[0] === v) || [v, ALC[v] || ""])[1].replace(/^\S+ (?=[A-Z])/, "");
 const FOODQ = ["Coffee with milk", "Iced coffee with syrup", "Sweet drink", "Water", "Meal", "Snack", "Alcohol", "Nothing yet"];
 /* morning and afternoon check-ins: how she slept, and how body and mood feel, so changes show over time */
 const CHECKIN = {michaela: true, jenny: true};
@@ -360,7 +365,7 @@ function chkSheet(){
       <div style="font:700 15px var(--sans);margin:16px 0 4px">And how do you feel this morning?</div>` : ""}
     ${rateOf(k.p).map(([id, lab, sc]) => `<div class="rrow"><div class="rl">${lab}</div><div class="rsc">${RLAB[sc].map((t, v) => `<button class="v${v} ${rate[id] === v ? "on" : ""}" data-chkrate="${id}|${v}">${t}</button>`).join("")}</div></div>`).join("")}
     ${(rate.irrit || rate.anx || rate.mood >= 2 || rate.fog >= 2) ? `<div style="font:700 14px var(--sans);margin:14px 0 4px">What might be behind it?</div><div class="symg">${WHYQ.map(q => `<button class="${(k.why||[]).includes(q) ? "on" : ""}" data-chkwhy="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
-    ${k.k === "ev" ? `<div class="rrow"><div class="rl">🍷 Alcohol today</div><div class="rsc">${ALC.map((t, v) => `<button class="v${v} ${k.alc === v ? "on" : ""}" data-chkalc="${v}">${t}</button>`).join("")}</div></div>` : ""}
+    ${k.k === "ev" ? `<div class="rrow"><div class="rl">🍷 Alcohol today</div><div class="rsc" style="grid-template-columns:repeat(${alcOpts(k.p).length},1fr)">${alcOpts(k.p).map(([v, t]) => `<button class="v${Math.min(v,3)} ${k.alc === v ? "on" : ""}" data-chkalc="${v}">${t}</button>`).join("")}</div></div>` : ""}
     <div style="margin-top:10px"><input class="exin" style="width:100%" id="chkNote" placeholder="Anything else? (optional)" value="${esc(k.note||"")}"></div>
     <div class="mbtns"><button data-chksave="1">Save</button><button data-chkclose="1">Later</button></div></div></div>`;
 }
@@ -396,7 +401,8 @@ function itemsFor(p, s, date){
     if(o.alt !== undefined){ if(k < 0) return false; if(((k % 2)+2)%2 !== o.alt) return false; }
     return true; });
 }
-const tooLate = (p, s, date) => !!s.latest && !logOf(p, date).done[s.id] && slotTime(p, s, date) > s.latest;
+const latestOf = (p, s) => s.latest || (p === "jenny" && s.id === "noon" ? "17:00" : "");
+const tooLate = (p, s, date) => !!latestOf(p, s) && !logOf(p, date).done[s.id] && slotTime(p, s, date) > latestOf(p, s);
 function slotsFor(p, date){
   const dow = parse(date).getDay();
   return P[p].slots.filter(s => (s.day === undefined || s.day === dow) && (!s.rifaxOnly || rifaxOn(date)) && itemsFor(p, s, date).length && !tooLate(p, s, date))
@@ -460,7 +466,7 @@ function banner(p){
 function pToday(){
   const p = S.who, cur = current(p), L = logOf(p, TODAY), pr = progress(p);
   const wk = L.wake;
-  const top = `<div class="topbar pad">${whoSwitch()}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>`;
+  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷${L.alc ? " "+esc(alcLab(p, L.alc)) : ""}</button>` : ""}<button class="chip ${wk?"":"up"}" data-up="1" id="upbtn">${wk?`☀ Up ${wk}`:"☀ I'm up"}</button></div>${p === "jenny" && S.alcOpen ? `<div class="pad"><div class="card" style="margin-top:8px;background:rgba(0,0,0,.45)"><div class="k" style="color:var(--acc)">🍷 Drinks today</div><div class="lvl">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc||0) === v ? "on" : ""}" data-alcset="${v}">${t}</button>`).join("")}</div></div></div>` : ""}`;
   let main, act, bg;
   const morningWaiting = !wk && !S.sel[p] && slotsFor(p,TODAY).some(s => s.rel !== undefined && !L.done[s.id]) && toMin(nowHM()) < toMin(usualWake(p,TODAY)) + GRACE;
   if(morningWaiting){
@@ -514,24 +520,24 @@ function pTodayMore(p){
     const rows = [...sy.map(x => ({at:x.at, h:`<b>${esc(symLab(x.s))}</b>${x.lvl ? ` · ${LVL[x.lvl]}` : ""}${x.note ? ` · <span class="small">${esc(x.note)}</span>` : ""}`, k:"sym", i:sy.indexOf(x)})),
                   ...fd.map(x => ({at:x.at, h:`🍽 ${esc(x.t)}`, k:"food", i:fd.indexOf(x)}))].sort((a,b) => a.at < b.at ? 1 : -1);
     h += `<div class="sec"><h3>How are you feeling?</h3><div class="card"><div class="small">Tap anything you feel, as it happens. It builds a record to show the doctors.</div>
-      <div class="symg">${SYMS.map(([id,lab,ic]) => `<button class="${pick && pick.s === id ? "on" : ""}" data-sym="${id}">${ic} ${lab}</button>`).join("")}</div>
+      <div class="symg">${symsOf(p).map(([id,lab,ic]) => `<button class="${pick && pick.s === id ? "on" : ""}" data-sym="${id}">${ic} ${lab}</button>`).join("")}</div>
       ${pick ? `<div style="margin-top:10px;font:700 13px var(--sans)">${esc(symLab(pick.s))}: how bad?</div><div class="lvl">${[1,2,3].map(n => `<button data-symlvl="${n}">${LVL[n]}</button>`).join("")}</div>
         ${pick.s === "bloated" ? `<div style="margin-top:10px;font:700 13px var(--sans)">What did you eat or drink in the last few hours?</div><div class="symg">${FOODQ.map(f => `<button data-symfood="${esc(f)}" class="${(pick.food||[]).includes(f) ? "on" : ""}">${esc(f)}</button>`).join("")}</div>` : ""}
         <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="symNote" placeholder="${pick.s === "bloated" ? "e.g. espresso, fat-free milk, vanilla + caramel syrup, ice" : "Anything to add? (optional)"}"><button class="ghostbtn" data-symcancel="1">Cancel</button></div>` : ""}
-      <div class="nums"><label>Weight today (kg)<input type="number" step="0.1" inputmode="decimal" data-num="kg" value="${L.kg || ""}" placeholder="kg"></label><label>Heart rate (beats/min)<input type="number" inputmode="numeric" data-num="hr" value="${L.hr || ""}" placeholder="optional"></label></div></div>
-      <div class="card"><div class="k" style="color:var(--acc)">🍽 What I ate or drank</div><div class="small" style="margin-top:4px">Also a coffee, a drink or skipping a meal. Write it the way you'd tell a friend.</div>
+      ${p === "michaela" ? `<div class="nums"><label>Weight today (kg)<input type="number" step="0.1" inputmode="decimal" data-num="kg" value="${L.kg || ""}" placeholder="kg"></label><label>Heart rate (beats/min)<input type="number" inputmode="numeric" data-num="hr" value="${L.hr || ""}" placeholder="optional"></label></div>` : ""}</div>
+      ${p === "michaela" ? `<div class="card"><div class="k" style="color:var(--acc)">🍽 What I ate or drank</div><div class="small" style="margin-top:4px">Also a coffee, a drink or skipping a meal. Write it the way you'd tell a friend.</div>
       <div class="symg">${FOODQ.slice(0,7).map(f => `<button data-foodq="${esc(f)}">${esc(f)}</button>`).join("")}</div>
-      <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="foodIn" placeholder="e.g. iced coffee: espresso, fat-free milk, vanilla, caramel"><button class="ghostbtn" data-foodadd="1">Add</button></div></div>
+      <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="foodIn" placeholder="e.g. iced coffee: espresso, fat-free milk, vanilla, caramel"><button class="ghostbtn" data-foodadd="1">Add</button></div></div>` : ""}
       ${rows.length ? `<div class="card"><div class="k" style="color:var(--dim)">Today so far</div>${rows.map(r => `<div class="logr"><span class="tm">${new Date(r.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span>${r.h}</span><button class="lnk" data-logrm="${r.k}|${r.i}">remove</button></div>`).join("")}</div>` : ""}
       <button class="ghostbtn on" style="margin-top:4px" data-report="${p}">📋 Make a report for the doctor</button></div>`; }
-  h += `<div class="sec"><h3>Took something else?</h3><div class="card"><div class="small">Tap it if you took it today. That's fine: it just means we know.</div><div class="chips" style="margin-top:8px">${av.map(([n]) => `<button class="chipb" data-extra="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+  if(av.length) h += `<div class="sec"><h3>Took something else?</h3><div class="card"><div class="small">Tap it if you took it today. That's fine: it just means we know.</div><div class="chips" style="margin-top:8px">${av.map(([n]) => `<button class="chipb" data-extra="${esc(n)}">${esc(n)}</button>`).join("")}</div>
     <div style="display:flex;gap:8px;margin-top:10px"><input class="exin" id="exIn" placeholder="Something else? Name it"><button class="ghostbtn" data-extratxt="1">Add</button></div>
     ${ex.length ? `<div class="k" style="margin-top:12px;color:var(--warn)">Taken today</div>${ex.map((e,i) => { const w = (av.find(a => a[0] === e.n)||[])[1]; return `<div class="exr"><b>${esc(e.n)}</b> <span class="small">${new Date(e.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><button class="lnk" data-extrarm="${i}">remove</button>${w ? `<div class="small" style="margin-top:3px">${esc(w)}</div>` : ""}</div>`; }).join("")}` : ""}</div></div>`;
   const walks = [10,15,20,30];
   h += `<div class="sec"><h3>Move</h3><div class="card"><div class="k" style="color:var(--acc)">Walk today · 10–15 minutes</div><div class="chips" style="margin-top:8px">${walks.map(m => `<button class="chipb" aria-pressed="${L.walk===m}" data-walk="${m}" id="walk_${m}">${m} min</button>`).join("")}</div><div class="small" style="margin-top:6px">${L.walk ? "Logged. Lovely." : "Any pace counts. Tap again to clear."}</div></div>
-    <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div></div>`;
-  const lateS = P[p].slots.find(x => x.latest && tooLate(p, x, TODAY)), lateRit = !!lateS;
-  h += `<div class="sec"><h3>Wake-up time</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="small">${L.wake?`Up at ${L.wake} today. Forgot to tap? Fix the time here.`:`Not up yet today (usually ${usualWake(p,TODAY)}). Your usual times are on the Plan tab.`}</div><input type="time" id="wakeIn" data-wake="1" aria-label="Woke up at" value="${L.wake||""}"></div>${lateRit?`<div class="card small" style="border-color:var(--warn)">A late start today would put your second dose after ${lateS ? lateS.latest : "17:00"}, so it's left out today. Nothing after 5.</div>`:""}</div>`;
+    <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div>${p === "jenny" ? `<div class="card"><div class="k" style="color:var(--acc)">💪 Arms &amp; body · a few minutes</div><div class="chips" style="margin-top:8px">${[["arms","Arms · 4 kg, 10 of each"],["squats","10 squats"],["push","10 push-ups"]].map(([k,t]) => `<button class="chipb" aria-pressed="${!!(L.ex||{})[k]}" data-ex="${k}">${(L.ex||{})[k] ? "✓ " : ""}${t}</button>`).join("")}</div><div class="small" style="margin-top:6px">Curls, shoulder press, side raises, tricep extensions: 10 each. Tick what you did.</div></div>` : ""}</div>`;
+  const lateS = P[p].slots.find(x => latestOf(p, x) && tooLate(p, x, TODAY)), lateRit = !!lateS;
+  h += `<div class="sec"><h3>Wake-up time</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="small">${L.wake?`Up at ${L.wake} today. Forgot to tap? Fix the time here.`:`Not up yet today (usually ${usualWake(p,TODAY)}). Your usual times are on the Plan tab.`}</div><input type="time" id="wakeIn" data-wake="1" aria-label="Woke up at" value="${L.wake||""}"></div>${lateRit?`<div class="card small" style="border-color:var(--warn)">A late start today would put your second dose after ${lateS ? latestOf(p, lateS) : "17:00"}, so it's left out today. Nothing after 5.</div>`:""}</div>`;
   if(p === "michaela"){
     const on = rifaxOn(TODAY), f = S.meta.settings.rifaxFrom;
     h += `<div class="sec"><h3>Gut plan</h3><div class="card"><div class="k" style="color:var(--acc)">Antibiotic course</div><div style="margin-top:6px;font:600 13.5px var(--sans)">${on ? `Day ${dayDiff(TODAY,f)+1} of 5 (started ${fmt(f)}). Two from the bottle at breakfast, 15:00 and in bed.` : "Starting this weekend. Tap below on the day you take the first one."}</div><button class="ghostbtn" style="margin-top:10px" data-rifax="1" id="rifax">${on?"Stop the course":"Start a 5-day course today"}</button></div>
@@ -572,7 +578,7 @@ function pWeek(){
   let full = 0, walksN = 0;
   const cols = days.map(d => { const sl = slotsFor(p,d).filter(s => s.day===undefined && !s.rifaxOnly), L = logOf(p,d); if(d<=TODAY && sl.length && sl.every(s=>L.done[s.id])) full++; if(L.walk) walksN++; return {d, L}; });
   const grid = rows.map(s => cols.map(({d,L}) => { const done = L.done[s.id], fut = d > TODAY; return `<div class="c" style="${d===TODAY&&!done?"outline:2px solid var(--acc);outline-offset:1px":""}">${fut?"":`<i class="${done?"":"grey"}" style="background-image:url(${photo(p,phIdx(slotTime(p,s,d)))})"></i>`}</div>`; }).join("")).join("");
-  const alcRow = `<div class="card"><div class="k" style="color:var(--acc)">🍷 Alcohol days</div><div class="small" style="margin-top:4px">Tap a day to say how much: none, 1–2, 3–4, 5+.</div><div class="symg" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${cols.map(({d,L}) => `<button class="${L.alc ? "on" : ""}" data-alcday="${d}" ${d > TODAY ? "disabled" : ""} style="padding:7px 0;border-radius:12px;display:grid;gap:2px;justify-items:center"><span style="font-size:11px">${fmt(d,{weekday:"short"})}</span><span>${L.alc ? ["","1–2","3–4","5+"][L.alc] : "·"}</span></button>`).join("")}</div></div>`;
+  const alcRow = `<div class="card"><div class="k" style="color:var(--acc)">🍷 Alcohol days</div><div class="small" style="margin-top:4px">${p === "jenny" ? "Tap a day: none, moderate, balls to the walls." : "Tap a day to say how much: none, 1–2, 3–4, 5+."}</div><div class="symg" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${cols.map(({d,L}) => `<button class="${L.alc ? "on" : ""}" data-alcday="${d}" ${d > TODAY ? "disabled" : ""} style="padding:7px 0;border-radius:12px;display:grid;gap:2px;justify-items:center"><span style="font-size:11px">${fmt(d,{weekday:"short"})}</span><span>${L.alc ? (p === "jenny" ? (L.alc >= 3 ? "🍾" : "🍷") : ["","1–2","3–4","5+"][L.alc]) : "·"}</span></button>`).join("")}</div></div>`;
   return head(p, 3, "The last 7 days", "This week") + `<div class="pad"><div class="sec">${alcRow}
     <div class="card"><div class="mos">${cols.map(({d}) => `<div class="d">${fmt(d,{weekday:"short"})}</div>`).join("")}${grid}${cols.map(({L}) => `<div class="d" style="color:var(--acc)">${L.walk?L.walk+"′":"·"}</div>`).join("")}</div><div class="small" style="margin-top:10px;text-align:center">Dawn at the top, night at the bottom · colour = taken · ′ = walk minutes</div></div>
     <div class="card" style="display:grid;grid-template-columns:1fr 1fr;text-align:center"><div><div class="serif" style="font-size:40px;font-weight:600;line-height:1;color:var(--acc)">${full}<span style="font-size:22px;color:var(--dim)">/7</span></div><div class="small">days in full colour</div></div><div style="border-left:1px solid var(--edge)"><div class="serif" style="font-size:40px;font-weight:600;line-height:1;color:var(--acc)">${walksN}<span style="font-size:22px;color:var(--dim)">/7</span></div><div class="small">days with a walk</div></div></div>
@@ -733,11 +739,11 @@ function weekText(){
       const sy = (L.sym||[]).map(y => symLab(y.s)+(y.lvl ? " ("+LVL[y.lvl]+")" : "")+(y.note ? ": "+y.note : "")+" "+new Date(y.at).toTimeString().slice(0,5)), fd = (L.food||[]).map(f => f.t+" "+new Date(f.at).toTimeString().slice(0,5));
       out.push(`${ds}${L.wake ? " up "+L.wake : ""}${L.kg ? " | "+L.kg+" kg" : ""}${L.hr ? " | pulse "+L.hr : ""}${sy.length ? " | felt: "+sy.join(", ") : ""}${fd.length ? " | ate/drank: "+fd.join(", ") : ""}`);
       const ck = L.chk || {}, rr = x => rateOf(p).filter(q => (x.rate||{})[q[0]] !== undefined).map(q => q[1].replace(/^\S+ /,"")+" "+RLAB[q[2]][x.rate[q[0]]]).join(", ")+(x.why && x.why.length ? " (why: "+x.why.join(", ")+")" : "");
-      if(L.alc) out.push(`   alcohol: ${ALC[L.alc]}`);
+      if(L.alc) out.push(`   alcohol: ${alcLab(p, L.alc)}`);
       if(ck.am) out.push(`   night: ${(ck.am.sleep||[]).join(", ")}${ck.am.hrs ? " ("+ck.am.hrs+" h)" : ""}${ck.am.lat ? ", asleep after "+ck.am.lat+" min" : ""} | morning: ${rr(ck.am)}`);
       if(ck.pm) out.push(`   afternoon: ${rr(ck.pm)}`);
       if(ck.ev) out.push(`   evening: ${rr(ck.ev)}`);
-      out.push(`   ${bits.join("; ")}${(L.extra||[]).length ? " | also took: "+L.extra.map(e => e.n+" "+new Date(e.at).toTimeString().slice(0,5)).join(", ") : ""}${L.walk ? " | walk "+L.walk+" min" : ""}`); }
+      out.push(`   ${bits.join("; ")}${(L.extra||[]).length ? " | also took: "+L.extra.map(e => e.n+" "+new Date(e.at).toTimeString().slice(0,5)).join(", ") : ""}${L.walk ? " | walk "+L.walk+" min" : ""}${L.ex && Object.keys(L.ex).length ? " | exercise: "+Object.keys(L.ex).join(", ") : ""}`); }
     const st = setupOf(p);
     out.push(`Let's get going: ${st.done ? "done "+st.done.slice(0,10) : "not finished"}`);
     for(const [k, a] of Object.entries(st.items||{})) if(a.v && a.v !== "yes") out.push(`- ${k.replace("|", ": ")} -> ${a.v === "no" ? "not any more" : "different"}${a.note ? " ("+a.note+")" : ""}`);
@@ -826,7 +832,10 @@ document.addEventListener("click", e => {
     a.out = {sum:v("ao_sum"), meds:v("ao_meds"), tests:v("ao_tests"), next:v("ao_next"), at:new Date().toISOString(), by:window.ME||""};
     S.meta.appts = Object.assign({}, S.meta.appts, {[d.apptoutsave]: a}); S.apptOut = ""; saveMeta("appts"); toast("Saved ✓ It's in the record"); }
   else if(d.apptdel){ const A = Object.assign({}, S.meta.appts); A[d.apptdel] = Object.assign({}, A[d.apptdel], {st:"cancelled"}); S.meta.appts = A; saveMeta("appts"); }
-  else if(d.alcday){ const ds = d.alcday; saveLog(S.who, ds, L => { L.alc = ((L.alc||0) + 1) % 4; if(!L.alc) delete L.alc; }); }
+  else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
+  else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
+  else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(v) L.alc = v; else delete L.alc; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "Noted"); }
+  else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
   else if(d.sym){ S.symPick = S.symPick && S.symPick.s === d.sym ? null : {p:S.who, s:d.sym, food:[]}; render(true); }
   else if(d.symfood){ const f = d.symfood, k = S.symPick; if(k){ k.food = k.food.includes(f) ? k.food.filter(x => x !== f) : k.food.concat(f); render(true); } }
   else if(d.symcancel){ S.symPick = null; render(true); }
