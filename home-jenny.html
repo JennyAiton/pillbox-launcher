@@ -372,6 +372,13 @@ function chkSheet(){
 }
 /* doctor appointments: book, take a report, write down what was said */
 const appts = () => Object.entries(S.meta.appts||{}).map(([id, a]) => Object.assign({id}, a)).sort((a,b) => (a.date+(a.time||"")).localeCompare(b.date+(b.time||"")));
+function roughNight(p, date){ const a = (logOf(p, date).chk || {}).am; if(!a) return false;
+  return (a.hrs && a.hrs < 6) || (a.sleep || []).some(q => /long|woke|4 hours|restless|overheat|dreams|pain|tired/i.test(q)); }
+function meCard(p){
+  if(p !== "michaela" || !roughNight(p, TODAY)) return "";
+  const L = logOf(p, TODAY); if(L.me === "no") return "";
+  return `<div class="card" style="margin-top:14px;border-left:4px solid #ff8fbf"><div class="k" style="color:#ff8fbf">💗 Rough night</div><div style="margin-top:6px;font:600 13.5px var(--sans)">${L.me ? "Done. Good for you 😊" : "Take a few minutes for yourself with your little friend. It eases tension and lifts the mood after a bad night. Doctor Jenny's orders 😉"}</div>${L.me ? "" : `<div class="chips" style="margin-top:8px"><button class="chipb" data-me="yes">Done 😊</button><button class="chipb" data-me="no">Not today</button></div>`}</div>`;
+}
 function todoCard(p){
   const due = [];
   for(const a of appts()){ if(a.p !== p || a.st === "cancelled") continue; const k = dayDiff(a.date, TODAY);
@@ -533,7 +540,7 @@ function pTodayMore(p){
   let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${sl.map(s => { const tm = slotTime(p,s,TODAY), st = slotState(p,s,TODAY), its = itemsFor(p,s,TODAY);
     const lab = {done:"Taken",late:"Overdue",now:"Now",later:"Later"}[st];
     return `<button class="rowi" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${st}">${lab}</span></button>`; }).join("")}</div>`;
-  h = todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
+  h = meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
   if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${x.lat ? " · asleep after "+x.lat+" min" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+rateOf(p).filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+(x.why && x.why.length ? " · why: "+esc(x.why.join(", ")) : "")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
     h += `<div class="sec"><h3>Check-ins</h3><div class="card">${line(c.am, "Morning") || `<div class="small">Morning check-in not done yet.</div>`}${line(c.pm, "Afternoon") || `<div class="small" style="margin-top:6px">Afternoon check-in from 14:00.</div>`}${line(c.ev, "Evening") || `<div class="small" style="margin-top:6px">Evening check-in from 20:30, before bed.</div>`}<div class="chips" style="margin-top:8px">${!c.am ? `<button class="chkbtn" data-chkopen="am">📝 Morning check-in</button>` : ""}${!c.pm ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="pm">📝 Afternoon</button>` : ""}${!c.ev ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="ev">📝 Evening</button>` : ""}</div></div></div>`; }
   const oL = logOf(other(p), TODAY);
@@ -635,7 +642,7 @@ function pPlan(){
 }
 function pShop(){
   const p = S.who;
-  return head(p, 2, "One-off buy · Clicks or Dis-Chem", "Shopping") + `<div class="pad"><div class="sec"><div class="list">${SHOP.map(([w,n,where,pr]) => `<div class="it" style="grid-template-columns:1fr auto"><div><div class="t">${esc(n)}</div><div class="x">${w} · ${where}</div></div><div class="serif" style="font-size:20px;font-weight:600;color:var(--acc)">${pr}</div></div>`).join("")}</div><div class="card small">Prices checked 6 Nov 2026. Michaela needs nothing new.</div></div></div>`;
+  return head(p, 2, "One-off buy · Clicks or Dis-Chem", "Shopping") + `<div class="pad"><div class="sec"><div class="list">${SHOP.map(([w,n,where,pr]) => `<div class="it" style="grid-template-columns:1fr auto"><div><div class="t">${esc(n)}</div><div class="x">${w} · ${where}</div></div><div class="serif" style="font-size:20px;font-weight:600;color:var(--acc)">${pr}</div></div>`).join("")}</div><div class="card small">Prices checked 7 Nov 2026. Michaela needs nothing new. Once you have something, tap "I have it now" on the Stock tab.</div></div></div>`;
 }
 /* ---------------- let's get going ---------------- */
 function setupSteps(p){ return ["hi","wake", ...P[p].slots.map(s => "slot:"+s.id), "flags", "done"]; }
@@ -860,6 +867,7 @@ document.addEventListener("click", e => {
   else if(d.apptdel){ const A = Object.assign({}, S.meta.appts); A[d.apptdel] = Object.assign({}, A[d.apptdel], {st:"cancelled"}); S.meta.appts = A; saveMeta("appts"); }
   else if(d.exhow){ S.exHow = S.exHow === d.exhow ? "" : d.exhow; render(true); }
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
+  else if(d.me){ const v = d.me; saveLog(S.who, TODAY, L => { L.me = v === "yes" ? new Date().toISOString() : "no"; }); toast(v === "yes" ? "💗" : "OK"); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
   else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(v) L.alc = v; else delete L.alc; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "Noted"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
