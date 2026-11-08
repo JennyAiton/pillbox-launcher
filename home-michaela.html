@@ -57,6 +57,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .skinsw.sm button{padding:8px;font-size:13px}
 .skinbar{display:flex;gap:5px}.skinbar i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.14)}
 .skinbar i.on{background:var(--acc)}.skinbar i.sk{background:rgba(255,255,255,.35)}.skinbar i.now{box-shadow:0 0 0 2px var(--acc) inset;background:rgba(255,255,255,.08)}
+.symlv{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font:700 13.5px var(--sans)}.symlv .lvl{margin:0;flex:0 0 auto}.symlv .lvl button.on{background:var(--acc);color:var(--ink)}
+.rxd{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin-top:10px}
+.rxd .dy{font:800 12px var(--sans);color:var(--dim);white-space:nowrap}
+.rxd .ds{display:flex;flex-wrap:wrap;gap:6px}
+.rxd button{border:1px solid var(--edge);border-radius:12px;padding:7px 10px;background:rgba(255,255,255,.05);color:var(--text);font:700 12.5px var(--sans)}
+.rxd button.on{background:var(--acc);color:var(--ink);border-color:transparent}.rxd button.fut{opacity:.45}
+.rxbar{height:10px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:8px}.rxbar i{display:block;height:100%;background:var(--acc)}
 .skincur{border:2px solid var(--acc);scroll-margin-top:10px}
 .head.short{height:150px}.head.short h2{font-size:36px}
 .skincur.pop{animation:skpop .45s ease}
@@ -306,7 +313,14 @@ let db = null;
 const other = p => p === "jenny" ? "michaela" : "jenny";
 const themeOf = p => THEMES[(S.meta.settings.theme||{})[p] || P[p].theme] ? ((S.meta.settings.theme||{})[p] || P[p].theme) : P[p].theme;
 const photo = (p, i) => `t/${themeOf(p)}/${i}.jpg`;
-function rifaxOn(date){ const f = S.meta.settings.rifaxFrom; if(!f) return false; const k = dayDiff(date, f); return k >= 0 && k < 5; }
+const RX_SLOTS = [["bfast","Breakfast"],["aft","15:00"],["bed","In bed"]], RX_DOSES = 15, RX_TABS = 2;
+function rxCourse(){ const st = S.meta.settings || {}; if(st.rifax && st.rifax.from) return st.rifax; return st.rifaxFrom ? {from: st.rifaxFrom, dose: "bfast"} : null; }
+function rxDoses(){ const c = rxCourse(); if(!c) return []; const out = []; let i = Math.max(0, RX_SLOTS.findIndex(x => x[0] === c.dose)), d = c.from;
+  while(out.length < RX_DOSES){ out.push({d, slot: RX_SLOTS[i][0], lab: RX_SLOTS[i][1]}); i++; if(i === RX_SLOTS.length){ i = 0; const x = parse(d); x.setDate(x.getDate()+1); d = ymd(x); } }
+  return out; }
+const rxHas = (date, slot) => rxDoses().some(x => x.d === date && x.slot === slot);
+function rxTaken(x){ const L = logOf("michaela", x.d), k = x.slot + "|Rifaximin"; return !!((L.items||{})[k] || ((L.done||{})[x.slot] && !(L.skip||{})[k])); }
+function rifaxOn(date){ return rxDoses().some(x => x.d === date); }
 function logOf(p, date){ return S.log[p+"~"+date] || {person:p, date, done:{}, walk:0, physio:""}; }
 /* usual wake-up time: per person, weekdays and weekends (Plan tab), else the defaults */
 const isWeekend = date => { const d = parse(date).getDay(); return d === 0 || d === 6; };
@@ -471,7 +485,7 @@ function itemsFor(p, s, date){
     if(ansOf(p, s, it[0]).v === "no") return false;
     if(missing(p, it[0])) return false;
     if(o.blood && bloodTest(p, date)) return false;
-    if(o.rifax && !rifaxOn(date)) return false;
+    if(o.rifax && !rxHas(date, s.id)) return false;
     if(o.alt !== undefined){ if(k < 0) return false; if(((k % 2)+2)%2 !== o.alt) return false; }
     return true; });
 }
@@ -596,11 +610,12 @@ function pTodayMore(p){
   { const sy = L.sym || [], fd = L.food || [], pick = S.symPick && S.symPick.p === p ? S.symPick : null;
     const rows = [...sy.map(x => ({at:x.at, h:`<b>${esc(symLab(x.s))}</b>${x.lvl ? ` · ${LVL[x.lvl]}` : ""}${x.note ? ` · <span class="small">${esc(x.note)}</span>` : ""}`, k:"sym", i:sy.indexOf(x)})),
                   ...fd.map(x => ({at:x.at, h:`🍽 ${esc(x.t)}${x.kcal ? ` · <b>${x.kcal} kcal</b>` : ""}`, k:"food", i:fd.indexOf(x)}))].sort((a,b) => a.at < b.at ? 1 : -1);
-    h += `<div class="sec"><h3>How are you feeling?</h3><div class="card"><div class="small">Tap anything you feel, as it happens. It builds a record to show the doctors.</div>
-      <div class="symg">${symsOf(p).map(([id,lab,ic]) => `<button class="${pick && pick.s === id ? "on" : ""}" data-sym="${id}">${ic} ${lab}</button>`).join("")}</div>
-      ${pick ? `<div style="margin-top:10px;font:700 13px var(--sans)">${esc(symLab(pick.s))}: how bad?</div><div class="lvl">${[1,2,3].map(n => `<button data-symlvl="${n}">${LVL[n]}</button>`).join("")}</div>
-        ${pick.s === "bloated" ? `<div style="margin-top:10px;font:700 13px var(--sans)">What did you eat or drink in the last few hours?</div><div class="symg">${FOODQ.map(f => `<button data-symfood="${esc(f)}" class="${(pick.food||[]).includes(f) ? "on" : ""}">${esc(f)}</button>`).join("")}</div>` : ""}
-        <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="symNote" placeholder="${pick.s === "bloated" ? "e.g. espresso, fat-free milk, vanilla + caramel syrup, ice" : "Anything to add? (optional)"}"><button class="ghostbtn" data-symcancel="1">Cancel</button></div>` : ""}
+    h += `<div class="sec"><h3>How are you feeling?</h3><div class="card"><div class="small">Tap everything you feel right now, as many as you like. It builds a record to show the doctors.</div>
+      <div class="symg">${symsOf(p).map(([id,lab,ic]) => `<button class="${pick && pick.list.includes(id) ? "on" : ""}" aria-pressed="${!!(pick && pick.list.includes(id))}" data-sym="${id}">${pick && pick.list.includes(id) ? "✓ " : ic+" "}${lab}</button>`).join("")}</div>
+      ${pick ? `<div style="margin-top:10px;font:700 13px var(--sans)">How bad is each one?</div>${pick.list.map(id => `<div class="symlv"><span>${esc(symLab(id))}</span><div class="lvl">${[1,2,3].map(n => `<button class="${pick.lv[id] === n ? "on" : ""}" data-symlv="${id}|${n}">${LVL[n]}</button>`).join("")}</div></div>`).join("")}
+        ${pick.list.includes("bloated") ? `<div style="margin-top:10px;font:700 13px var(--sans)">What did you eat or drink in the last few hours?</div><div class="symg">${FOODQ.map(f => `<button data-symfood="${esc(f)}" class="${(pick.food||[]).includes(f) ? "on" : ""}">${esc(f)}</button>`).join("")}</div>` : ""}
+        <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="symNote" value="${esc(pick.note || "")}" placeholder="${pick.list.includes("bloated") ? "e.g. espresso, fat-free milk, vanilla + caramel syrup, ice" : "Anything to add? (optional)"}"></div>
+        <div class="skbtns"><button class="skbtn" data-symsave="1">Save ${pick.list.length > 1 ? "all " + pick.list.length : ""}</button><button class="skbtn alt" data-symcancel="1">Cancel</button></div>` : ""}
       ${p === "michaela" ? `<div class="nums"><label>Weight today (kg)<input type="number" step="0.1" inputmode="decimal" data-num="kg" value="${L.kg || ""}" placeholder="kg"></label><label>Heart rate (beats/min)<input type="number" inputmode="numeric" data-num="hr" value="${L.hr || ""}" placeholder="optional"></label></div>` : ""}</div>
       ${p === "michaela" ? `<div class="card"><div class="k" style="color:var(--acc)">🍽 What I ate or drank</div><div class="small" style="margin-top:4px">Also a coffee, a drink or skipping a meal. Write it the way you'd tell a friend.</div>
       <div class="symg">${FOODQ.slice(0,7).map(f => `<button data-foodq="${esc(f)}">${esc(f)}</button>`).join("")}</div>
@@ -617,8 +632,23 @@ function pTodayMore(p){
   const lateS = P[p].slots.find(x => latestOf(p, x) && tooLate(p, x, TODAY)), lateRit = !!lateS;
   h += `<div class="sec"><h3>Wake-up time</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="small">${L.wake?`Up at ${L.wake} today. Forgot to tap? Fix the time here.`:`Not up yet today (usually ${usualWake(p,TODAY)}). Your usual times are on the Plan tab.`}</div><input type="time" id="wakeIn" data-wake="1" aria-label="Woke up at" value="${L.wake||""}"></div>${lateRit?`<div class="card small" style="border-color:var(--warn)">A late start today would put your second dose after ${lateS ? latestOf(p, lateS) : "17:00"}, so it's left out today. Nothing after 5.</div>`:""}</div>`;
   if(p === "michaela"){
-    const on = rifaxOn(TODAY), f = S.meta.settings.rifaxFrom;
-    h += `<div class="sec"><h3>Gut plan</h3><div class="card"><div class="k" style="color:var(--acc)">Antibiotic course</div><div style="margin-top:6px;font:600 13.5px var(--sans)">${on ? `Day ${dayDiff(TODAY,f)+1} of 5 (started ${fmt(f)}). Two from the bottle at breakfast, 15:00 and in bed.` : "Starting this weekend. Tap below on the day you take the first one."}</div><button class="ghostbtn" style="margin-top:10px" data-rifax="1" id="rifax">${on?"Stop the course":"Start a 5-day course today"}</button></div>
+    const C = rxCourse(), D = rxDoses(), got = D.filter(rxTaken).length, last = D[D.length-1], left = D.filter(x => !rxTaken(x)), over = C && last && last.d < TODAY;
+    let rx;
+    if(!C || over){ const f = S.rxForm || {d: TODAY, dose: "bfast"};
+      rx = `<div style="margin-top:6px;font:600 13.5px var(--sans)">${over ? `Last course finished ${fmt(last.d)} · ${got} of ${RX_DOSES} doses ticked.` : "Not on a course right now."} Two tablets, three times a day (breakfast, 15:00, in bed), ${RX_DOSES} doses.</div>
+        <div class="small" style="margin-top:10px">When did she take the first one?</div><div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap"><input class="exin" type="date" id="rxFrom" value="${f.d}" max="${TODAY}" style="flex:0 0 auto"></div>
+        <div class="chips" style="margin-top:8px">${RX_SLOTS.map(([id, l]) => `<button class="chipb" aria-pressed="${f.dose === id}" data-rxdose="${id}">${l}</button>`).join("")}</div>
+        <div class="skbtns"><button class="skbtn" data-rxstart="1">Start the course</button></div>`;
+    } else {
+      const byDay = []; D.forEach(x => { let g = byDay.find(y => y.d === x.d); if(!g){ g = {d: x.d, xs: []}; byDay.push(g); } g.xs.push(x); });
+      const nx = left.find(x => x.d >= TODAY) || left[0];
+      rx = `<div style="margin-top:6px;font:700 15px var(--sans)">${got} of ${RX_DOSES} doses · ${got*RX_TABS} of ${RX_DOSES*RX_TABS} tablets</div><div class="rxbar"><i style="width:${Math.round(got/RX_DOSES*100)}%"></i></div>
+        <div class="small" style="margin-top:6px">Started ${fmt(C.from)} at ${(RX_SLOTS.find(x => x[0] === C.dose)||RX_SLOTS[0])[1].toLowerCase()} · last dose ${fmt(last.d)} ${last.lab.toLowerCase()}.${nx ? ` Next: ${nx.d === TODAY ? "today" : fmt(nx.d)} ${nx.lab.toLowerCase()}.` : " All done ✓"}</div>
+        <div class="rxd">${byDay.map(g => `<span class="dy">${g.d === TODAY ? "Today" : fmt(g.d)}</span><span class="ds">${g.xs.map(x => `<button class="${rxTaken(x) ? "on" : g.d > TODAY ? "fut" : ""}" data-rxtick="${x.d}|${x.slot}">${rxTaken(x) ? "✓ " : ""}${x.lab}</button>`).join("")}</span>`).join("")}</div>
+        <div class="small" style="margin-top:8px">Tap a dose to tick or untick it, also for earlier days. Missed one? Take the next dose on time and don't double up.</div>
+        <div class="skbtns"><button class="skbtn alt" data-rxedit="1">Change the start</button><button class="skbtn alt" data-rifax="1">${S.rxStop ? "Tap again to stop" : "Stop the course"}</button></div>`;
+    }
+    h += `<div class="sec"><h3>Gut plan</h3><div class="card"><div class="k" style="color:var(--acc)">Antibiotic course</div>${rx}</div>
       <div class="card"><div class="small">Some items take turns every second day: today's list already shows the right one.</div><div class="k" style="margin:10px 0 6px;color:var(--dim)">Stopped</div><div class="stopped">${STOPPED.michaela.map(x=>`<span>${x}</span>`).join("")}</div></div></div>`;
   }
   return h + `<div class="status" id="status">Connecting…</div>`;
@@ -1025,8 +1055,13 @@ document.addEventListener("click", e => {
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
   else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
-  else if(d.sym){ S.symPick = S.symPick && S.symPick.s === d.sym ? null : {p:S.who, s:d.sym, food:[]}; render(true); }
-  else if(d.symfood){ const f = d.symfood, k = S.symPick; if(k){ k.food = k.food.includes(f) ? k.food.filter(x => x !== f) : k.food.concat(f); render(true); } }
+  else if(d.sym){ const k = S.symPick && S.symPick.p === S.who ? S.symPick : {p:S.who, list:[], lv:{}, food:[]}; const el = document.getElementById("symNote"); if(el) k.note = el.value;
+    k.list = k.list.includes(d.sym) ? k.list.filter(x => x !== d.sym) : k.list.concat(d.sym); S.symPick = k.list.length ? k : null; render(true); }
+  else if(d.symlv){ const k = S.symPick; if(!k) return; const [id, n] = d.symlv.split("|"); const el = document.getElementById("symNote"); if(el) k.note = el.value; k.lv[id] = k.lv[id] === +n ? 0 : +n; render(true); }
+  else if(d.symsave){ const k = S.symPick; if(!k || !k.list.length) return; const el = document.getElementById("symNote"), at = new Date().toISOString();
+    saveLog(S.who, TODAY, L => { L.sym = (L.sym||[]).concat(k.list.map(id => { const note = [ id === "bloated" ? (k.food||[]).join(", ") : "", (el && el.value || "").trim() ].filter(Boolean).join(" · "); return {s:id, lvl:k.lv[id] || 0, note, at}; })); });
+    S.symPick = null; render(true); toast(k.list.length > 1 ? "Noted all " + k.list.length + " ✓" : "Noted ✓ It's in your record"); }
+  else if(d.symfood){ const f = d.symfood, k = S.symPick; const el0 = document.getElementById("symNote"); if(k && el0) k.note = el0.value; if(k){ k.food = k.food.includes(f) ? k.food.filter(x => x !== f) : k.food.concat(f); render(true); } }
   else if(d.symcancel){ S.symPick = null; render(true); }
   else if(d.symlvl){ const k = S.symPick; if(!k) return; const el = document.getElementById("symNote"), note = [ (k.food||[]).join(", "), (el && el.value || "").trim() ].filter(Boolean).join(" · ");
     saveLog(S.who, TODAY, L => { L.sym = (L.sym||[]).concat({s:k.s, lvl:+d.symlvl, note, at:new Date().toISOString()}); });
@@ -1058,7 +1093,13 @@ document.addEventListener("click", e => {
   else if(d.remind){ const [p, slot] = d.remind.split("|"); remind(p, slot); }
   else if(d.remindnext){ const o = other(S.who), c = current(o) || slotsFor(o,TODAY).slice(-1)[0]; if(c) remind(o, c.id); }
   else if(d.nudgeok){ const [p, slot] = d.nudgeok.split("|"); const sl = P[p].slots.find(x => x.id === slot); S.nudge[p] = Object.assign({}, S.nudge[p], {ok: new Date().toISOString()}); save("nudge/"+p, S.nudge[p]); saveLog(p, TODAY, L => { L.done[slot] = new Date().toISOString(); if(!L.wake && sl && sl.rel !== undefined) L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); }); toast("Taken ✓"); }
-  else if(d.rifax){ S.meta.settings = Object.assign({}, S.meta.settings, {rifaxFrom: rifaxOn(TODAY) ? "" : TODAY}); saveMeta("settings"); }
+  else if(d.rifax){ if(!S.rxStop){ S.rxStop = 1; render(true); setTimeout(() => { S.rxStop = 0; render(true); }, 5000); return; } S.rxStop = 0; S.meta.settings = Object.assign({}, S.meta.settings, {rifax: null, rifaxFrom: ""}); saveMeta("settings"); toast("Course stopped"); }
+  else if(d.rxdose){ const f = S.rxForm || {d: TODAY, dose: "bfast"}; const el = document.getElementById("rxFrom"); if(el && el.value) f.d = el.value; f.dose = d.rxdose; S.rxForm = f; render(true); }
+  else if(d.rxedit){ const c = rxCourse(); S.rxForm = {d: c.from, dose: c.dose}; S.meta.settings = Object.assign({}, S.meta.settings, {rifax: null, rifaxFrom: ""}); render(true); toast("Pick the new start, then Start"); }
+  else if(d.rxstart){ const f = S.rxForm || {d: TODAY, dose: "bfast"}, el = document.getElementById("rxFrom"), from = (el && el.value) || f.d || TODAY;
+    S.rxForm = null; S.meta.settings = Object.assign({}, S.meta.settings, {rifax: {from, dose: f.dose || "bfast", at: new Date().toISOString(), by: window.ME || ""}, rifaxFrom: ""}); saveMeta("settings"); toast("Course started ✓ Tick the doses already taken"); }
+  else if(d.rxtick){ const [ds, sl] = d.rxtick.split("|"), k = sl + "|Rifaximin";
+    saveLog("michaela", ds, L => { L.items = L.items || {}; L.skip = L.skip || {}; const was = L.items[k] || (L.done[sl] && !L.skip[k]); if(was){ delete L.items[k]; if(L.done[sl]) L.skip[k] = new Date().toISOString(); } else { L.items[k] = new Date().toISOString(); delete L.skip[k]; } }); }
   else if(d.theme){ S.meta.settings = Object.assign({}, S.meta.settings, {theme: Object.assign({}, S.meta.settings.theme, {[S.who]: d.theme})}); saveMeta("settings"); }
   else if(d.topup){ S.meta.refill = Object.assign({}, S.meta.refill, {[d.topup]: new Date().toISOString()}); saveMeta("refill"); toast("Topped up for a month ✓"); }
   else if(d.photo){ if(!assets){ toast("Photos can only be added by someone who can edit the app"); return; } snapFor = d.photo; document.getElementById("snap").click(); }
