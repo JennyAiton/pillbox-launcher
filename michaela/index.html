@@ -15,6 +15,18 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch
   <input id="lPass" type="password" autocomplete="current-password" placeholder="Password" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:14px;font:16px system-ui">
   <button style="width:100%;padding:14px;border:0;border-radius:999px;background:#c3f26b;color:#1b3006;font:800 17px system-ui">Sign in</button>
   <div id="loginMsg" style="min-height:20px;margin-top:10px;font-size:14px"></div>
+  <button type="button" id="lForgot" style="background:none;border:0;color:#fff;opacity:.85;text-decoration:underline;font:600 14px system-ui;padding:6px 0">Forgot password?</button>
+ </form>
+</div>
+<div id="pwBox" style="position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:24px;background:rgba(0,0,0,.7)">
+ <form id="pwForm" style="width:100%;max-width:340px;background:#1b1d22;border:2px solid #c3f26b;border-radius:24px;padding:24px;color:#fff;font-family:Manrope,system-ui,sans-serif">
+  <div style="font:600 32px 'Cormorant Garamond',Georgia,serif;line-height:1">New password</div>
+  <p style="opacity:.8;margin:6px 0 16px">At least 8 characters. Save it in your password manager.</p>
+  <input id="pw1" type="password" autocomplete="new-password" placeholder="New password" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:10px;font:16px system-ui;box-sizing:border-box">
+  <input id="pw2" type="password" autocomplete="new-password" placeholder="Type it again" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:14px;font:16px system-ui;box-sizing:border-box">
+  <button style="width:100%;padding:14px;border:0;border-radius:999px;background:#c3f26b;color:#1b3006;font:800 17px system-ui">Save my password</button>
+  <button type="button" id="pwCancel" style="width:100%;margin-top:8px;padding:10px;border:0;background:none;color:#fff;opacity:.8;font:600 14px system-ui">Cancel</button>
+  <div id="pwMsg" style="min-height:20px;margin-top:8px;font-size:14px"></div>
  </form>
 </div>
 <title>Our Pillbox</title>
@@ -715,7 +727,7 @@ function pPlan(){
         return `<div style="border-top:1px solid var(--edge);margin-top:12px;padding-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="wtag" style="background:${T.acc};color:${T.ink}">${P[q].name}</span><button class="chipb" aria-pressed="${au}" data-wakeauto="${q}" id="wa_${q}">${au?"✓ Learning from my mornings":"Learn from my mornings"}</button></div>
           ${au?`<div style="margin-top:8px;font:600 13px var(--sans);display:grid;gap:3px">${learned(lw,"Weekdays")}${learned(le,"Weekends")}</div>`:""}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><label class="small">${au?"Until then, weekdays":"Weekdays"}<br><input type="time" id="wk_${q}" data-usual="${q}|wk" value="${w.wk||WAKE[q]}"></label><label class="small">${au?"Until then, weekends":"Weekends"}<br><input type="time" id="we_${q}" data-usual="${q}|we" value="${w.we||w.wk||WAKE[q]}"></label></div></div>`; }).join("")}</div></div>
-    <div class="sec"><h3>Your theme</h3><div class="card"><div class="small">${P[p].name}'s screens use:</div><div class="chips" style="margin-top:8px">${Object.entries(THEMES).map(([k,T]) => `<button class="chipb" aria-pressed="${themeOf(p)===k}" data-theme="${k}" id="th_${k}">${T.name}</button>`).join("")}</div></div></div></div>`;
+    <div class="sec"><h3>Your theme</h3><div class="card"><div class="small">${P[p].name}'s screens use:</div><div class="chips" style="margin-top:8px">${Object.entries(THEMES).map(([k,T]) => `<button class="chipb" aria-pressed="${themeOf(p)===k}" data-theme="${k}" id="th_${k}">${T.name}</button>`).join("")}</div></div></div>${window.pwChange ? `<div class="sec"><h3>Your password</h3><div class="card"><div class="small">Pick a new password for this phone app. You stay signed in.</div><div class="skbtns"><button class="skbtn" data-pwchange="1">🔒 Change my password</button></div></div></div>` : ""}</div>`;
 }
 /* ---------------- skin routine: one step at a time ---------------- */
 const SK_DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], SK_DOWL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -1052,6 +1064,7 @@ document.addEventListener("click", e => {
   else if(d.foodaix){ S.foodAI = null; render(true); }
   else if(d.foodaisave){ const r = (S.foodAI || {}).r || {}, t = ((document.getElementById("foodAiT") || {}).value || r.title || "Meal").trim(), k = Math.round(+((document.getElementById("foodAiK") || {}).value || r.kcal || 0));
     S.foodAI = null; saveLog(S.who, TODAY, L => { L.food = (L.food || []).concat({t, at: new Date().toISOString(), kcal: k || undefined, prot: r.protein_g, carb: r.carbs_g, fat: r.fat_g, ai: 1}); }); toast("Added ✓"); }
+  else if(d.pwchange){ if(window.pwChange) window.pwChange(); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
   else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
@@ -1218,6 +1231,28 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
   msg.textContent = ""; start(data.session);
 });
 SB.auth.getSession().then(({ data }) => { if(data.session) start(data.session); else document.getElementById("login").style.display = "grid"; });
+/* passwords: forgot (email link) and change (signed in) */
+const pwBox = document.getElementById("pwBox"), pwMsg = document.getElementById("pwMsg");
+window.pwChange = () => { pwMsg.textContent = ""; document.getElementById("pw1").value = ""; document.getElementById("pw2").value = ""; pwBox.style.display = "grid"; };
+document.getElementById("pwCancel").addEventListener("click", () => { pwBox.style.display = "none"; });
+document.getElementById("pwForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const a = document.getElementById("pw1").value, b = document.getElementById("pw2").value;
+  if(a.length < 8){ pwMsg.textContent = "Use at least 8 characters."; return; }
+  if(a !== b){ pwMsg.textContent = "The two passwords don't match."; return; }
+  pwMsg.textContent = "Saving…";
+  const { error } = await SB.auth.updateUser({ password: a });
+  if(error){ pwMsg.textContent = /same|different/i.test(error.message) ? "That's your current password. Pick a new one." : "That didn't work. Try again, or use Forgot password on the sign-in screen."; return; }
+  pwMsg.textContent = ""; pwBox.style.display = "none"; if(window.toast) toast("Password changed ✓"); else alert("Password changed");
+});
+document.getElementById("lForgot").addEventListener("click", async () => {
+  const msg = document.getElementById("loginMsg"), email = document.getElementById("lEmail").value.trim();
+  if(!email){ msg.textContent = "Type your email first."; return; }
+  msg.textContent = "Sending…";
+  const { error } = await SB.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  msg.textContent = error ? "Couldn't send it. Wait a minute and try again." : "Check your email for a reset link. Open it on this phone.";
+});
+SB.auth.onAuthStateChange(ev => { if(ev === "PASSWORD_RECOVERY"){ window.pwChange(); pwMsg.textContent = "Pick your new password."; } });
 
 </script>
 
