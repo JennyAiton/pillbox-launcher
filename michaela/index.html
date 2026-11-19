@@ -107,15 +107,15 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .wineg button{display:grid;justify-items:center;gap:4px;padding:14px 6px;border-radius:16px;border:1px solid var(--edge);background:rgba(255,255,255,.08);font:700 13.5px var(--sans);color:var(--text);line-height:1.2;text-align:center}
 .wineg button span{font-size:30px}
 .wineg button.on{background:var(--acc);color:var(--ink);border-color:transparent}
-.arc{position:absolute;left:0;right:0;top:calc(60px + env(safe-area-inset-top,0px));height:128px;z-index:4}
+.arc{position:absolute;left:12px;right:12px;top:calc(58px + env(safe-area-inset-top,0px));height:136px;z-index:4;border-radius:24px;background:rgba(12,32,30,.42);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.28);box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .arc svg{position:absolute;inset:0;width:100%;height:100%}
 .dotp{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,.75);box-shadow:0 3px 10px rgba(0,0,0,.35);padding:0}
 .dotp.now{width:48px;height:48px;margin:-24px 0 0 -24px;border:3px solid var(--acc);box-shadow:0 0 0 4px rgba(255,255,255,.22),0 0 24px var(--acc)}
 .dotp.late{border-color:var(--bad)}
 .dotp i{position:absolute;inset:0;background:center/cover no-repeat}
 .dotp .ok{position:absolute;inset:0;display:grid;place-items:center;font:800 14px var(--sans);color:#fff;background:rgba(0,0,0,.2)}
-.dl{position:absolute;transform:translateX(-50%);font:700 9px var(--sans);color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,.7);white-space:nowrap;pointer-events:none}
-.banner{position:absolute;left:0;right:0;top:calc(196px + env(safe-area-inset-top,0px));z-index:6}
+.dl{position:absolute;transform:translateX(-50%);font:800 10.5px var(--sans);color:#fff;background:rgba(0,0,0,.35);border-radius:8px;padding:1px 6px;white-space:nowrap;pointer-events:none}
+.banner{position:absolute;left:0;right:0;top:calc(202px + env(safe-area-inset-top,0px));z-index:6}
 .banner .in{background:rgba(0,0,0,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--acc);border-radius:18px;padding:10px 12px;display:flex;gap:10px;align-items:center;font:600 12.5px var(--sans)}
 .banner .in.other{border-color:var(--edge)}
 .banner .in b{color:var(--acc)}
@@ -135,7 +135,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 
 /* 19 Nov 2026 (Jenny): the leaves stay behind; the thing you're on is ONE solid card in your colour */
 .hero.fl{height:auto;min-height:min(100svh,880px);display:flex;flex-direction:column;justify-content:flex-end}
-.focus-wrap{position:relative;z-index:5;margin-top:250px;padding-bottom:104px}
+.focus-wrap{position:relative;z-index:5;margin-top:330px;padding-bottom:104px}
 .focus{background:var(--acc);color:var(--ink);border-radius:26px;padding:16px 16px 14px;box-shadow:0 18px 50px rgba(0,0,0,.5),0 0 0 6px rgba(255,255,255,.14);text-shadow:none}
 .focus .big{font-size:clamp(40px,12vw,54px);margin-top:8px}
 .focus .big.sk{font-size:clamp(30px,9vw,40px);line-height:1.05}
@@ -214,6 +214,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 
 /* the drawn scene and its gentle motion */
 .hero .bg,.head .bg{background:none}
+.hero .bg{background:#0f3a44}.hero .bg .scene{height:880px;bottom:auto}
 .scene{position:absolute;inset:0;width:100%;height:100%;display:block}
 .scene .fr{transform-box:view-box}
 .scene .fl{transform-origin:0 0}.scene .frr{transform-origin:400px 0}
@@ -224,6 +225,24 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
   .scene .rip{animation:ripple 6s ease-out infinite}.scene .r2{animation-delay:-3s}
   .scene .petal{animation:fall 13s linear infinite}
 }
+@media (prefers-reduced-motion:no-preference){
+  .scene .crown{animation:sway 6s ease-in-out infinite alternate}.scene .crown.cr{animation-duration:7.5s;animation-direction:alternate-reverse}
+  .scene .rays{animation:spin 60s linear infinite}
+  .scene .birds{animation:birds 26s linear infinite}
+  .scene .bfly{animation:fly1 18s ease-in-out infinite}.scene .bfly.b2{animation:fly2 22s ease-in-out infinite}
+  .scene .wing{animation:flap .35s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:right center}.scene .wing.r{transform:scaleX(-1);animation-name:flapr;transform-origin:left center}
+  .scene .shim{animation:shim 3.5s ease-in-out infinite alternate}
+  .scene .tw{animation:tw 3s ease-in-out infinite alternate}.scene .ffly{animation:ffly 7s ease-in-out infinite}
+}
+.scene .bfly,.scene .birds,.scene .ffly{transform-box:view-box}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes birds{from{transform:translate(-60px,70px)}to{transform:translate(460px,40px)}}
+@keyframes fly1{0%{transform:translate(40px,250px)}25%{transform:translate(150px,215px)}50%{transform:translate(250px,262px)}75%{transform:translate(140px,290px)}100%{transform:translate(40px,250px)}}
+@keyframes fly2{0%{transform:translate(360px,230px)}30%{transform:translate(260px,200px)}60%{transform:translate(200px,250px)}100%{transform:translate(360px,230px)}}
+@keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.35)}}@keyframes flapr{from{transform:scaleX(-1)}to{transform:scaleX(-.35)}}
+@keyframes shim{from{opacity:.15}to{opacity:.6}}
+@keyframes tw{from{opacity:.25}to{opacity:1}}
+@keyframes ffly{0%,100%{transform:translate(0,0);opacity:.2}50%{transform:translate(14px,-10px);opacity:1}}
 @keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
 @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
 @keyframes ripple{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.7);opacity:0}}
@@ -425,34 +444,55 @@ let db = null;
 const other = p => p === "jenny" ? "michaela" : "jenny";
 const themeOf = p => THEMES[(S.meta.settings.theme||{})[p] || P[p].theme] ? ((S.meta.settings.theme||{})[p] || P[p].theme) : P[p].theme;
 const photo = (p, i) => miniScene(p, i);
-/* drawn scene (19 Nov 2026, Jenny: "lotus and palm leaves, but animated", not photos). i = time of day 1..5 */
-const SKY = {1:["#f6dccb","#eab9ab","#7fa7a0","#3f6f6a"], 2:["#e3f0e9","#c4e0d6","#6fa396","#2f6457"], 3:["#e9f3e4","#d2e8d5","#5d9886","#285a4c"], 4:["#f3d7bb","#dfa58e","#5d8183","#2b4b52"], 5:["#2a3a55","#41557a","#24405a","#13283a"]};
+/* drawn scene, round 2 (19 Nov 2026, Jenny: "combine lotus and palm trees ... lively and inspiring"). i = time of day 1..5.
+   The scene is a fixed-height backdrop at the top; the pond sits in the strip between the day curve and the card. */
+const SKY = {1:["#ffd9b8","#f7b39a","#5fa8a3","#1f6466"], 2:["#bfe6f0","#e6f5e9","#4fb0a5","#16696a"], 3:["#9fd8ef","#dff3f4","#3fa79d","#126361"], 4:["#ffc58f","#f08f74","#3f8f93","#17505d"], 5:["#1c2a48","#33467a","#1d4f63","#0e2a3a"]};
 function frond(x, y, a, len, col){ // one palm frond: a curved rib with leaflets
-  let leaves = ""; const n = 13;
-  for(let k = 1; k <= n; k++){ const t = k/(n+1), px = t*len, py = Math.sin(t*Math.PI)*len*.12, l = len*(.34 - t*.18);
+  let leaves = ""; const n = 12;
+  for(let k = 1; k <= n; k++){ const t = k/(n+1), px = t*len, py = Math.sin(t*Math.PI)*len*.12, l = len*(.36 - t*.2);
     leaves += `<path d="M${px.toFixed(1)} ${py.toFixed(1)} q ${(l*.35).toFixed(1)} ${(l*.25).toFixed(1)} ${(l*.75).toFixed(1)} ${(l*.95).toFixed(1)} q ${(-l*.45).toFixed(1)} ${(-l*.35).toFixed(1)} ${(-l*.75).toFixed(1)} ${(-l*.95).toFixed(1)}z"/><path d="M${px.toFixed(1)} ${py.toFixed(1)} q ${(l*.35).toFixed(1)} ${(-l*.25).toFixed(1)} ${(l*.75).toFixed(1)} ${(-l*.95).toFixed(1)} q ${(-l*.45).toFixed(1)} ${(l*.35).toFixed(1)} ${(-l*.75).toFixed(1)} ${(l*.95).toFixed(1)}z"/>`; }
   return `<g transform="translate(${x} ${y}) rotate(${a})" fill="${col}"><path d="M0 0 Q ${len*.5} ${len*.16} ${len} ${len*.02}" stroke="${col}" stroke-width="3" fill="none"/>${leaves}</g>`;
 }
-function lotusFlower(x, y, sc, c1, c2){
-  const pet = (r, c) => `<path transform="rotate(${r})" d="M0 0 C -9 -14 -7 -34 0 -44 C 7 -34 9 -14 0 0Z" fill="${c}"/>`;
-  return `<g class="bob" transform="translate(${x} ${y}) scale(${sc})"><g>${[-62,62,-40,40].map(r => pet(r, c2)).join("")}${[-18,18,0].map(r => pet(r, c1)).join("")}<ellipse cx="0" cy="-4" rx="7" ry="4" fill="#f4d58d"/></g></g>`;
+function palmTree(bx, by, tx, ty, scale, c1, c2, cls){ // trunk from the shore up to a crown of fronds
+  const mx = (bx + tx) / 2 + (tx > bx ? -30 : 30), my = (by + ty) / 2;
+  let rings = ""; for(let k = 1; k < 9; k++){ const t = k/9, x = (1-t)*(1-t)*bx + 2*(1-t)*t*mx + t*t*tx, y = (1-t)*(1-t)*by + 2*(1-t)*t*my + t*t*ty; rings += `<path d="M${(x-6).toFixed(1)} ${y.toFixed(1)} q 6 4 12 0" stroke="#5b3d28" stroke-width="1.6" fill="none" opacity=".5"/>`; }
+  const fr = [[200,1],[235,.92],[270,1.02],[305,.95],[340,1],[20,.9],[160,.88]].map(([a, k]) => frond(0, 0, a, 120*scale*k, a % 2 ? c1 : c2)).join("");
+  return `<path d="M${bx} ${by} Q ${mx} ${my} ${tx} ${ty}" stroke="#7a5638" stroke-width="${9*scale}" stroke-linecap="round" fill="none"/>${rings}<g class="crown ${cls}" style="transform-origin:${tx}px ${ty}px">${`<g transform="translate(${tx} ${ty})">${fr}<circle r="${6*scale}" fill="#6b4a2f"/><circle cx="${7*scale}" cy="${4*scale}" r="${5*scale}" fill="#7d5a36"/></g>`}</g>`;
 }
-function lilyPad(x, y, rx, col, rot){ return `<path transform="translate(${x} ${y}) rotate(${rot})" d="M0 0 L ${rx} -${rx*.12} A ${rx} ${rx*.42} 0 1 1 ${rx} ${rx*.12} Z" fill="${col}"/>`; }
+function lotusFlower(x, y, sc, p, d){ // layered petals with a soft gradient, golden heart
+  const id = `lp${p[0]}${Math.round(x)}`;
+  const pet = (r, s, f) => `<path transform="rotate(${r}) scale(${s})" d="M0 0 C -11 -16 -9 -40 0 -52 C 9 -40 11 -16 0 0Z" fill="${f}"/>`;
+  return `<g transform="translate(${x} ${y}) scale(${sc})"><g class="bob" style="animation-delay:-${d}s"><defs><linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${p[0]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient></defs>
+    <ellipse cx="0" cy="4" rx="34" ry="8" fill="#000" opacity=".12"/>${[-72,72,-52,52].map(r => pet(r, .9, p[2])).join("")}${[-30,30,-14,14].map(r => pet(r, 1, `url(#${id})`)).join("")}${pet(0, 1.05, `url(#${id})`)}
+    <ellipse cx="0" cy="-8" rx="9" ry="5" fill="#f7cf5a"/><g fill="#e9a93a">${[-6,-2,2,6].map(dx => `<circle cx="${dx}" cy="-10" r="1.2"/>`).join("")}</g></g></g>`;
+}
+function bud(x, y, sc, p){ return `<g transform="translate(${x} ${y}) scale(${sc})"><g class="bob"><path d="M0 0 v 24" stroke="#3f7a52" stroke-width="2.5"/><path d="M0 0 C -9 -12 -6 -26 0 -32 C 6 -26 9 -12 0 0Z" fill="${p[1]}"/><path d="M0 0 C -4 -10 -3 -22 0 -28" stroke="${p[0]}" stroke-width="2" fill="none"/></g></g>`; }
+function lilyPad(x, y, rx, col, rot){ return `<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M0 0 L ${rx} -${rx*.12} A ${rx} ${rx*.36} 0 1 1 ${rx} ${rx*.12} Z" fill="${col}"/><path d="M0 0 L ${-rx*.7} ${-rx*.12} M0 0 L ${-rx*.5} ${rx*.2} M0 0 L ${rx*.3} ${rx*.28}" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.2"/></g>`; }
+function butterfly(cls, c1, c2){ const w = `<path d="M0 0 C -10 -12 -18 -6 -14 2 C -12 8 -4 6 0 0Z" fill="${c1}"/><path d="M0 0 C -8 6 -12 14 -6 14 C -2 13 0 6 0 0Z" fill="${c2}"/>`;
+  return `<g class="bfly ${cls}"><g class="wing">${w}</g><g class="wing r">${w}</g><path d="M0 -4 v 10" stroke="#3b2a2a" stroke-width="1.6"/></g>`; }
 function scene(p, i){
-  const c = SKY[i] || SKY[2], night = i === 5, leaf = night ? "#1d3a36" : "#2f5e4f", leaf2 = night ? "#244640" : "#3f7562";
-  const rose = p === "michaela" ? ["#f6efe1", "#e4d9bf"] : ["#f2cdd3", "#e1a9b5"];
-  const sun = night ? `<circle cx="285" cy="330" r="24" fill="#f1ecd8" opacity=".9"/>` : `<circle cx="290" cy="${i === 4 ? 470 : 330}" r="${i === 4 ? 46 : 34}" fill="#fff6dc" opacity=".75"/>`;
-  return `<svg class="scene" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient><linearGradient id="wat${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[2]}"/><stop offset="1" stop-color="${c[3]}"/></linearGradient></defs>
-    <rect width="400" height="540" fill="url(#sky${i})"/>${sun}
-    <path d="M0 520 Q 60 470 130 505 T 260 495 T 400 500 V 545 H 0Z" fill="${leaf2}" opacity=".35"/>
-    <rect y="535" width="400" height="325" fill="url(#wat${i})"/>
-    <g stroke="#fff" stroke-opacity=".18" stroke-width="1.2" fill="none"><path d="M30 600 h70 M210 585 h90 M80 690 h60 M260 720 h100 M40 800 h80"/></g>
-    <g class="rip"><ellipse cx="120" cy="705" rx="38" ry="9" fill="none" stroke="#fff" stroke-opacity=".35"/></g><g class="rip r2"><ellipse cx="290" cy="640" rx="30" ry="7" fill="none" stroke="#fff" stroke-opacity=".35"/></g>
-    ${lilyPad(70, 650, 46, "#4d8a66", -8)}${lilyPad(250, 700, 58, "#457f5e", 12)}${lilyPad(330, 600, 34, "#5a9670", -20)}${lilyPad(150, 790, 52, "#3f7657", 4)}
-    ${lotusFlower(250, 690, 1.15, rose[0], rose[1])}${lotusFlower(84, 640, .8, rose[0], rose[1])}${lotusFlower(160, 780, .95, rose[0], rose[1])}
-    <g class="fr fl">${frond(-20, -10, 38, 300, leaf)}${frond(-30, 30, 62, 260, leaf2)}${frond(-10, -30, 14, 240, leaf2)}</g>
-    <g class="fr frr">${frond(420, -10, 142, 300, leaf)}${frond(430, 40, 118, 250, leaf2)}${frond(415, -25, 166, 230, leaf2)}</g>
-    ${night ? "" : [[60,0],[200,3],[330,6],[130,9]].map(([x, d]) => `<path class="petal" style="animation-delay:-${d}s" transform="translate(${x} 0)" d="M0 0 c 4 -6 10 -6 12 0 c -4 5 -9 5 -12 0z" fill="${rose[1]}"/>`).join("")}
+  const c = SKY[i] || SKY[2], night = i === 5, dusk = i === 4 || i === 1;
+  const petals = p === "michaela" ? ["#fff7ea", "#fde2c4", "#f3cfa6"] : ["#fff4f2", "#f6b8bf", "#ee9fad"];
+  const leaf = night ? "#1c4a3a" : "#2f7a4f", leaf2 = night ? "#255a45" : "#46955f", pad1 = night ? "#2a5e46" : "#4fa36a", pad2 = night ? "#234f3c" : "#3d8c58";
+  const sun = night ? `<circle cx="300" cy="160" r="20" fill="#fbf4dc"/><circle cx="292" cy="154" r="20" fill="${c[0]}" opacity=".0"/>`
+    : `<g class="rays" style="transform-origin:300px 205px">${[...Array(12)].map((_, k) => `<path transform="rotate(${k*30} 300 205)" d="M300 150 l 5 -26 l 5 26z" fill="#fff4c9" opacity=".55"/>`).join("")}</g><circle cx="300" cy="205" r="${dusk ? 34 : 28}" fill="${dusk ? "#ffd27a" : "#fff1b8"}"/>`;
+  const stars = night ? [...Array(22)].map((_, k) => `<circle class="tw" style="animation-delay:-${(k*.37)%3}s" cx="${(k*73)%400}" cy="${20 + (k*41)%170}" r="${k % 3 ? 1.1 : 1.8}" fill="#fff"/>`).join("") : "";
+  const birds = night ? "" : `<g class="birds" fill="none" stroke="#2c3e46" stroke-width="2" stroke-linecap="round"><path d="M0 0 q 6 -6 12 0 q 6 -6 12 0"/><path d="M30 14 q 5 -5 10 0 q 5 -5 10 0"/><path d="M-22 18 q 4 -4 8 0 q 4 -4 8 0"/></g>`;
+  const flyers = night ? [...Array(6)].map((_, k) => `<circle class="ffly" style="animation-delay:-${k*1.3}s" cx="${50 + k*55}" cy="${250 + (k%3)*22}" r="2.2" fill="#fff3a8"/>`).join("")
+    : butterfly("b1", "#f6a65a", "#f4c26a") + butterfly("b2", "#9fd0f0", "#c7a7e8");
+  return `<svg class="scene" viewBox="0 0 400 860" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><defs><linearGradient id="sky${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient><linearGradient id="wat${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[2]}"/><stop offset=".5" stop-color="${c[3]}"/></linearGradient></defs>
+    <rect width="400" height="235" fill="url(#sky${i})"/>${stars}${sun}${birds}
+    <path d="M0 222 Q 50 196 110 214 T 230 206 T 330 210 T 400 204 V 240 H 0Z" fill="${leaf2}" opacity=".55"/><path d="M0 232 Q 80 214 170 228 T 400 222 V 240 H 0Z" fill="${leaf}" opacity=".6"/>
+    <rect y="234" width="400" height="626" fill="url(#wat${i})"/>
+    <g class="shim" stroke="#fff" stroke-linecap="round" stroke-width="1.6"><path d="M250 246 h40 M262 254 h22 M120 262 h30 M40 250 h26 M200 300 h34 M320 296 h28"/></g>
+    <g class="rip"><ellipse cx="190" cy="285" rx="34" ry="7" fill="none" stroke="#fff" stroke-opacity=".45"/></g><g class="rip r2"><ellipse cx="330" cy="318" rx="26" ry="6" fill="none" stroke="#fff" stroke-opacity=".45"/></g>
+    ${lilyPad(70, 262, 34, pad2, -6)}${lilyPad(165, 318, 46, pad1, 10)}${lilyPad(300, 268, 30, pad1, -14)}${lilyPad(345, 330, 40, pad2, 6)}${lilyPad(240, 345, 34, pad2, -4)}${lilyPad(30, 330, 30, pad1, 14)}
+    ${palmTree(26, 250, 74, 70, 1.05, leaf, leaf2, "cl")}${palmTree(392, 246, 336, 96, .9, leaf2, leaf, "cr")}
+    ${bud(118, 270, .8, petals)}${bud(268, 262, .7, petals)}
+    ${lotusFlower(84, 268, .62, petals, 0)}${lotusFlower(178, 322, .95, petals, 1.2)}${lotusFlower(300, 278, .7, petals, 2.1)}${lotusFlower(352, 336, .85, petals, .6)}
+    <g class="fr fl">${frond(-24, -14, 34, 170, leaf)}${frond(-20, 10, 58, 140, leaf2)}</g><g class="fr frr">${frond(424, -14, 146, 170, leaf)}${frond(420, 12, 122, 140, leaf2)}</g>
+    ${flyers}
+    ${night ? "" : [[60,0],[200,4],[330,8]].map(([x, d]) => `<g transform="translate(${x} 0)"><path class="petal" style="animation-delay:-${d}s" d="M0 0 c 4 -6 10 -6 12 0 c -4 5 -9 5 -12 0z" fill="${petals[2]}"/></g>`).join("")}
   </svg>`;
 }
 /* small round picture per time of day, used wherever a photo used to be */
@@ -727,7 +767,7 @@ function arc(p, cur){
   const pts = sl.map((s,i) => { const t = n === 1 ? .5 : i/(n-1); const x = 12 + t*76; const y = 102 - Math.sin(t*Math.PI)*58; return [x,y]; });
   const doneN = sl.filter(s => logOf(p,TODAY).done[s.id]).length;
   const frac = n ? doneN/n : 0;
-  return `<div class="arc"><svg viewBox="0 0 100 128" preserveAspectRatio="none" aria-hidden="true"><path d="M12 102 Q50 -14 88 102" fill="none" stroke="rgba(255,255,255,.35)" stroke-width=".6" stroke-dasharray="1 2.4" vector-effect="non-scaling-stroke"/><path d="M12 102 Q50 -14 88 102" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linecap="round" pathLength="100" stroke-dasharray="${frac*100} 100" vector-effect="non-scaling-stroke"/></svg>
+  return `<div class="arc"><svg viewBox="0 0 100 128" preserveAspectRatio="none" aria-hidden="true"><path d="M12 102 Q50 -14 88 102" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round" vector-effect="non-scaling-stroke"/><path d="M12 102 Q50 -14 88 102" fill="none" stroke="var(--acc)" stroke-width="4" stroke-linecap="round" pathLength="100" stroke-dasharray="${frac*100} 100" vector-effect="non-scaling-stroke"/></svg>
     ${sl.map((s,i) => { const st = slotState(p,s,TODAY), on = cur && s.id === cur.id, tm = slotTime(p,s,TODAY);
       return `<button class="dotp ${on?"now":""} ${st==="late"&&!on?"late":""}" style="left:${pts[i][0]}%;top:${pts[i][1]}px" data-sel="${s.id}" id="dot_${s.id}" aria-label="${esc(s.lab)} at ${tm}"><i class="${st==="done"||on?"":"grey"}" style="background-image:url(${photo(p,phIdx(tm))})"></i>${st==="done"?`<span class="ok">✓</span>`:""}</button><div class="dl" style="left:${pts[i][0]}%;top:${pts[i][1]+(on?28:22)}px">${tm}</div>`; }).join("")}</div>`;
 }
