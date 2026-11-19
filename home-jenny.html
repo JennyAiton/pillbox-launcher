@@ -342,6 +342,14 @@ html,body{background:#cfe9fa}
 .drinkdone{display:inline-block;margin-top:10px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.75);font:700 12px var(--sans);color:#2c3e57;text-decoration:underline}
 .logfab{position:fixed;right:max(16px,calc(50% - 224px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:21;background:#f19bb5;color:#fff;border-radius:999px;padding:12px 18px;font:800 14px var(--sans);box-shadow:0 8px 20px rgba(217,102,143,.35)}
 .logsheet .in{background:rgba(250,252,255,.98)}.logsheet .card{background:#fff;border:1px solid rgba(44,62,87,.1)}
+/* one button system (20 Nov 2026 clean-up) */
+#app .ghostbtn.on,#app .skbtn:not(.alt),#app .tb1,#app .chkbtn:not(.alt),.mbtns button:first-child,.mbtns a:first-child,.sheet .skbtn:not(.alt){background:#2c3e57!important;color:#fff!important;border:1px solid #2c3e57!important;border-radius:14px}
+#app .ghostbtn:not(.on),#app .skbtn.alt,#app .pill2,#app .tb2,#app .chkbtn.alt,.mbtns button+button,.mbtns a+button,.mbtns button+a{background:#fff!important;color:#2c3e57!important;border:1px solid rgba(44,62,87,.2)!important;border-radius:14px}
+#app .chipb,#app .symg button,#app .lvls button,#app .wineg button,#app .moodg button,#app .skdays button,#app .rxd button{background:#fff;color:#2c3e57;border:1px solid rgba(44,62,87,.18)}
+#app .chipb[aria-pressed="true"],#app .symg button.on,#app .wineg button.on,#app .moodg button.on,#app .skdays button.on,#app .rxd button.on{background:#f19bb5!important;color:#fff!important;border-color:#f19bb5!important}
+.subhead{padding-top:22px}.subhead h3{display:inline-block;font:600 28px var(--serif);margin:0;background:rgba(255,255,255,.8);border-radius:14px;padding:2px 12px}.subhead .small{margin-top:4px;color:#2c3e57}
+.grpall{display:inline-block;margin-top:8px;font:700 12.5px var(--sans);color:#2c3e57;text-decoration:underline}
+.setfold{margin-top:22px;background:rgba(255,255,255,.85);border-radius:18px;padding:10px 14px}.setfold summary{font:800 14px var(--sans);color:#2c3e57;cursor:pointer}
 /* tab bar */
 .tb{color:#2c3e57;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(452px,calc(100% - 28px));display:flex;justify-content:space-around;padding:8px 4px;font:700 9.5px var(--sans);background:rgba(255,255,255,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 6px 20px rgba(0,0,0,.15);border-radius:24px;z-index:20}
 .tb button{display:grid;justify-items:center;gap:2px;opacity:.55;padding:2px 8px}
@@ -848,11 +856,12 @@ const ICON = {
   week:`<rect x="4" y="5" width="16" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 10h16M9 3v4M15 3v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
   plan:`<path d="M7 3h7l4 4v14H7z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 12h5M10 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
   skin:`<path d="M12 3.5c3 4 5.5 6.8 5.5 10.3a5.5 5.5 0 0 1-11 0c0-3.5 2.5-6.3 5.5-10.3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  lists:`<path d="M8 6h11M8 12h11M8 18h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="4.5" cy="6" r="1.2" fill="currentColor"/><circle cx="4.5" cy="12" r="1.2" fill="currentColor"/><circle cx="4.5" cy="18" r="1.2" fill="currentColor"/>`,
   shop:`<path d="M5 8h14l-1.4 11.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="1.5"/>`
 };
 function dueCount(){ let n = 0; for(const s of SCRIPTS){ const m = S.meta.scripts[s.id]||{}, d = m.d||s.d; if(d && d >= FRESH && !m.done && dayDiff(d,TODAY) <= 3) n++; } return n; }
 function paintTabs(){
-  const T = [["today","Today"],["fill","Stock"],["week","Week"],["skin","Skin"],["plan","Health"],["shop","Shop"]];
+  const T = [["today","Today"],["skin","Care"],["plan","Health"],["lists","Lists"]];
   const n = dueCount();
   document.getElementById("tabs").innerHTML = T.map(([id,l]) => `<button role="tab" id="tab_${id}" aria-selected="${S.tab===id}" data-tab="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[id]}</svg>${l}${id==="plan"&&n?` <b style="color:var(--bad)">•${n}</b>`:""}</button>`).join("");
 }
@@ -952,10 +961,10 @@ function pToday(){
       else {
       const J = S.skinJust && Date.now() - S.skinJust.at < 6000 ? S.skinJust : null;
       card = `${J ? `<div class="skjust">✓ ${esc(J.n)} ${J.skip ? "skipped" : "done"} · next up 👇</div>` : ""}<div class="flead"><span class="lchip now">${lab} · ${careGroup(K.cur)} · step ${i+1} of ${K.st.length}${K.cur.opt ? " · only if needed" : ""}</span></div>${bar}<div class="big sk">${esc(K.cur.n)}</div>${K.cur.b ? `<div class="what"><b>${esc(K.cur.b)}</b></div>` : ""}${K.cur.how ? `<div class="skinhow">${esc(K.cur.how)}</div>` : ""}
-        ${drinks}<div class="act"><button class="pill" data-skindo="${sl}|${K.cur.id}" id="skdo">${tick} Done</button><button class="pill2" data-skinskip="${sl}|${K.cur.id}">${K.cur.opt ? "Not needed" : K.cur.teeth ? "Not today" : "Skip today"}</button></div>${i > 0 ? `<button class="skiplink" data-skinview="${sl}|${K.st[i-1].id}">‹ See the step before</button>` : ""}${back}`; } }
+        ${drinks}<div class="act"><button class="pill" data-skindo="${sl}|${K.cur.id}" id="skdo">${tick} Done</button><button class="pill2" data-skinskip="${sl}|${K.cur.id}">${K.cur.opt ? "Not needed" : K.cur.teeth ? "Not today" : "Skip today"}</button></div>${(() => { const g = careGroup(K.cur), left = K.st.filter(x => careGroup(x) === g && !K.mk[x.id]); return left.length > 1 ? `<button class="grpall" data-skingroup="${sl}|${g}">✓ Done all ${left.length} ${g.toLowerCase()} steps</button> · ` : ""; })()}${i > 0 ? `<button class="skiplink" data-skinview="${sl}|${K.st[i-1].id}">‹ See the step before</button>` : ""}${back}`; } }
   } else if(!cur){
     bg = 5;
-    card = `<div class="flead"><span class="lchip">${pr.n} of ${pr.n} · today</span></div><div class="big">All done</div><div class="what">Everything for today is ticked. Well done${p === "michaela" ? ", my love" : ""} 💛</div><div class="act"><button class="pill" data-tab="week" id="seeweek">See this week</button>${bell}</div>`;
+    card = `<div class="flead"><span class="lchip">${pr.n} of ${pr.n} · today</span></div><div class="big">All done</div><div class="what">Everything for today is ticked. Well done${p === "michaela" ? ", my love" : ""} 💛</div><div class="act"><button class="pill" data-tab="plan" id="seeweek">See your garden</button>${bell}</div>`;
   } else {
     curKey = cur.id;
     const tm = slotTime(p, cur, TODAY), st = curSt, its = itemsFor(p, cur, TODAY), doneAt = L.done[cur.id], skAll = allSkipped(p, cur, TODAY);
@@ -1056,7 +1065,7 @@ function pTodayMore(p, curKey){
   }
   return topH + `<button class="logfab" data-logopen="1" aria-label="Log something">＋ Log</button>` + (S.logOpen ? `<div class="sheet logsheet" role="dialog" aria-modal="true"><div class="in"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Log</h3><button class="ghostbtn" data-logclose="1">Close</button></div><div class="small">How you feel, food, check-ins, moving, wake-up time.</div>${h}<div class="mbtns"><button data-logclose="1">Done</button></div></div></div>` : "") + `<div class="status" id="status">Connecting…</div>`;
 }
-function head(p, idx, eyebrow, title){ S.sceneIdx = 0; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div>${postcard(p, title, 6)}<div class="tt pad"><div class="k">${eyebrow}</div></div></div>`; }
+function head(p, idx, eyebrow, title){ S.sceneIdx = 0; if(S.noHead) return `<div class="subhead pad"><h3>${title}</h3><div class="small">${eyebrow}</div></div>`; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div>${postcard(p, title, 6)}<div class="tt pad"><div class="k">${eyebrow}</div></div></div>`; }
 function headOld(p, idx, eyebrow, title){ return `<div class="head"><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
 function orderHtml(){
   const rows = [], uncounted = [];
@@ -1073,7 +1082,7 @@ function stockSec(p){
 }
 function pFill(){
   const p = S.who, jars = P[p].slots.filter(s => s.jar);
-  return head(p, 2, "What we have, and what to order", "Stock") + `<div class="pad">${refillCard(p, false)}${stockSec(p)}<div class="sec"><h3>The containers</h3>
+  return head(p, 2, "Refills, stock and shopping", "Lists") + `<div class="pad">${refillCard(p, false)}${stockSec(p)}<div class="sec"><h3>The containers</h3>
     <div class="card small">Each container holds <b style="color:var(--text)">a month of every tablet for that time</b>, loose together. At that time, fish out one of each (two where it says ×2). Tap a 📷 to photograph one tablet, so you can always see what you're looking for.</div>
     ${jars.map(s => { const its = s.items.filter(i => !(i[2]||{}).out), tot = its.reduce((a,i)=>a+i[2].n,0), left = topLeft(p, s.id);
       const pct = left === null ? 0 : Math.max(0, Math.min(1, left/SUPPLY)), col = left === null ? "var(--dim)" : left <= 5 ? "var(--bad)" : left <= 10 ? "var(--warn)" : "var(--acc)";
@@ -1111,16 +1120,16 @@ function pPlan(){
   const sc = [...SCRIPTS].sort((a,b) => ((S.meta.scripts[a.id]||{}).d||a.d||"9").localeCompare((S.meta.scripts[b.id]||{}).d||b.d||"9"));
   const st = setupOf(p), F = FLAGS[p] || [];
   const open = F.filter(f => ["still","ask"].includes((st.flags||{})[f.id]));
-  const setupCard = `<div class="sec"><h3>Your medicines</h3><div class="card">${st.done ? `<div class="small">Checked ${fmt(st.done.slice(0,10))}.${open.length?" Still to sort out:":" Nothing open."}</div>${open.map(f => `<div style="margin-top:8px;font:600 13px var(--sans)"><span style="color:${f.lv==="red"?"var(--bad)":"var(--warn)"}">●</span> ${esc(f.t)}${f.who?` <span class="small">· ${esc(f.who)}</span>`:""}</div>`).join("")}` : `<div class="small">Not checked yet.</div>`}<button class="ghostbtn on" style="margin-top:12px" data-setgo="${p}" id="setagain">🌱 ${st.done?"Go through it again":"Let's get going"}</button></div></div>`;
-  return head(p, 4, "Appointments, results, medicines", "Our health") + `<div class="pad">${apptSec(p)}${resultsSec(p)}${medsSec(p)}${setupCard}<div class="sec"><h3>Ask Claude</h3><div class="card"><div class="small">Copies both your last 7 days, what was skipped, anything else taken, and the stock, so you can paste it to Claude.</div><button class="ghostbtn on" style="margin-top:10px" data-copyweek="1" id="copyweek">Copy my week for Claude</button></div></div><div class="sec"><h3>Scripts</h3><div class="small">Red = due now, amber = this week. A last repeat always gets a reminder to ask the doctor for a new script.</div><div class="list">${sc.map(s => listItem(s,"scripts")).join("")}</div></div>
+  const setupCard = `<div class="sec"><h3>Medicine check</h3><div class="card">${st.done ? `<div class="small">Checked ${fmt(st.done.slice(0,10))}.${open.length?" Still to sort out:":" Nothing open."}</div>${open.map(f => `<div style="margin-top:8px;font:600 13px var(--sans)"><span style="color:${f.lv==="red"?"var(--bad)":"var(--warn)"}">●</span> ${esc(f.t)}${f.who?` <span class="small">· ${esc(f.who)}</span>`:""}</div>`).join("")}` : `<div class="small">Not checked yet.</div>`}<button class="ghostbtn on" style="margin-top:12px" data-setgo="${p}" id="setagain">🌱 ${st.done?"Go through it again":"Let's get going"}</button></div></div>`;
+  return head(p, 4, "Appointments, results, medicines, progress", "Our health") + `<div class="pad">${apptSec(p)}${resultsSec(p)}${medsSec(p)}${setupCard}<div class="sec"><h3>Ask Claude</h3><div class="card"><div class="small">Copies both your last 7 days, what was skipped, anything else taken, and the stock, so you can paste it to Claude.</div><button class="ghostbtn on" style="margin-top:10px" data-copyweek="1" id="copyweek">Copy my week for Claude</button></div></div><div class="sec"><h3>Scripts</h3><div class="small">Red = due now, amber = this week. A last repeat always gets a reminder to ask the doctor for a new script.</div><div class="list">${sc.map(s => listItem(s,"scripts")).join("")}</div></div>
     <div class="sec"><h3>Check-ups</h3><div class="small">The date is a "book by" date. Change it to the appointment once booked, and tap Went afterwards.</div><div class="list">${CHECKS.map(c => listItem(c,"checks")).join("")}</div></div>
-    <div class="sec"><h3>Usual wake-up times</h3><div class="card"><div class="small">Morning containers always wait for "I'm up". The usual time is only for the Good morning screen and to know when a morning has really been missed (3 hours after it). The app learns it from your "I'm up" taps over the last 3 weeks, once it has 3 mornings of each kind.</div>
+    <details class="setfold"><summary>⚙ Settings · wake-up times, password</summary><div class="sec"><h3>Usual wake-up times</h3><div class="card"><div class="small">Morning containers always wait for "I'm up". The usual time is only for the Good morning screen and to know when a morning has really been missed (3 hours after it). The app learns it from your "I'm up" taps over the last 3 weeks, once it has 3 mornings of each kind.</div>
       ${["michaela","jenny"].map(q => { const w = ((S.meta.settings||{}).wake||{})[q] || {}; const T = THEMES[themeOf(q)], au = autoWake(q), lw = learnedWake(q,false), le = learnedWake(q,true);
         const learned = (L, lab) => L.t ? `<b style="color:var(--text)">${lab} ${L.t}</b> <span class="small">(from ${L.n} mornings)</span>` : `<span class="small">${lab}: learning… ${L.n}/3 mornings</span>`;
         return `<div style="border-top:1px solid var(--edge);margin-top:12px;padding-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="wtag" style="background:${T.acc};color:${T.ink}">${P[q].name}</span><button class="chipb" aria-pressed="${au}" data-wakeauto="${q}" id="wa_${q}">${au?"✓ Learning from my mornings":"Learn from my mornings"}</button></div>
           ${au?`<div style="margin-top:8px;font:600 13px var(--sans);display:grid;gap:3px">${learned(lw,"Weekdays")}${learned(le,"Weekends")}</div>`:""}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><label class="small">${au?"Until then, weekdays":"Weekdays"}<br><input type="time" id="wk_${q}" data-usual="${q}|wk" value="${w.wk||WAKE[q]}"></label><label class="small">${au?"Until then, weekends":"Weekends"}<br><input type="time" id="we_${q}" data-usual="${q}|we" value="${w.we||w.wk||WAKE[q]}"></label></div></div>`; }).join("")}</div></div>
-    <div class="sec"><h3>Your theme</h3><div class="card"><div class="small">${P[p].name}'s screens use:</div><div class="chips" style="margin-top:8px">${Object.entries(THEMES).map(([k,T]) => `<button class="chipb" aria-pressed="${themeOf(p)===k}" data-theme="${k}" id="th_${k}">${T.name}</button>`).join("")}</div></div></div>${window.pwChange ? `<div class="sec"><h3>Your password</h3><div class="card"><div class="small">Pick a new password for this phone app. You stay signed in.</div><div class="skbtns"><button class="skbtn" data-pwchange="1">🔒 Change my password</button></div></div></div>` : ""}</div>`;
+    ${window.pwChange ? `<div class="sec"><h3>Your password</h3><div class="card"><div class="small">Pick a new password for this phone app. You stay signed in.</div><div class="skbtns"><button class="skbtn" data-pwchange="1">🔒 Change my password</button></div></div></div>` : ""}</details></div>`;
 }
 /* ---------------- health records (19 Nov 2026): results from doctors, chronic medicines you can edit ---------------- */
 const docList = p => { const d = (DOCS[p] || []).slice(); for(const x of ["Psychiatrist", "Psychologist", "GP"]) if(!d.some(y => y.toLowerCase().includes(x.toLowerCase()))) d.push(x); return d; };
@@ -1432,7 +1441,7 @@ function skinToday(p){
 function pSkin(){
   const p = S.who, ds = skinDay(), slot = skinSlot(), R = skinR(p), K = skinState(p, slot, ds), lab = slot === "am" ? "Morning" : "Night";
   const none = !(R.am||[]).length && !(R.pm||[]).length;
-  let h = head(p, 1, "One step at a time", P[p].name + "'s skin").replace('class="head"', 'class="head short"') + `<div class="pad"><div class="sec">`;
+  let h = head(p, 1, "Skin, teeth and your shelf", "Care") + `<div class="pad"><div class="sec">`;
   h += `<div class="skinsw">${[["am","☀ Morning"],["pm","🌙 Night"]].map(([k, l]) => { const k2 = skinState(p, k, ds); return `<button class="${slot === k ? "on" : ""}" data-skinslot="${k}">${l}<span>${k2.n ? (k2.done >= k2.n ? "✓ done" : k2.done + " of " + k2.n + " done") : "no steps"}</span></button>`; }).join("")}</div>`;
   if(none){ h += `<div class="card skincur"><div class="skinn">List what you use</div><div class="small">Add your products in the order you put them on, morning and night. After that the app shows them one at a time, so you never wonder what's next.</div></div>`; if(!S.skinEdit) S.skinEdit = slot; }
   else if(!K.st.length) h += `<div class="card small">No ${lab.toLowerCase()} steps ${slot === "pm" ? "for " + SK_DOWL[parse(ds).getDay()] : "yet"}. Add them under "Change my steps".</div>`;
@@ -1500,6 +1509,9 @@ function pShop(){
   const p = S.who;
   return head(p, 2, "One-off buy · Clicks or Dis-Chem", "Shopping") + `<div class="pad"><div class="sec"><div class="list">${SHOP.map(([w,n,where,pr]) => `<div class="it" style="grid-template-columns:1fr auto"><div><div class="t">${esc(n)}</div><div class="x">${w} · ${where}</div></div><div class="serif" style="font-size:20px;font-weight:600;color:var(--acc)">${pr}</div></div>`).join("")}</div><div class="card small">Prices checked 7 Nov 2026. Michaela already has the rest at home. Once you have something, tap "I have it now" on the Stock tab.</div></div></div>`;
 }
+/* Health = appointments, results, medicines + our progress (garden, patterns, the week); Lists = refill radar, stock, shopping */
+function pHealth(){ const a = pPlan(); S.noHead = true; const b = pWeek(); S.noHead = false; return a + b; }
+function pLists(){ const p = S.who; S.noHead = false; const a = pFill().replace('"Stock")', '"Stock")'); S.noHead = true; const b = pShop(); S.noHead = false; return a + b; }
 /* ---------------- let's get going ---------------- */
 function setupSteps(p){ return ["hi","wake", ...P[p].slots.map(s => "slot:"+s.id), "flags", "done"]; }
 function goCard(p){
@@ -1652,7 +1664,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795128397"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795128636"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -1663,7 +1675,7 @@ function render(keepScroll){
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, skin:pSkin, plan:pPlan, shop:pShop}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet() + wakeSheet() + whenSheet() + boatSheet();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, skin:pSkin, plan:pHealth, lists:pLists, fill:pLists, shop:pLists, week:pHealth}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet() + wakeSheet() + whenSheet() + boatSheet();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr); paintScene();
   if(keepScroll) window.scrollTo(0, y);
@@ -1798,6 +1810,9 @@ document.addEventListener("click", e => {
   else if(d.ex){ const k = d.ex; saveLog(S.who, TODAY, L => { L.ex = Object.assign({}, L.ex); if(L.ex[k]) delete L.ex[k]; else L.ex[k] = new Date().toISOString(); }); }
   else if(d.me){ const v = d.me; saveLog(S.who, TODAY, L => { L.me = v === "yes" ? new Date().toISOString() : "no"; }); toast(v === "yes" ? "💗" : "OK"); }
   else if(d.skinslot){ S.skinSlot = d.skinslot; render(true); skinJump(); }
+  else if(d.skingroup){ const [sl, g] = d.skingroup.split("|"), p = S.who, ds = skinDay(), at = new Date().toISOString();
+    saveLog(p, ds, L => { L.skin = Object.assign({am:{}, pm:{}}, L.skin); L.skin[sl] = Object.assign({}, L.skin[sl]); for(const x of skinSteps(p, sl, ds)) if(careGroup(x) === g && !L.skin[sl][x.id] && !x.opt) L.skin[sl][x.id] = at; });
+    toast("✓ " + g + " done"); }
   else if(d.skinview !== undefined){ const v = d.skinview; S.skinView = v ? {sl: v.slice(0, v.indexOf("|")), id: v.slice(v.indexOf("|") + 1)} : null; render(true); }
   else if(d.drinkedit){ S.drinkEdit = true; render(true); }
   else if(d.skindo || d.skinskip || d.skintog){ S.skinView = null; const v = d.skindo || d.skinskip || d.skintog, i = v.indexOf("|"), sl = v.slice(0, i), id = v.slice(i+1), p = S.who, ds = skinDay();
