@@ -191,6 +191,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .tb2{background:#fff;color:var(--ink);border:1px solid rgba(0,0,0,.15);border-radius:12px;padding:7px 9px;font:800 13px var(--sans)}
 .drow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.55);font:700 12.5px var(--sans)}
 .drow div{display:flex;gap:4px}.drow button{border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:6px 8px;background:#fff;color:var(--ink);font:700 11.5px var(--sans)}.drow button.on{background:var(--ink);color:#fff}
+.resimg{display:block;width:100%;height:120px;margin-top:10px;border-radius:12px;border:1px solid var(--edge);background:#111 center/cover no-repeat}.resimg.big{height:auto;aspect-ratio:3/4;background-size:contain}
+.medr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--edge);font:600 14px var(--sans)}.medr.ed{display:grid;gap:6px}
 .cq{font:800 14px var(--sans);margin:16px 0 6px}.cq span{font-weight:600;opacity:.6}
 .symg.two{display:grid;grid-template-columns:1fr 1fr}.symg.three{display:grid;grid-template-columns:repeat(3,1fr)}
 .moodg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -405,7 +407,7 @@ input[type=date],input[type=time]{font:600 12.5px var(--sans);color:var(--text);
 <div class="app" id="app"></div>
 <nav class="tb" id="tabs" role="tablist"></nav>
 <div class="toast" id="toast" role="status"></div>
-<input type="file" id="snap" accept="image/*" capture="environment" hidden><input type="file" id="foodsnap" accept="image/*" capture="environment" hidden>
+<input type="file" id="snap" accept="image/*" capture="environment" hidden><input type="file" id="foodsnap" accept="image/*" capture="environment" hidden><input type="file" id="ressnap" accept="image/*" hidden>
 
 <script>
 /* ---------------- the plan (same as before) ---------------- */
@@ -649,8 +651,8 @@ function apptSec(p){
       ${a.out ? `<div class="small" style="margin-top:8px;color:var(--text)">${a.out.sum ? "<b>What they said:</b> "+esc(a.out.sum)+"<br>" : ""}${a.out.meds ? "<b>Medicine changes:</b> "+esc(a.out.meds)+"<br>" : ""}${a.out.tests ? "<b>Tests:</b> "+esc(a.out.tests)+"<br>" : ""}${a.out.next ? "<b>Next:</b> "+esc(a.out.next) : ""}</div>` : ""}
       <div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-report="${p}|${a.id}">📋 Report for this visit</button><button class="ghostbtn" data-apptout="${a.id}">${a.out ? "Change the notes" : "After the visit: what happened"}</button><button class="lnk" data-apptdel="${a.id}">remove</button></div>
       ${S.apptOut === a.id ? `<div style="margin-top:10px;display:grid;gap:8px"><textarea class="exin" id="ao_sum" rows="2" placeholder="What did the doctor say?">${esc((a.out||{}).sum||"")}</textarea><input class="exin" id="ao_meds" placeholder="Medicine changes (new, stopped, different dose)" value="${esc((a.out||{}).meds||"")}"><input class="exin" id="ao_tests" placeholder="Tests ordered or results" value="${esc((a.out||{}).tests||"")}"><input class="exin" id="ao_next" placeholder="Next step or next appointment" value="${esc((a.out||{}).next||"")}"><button class="ghostbtn on" data-apptoutsave="${a.id}">Save</button></div>` : ""}</div>`; };
-  return `<div class="sec"><h3>Doctor appointments</h3><div class="small">Book it here, take the report along, and write down what was said afterwards.</div>
-    ${f && f.p === p ? `<div class="card" style="display:grid;gap:8px"><select class="exin" id="ap_doc">${DOCS[p].map(d => `<option>${esc(d)}</option>`).join("")}<option value="">Someone else…</option></select><input class="exin" id="ap_other" placeholder="Doctor's name (if someone else)"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input class="exin" type="date" id="ap_date"><input class="exin" type="time" id="ap_time"></div><input class="exin" id="ap_why" placeholder="What it's for (optional)"><div class="chips"><button class="ghostbtn on" data-apptsave="${p}">Save the appointment</button><button class="lnk" data-apptform="">cancel</button></div></div>` : `<button class="ghostbtn on" style="margin-top:8px" data-apptform="${p}">＋ Add an appointment</button>`}
+  return `<div class="sec"><h3>Appointments</h3><div class="small">Doctor, psychiatrist, psychologist, anyone: book it here, take the report along, and write down what was said afterwards.</div>
+    ${f && f.p === p ? `<div class="card" style="display:grid;gap:8px"><select class="exin" id="ap_doc">${docList(p).map(d => `<option>${esc(d)}</option>`).join("")}<option value="">Someone else…</option></select><input class="exin" id="ap_other" placeholder="Doctor's name (if someone else)"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input class="exin" type="date" id="ap_date"><input class="exin" type="time" id="ap_time"></div><input class="exin" id="ap_why" placeholder="What it's for (optional)"><div class="chips"><button class="ghostbtn on" data-apptsave="${p}">Save the appointment</button><button class="lnk" data-apptform="">cancel</button></div></div>` : `<button class="ghostbtn on" style="margin-top:8px" data-apptform="${p}">＋ Add an appointment</button>`}
     ${up.map(row).join("")}${past.slice(0, 4).map(row).join("")}</div>`;
 }
 const EXS = [
@@ -755,7 +757,7 @@ const ICON = {
 };
 function dueCount(){ let n = 0; for(const s of SCRIPTS){ const m = S.meta.scripts[s.id]||{}, d = m.d||s.d; if(d && d >= FRESH && !m.done && dayDiff(d,TODAY) <= 3) n++; } return n; }
 function paintTabs(){
-  const T = [["today","Today"],["fill","Stock"],["week","Week"],["skin","Skin"],["plan","Plan"],["shop","Shop"]];
+  const T = [["today","Today"],["fill","Stock"],["week","Week"],["skin","Skin"],["plan","Health"],["shop","Shop"]];
   const n = dueCount();
   document.getElementById("tabs").innerHTML = T.map(([id,l]) => `<button role="tab" id="tab_${id}" aria-selected="${S.tab===id}" data-tab="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[id]}</svg>${l}${id==="plan"&&n?` <b style="color:var(--bad)">•${n}</b>`:""}</button>`).join("");
 }
@@ -885,7 +887,7 @@ function pTodayMore(p, curKey){
     rows.push([tm, `<button class="rowi ${curKey === "skin:"+k ? "cur" : ""} ${done ? "dn" : ""}" data-selskin="${k}" data-top="1" id="row_skin_${k}"><div class="th skth">🧴</div><div><div class="t">${k === "am" ? "Morning care" : "Evening care"}</div><div class="s">${k === "am" ? "after your morning tablets" : "before bed"} · ${K.done} of ${K.n} steps</div></div><span class="st ${done ? "done" : K.done ? "now" : "later"}">${done ? "Done" : K.done ? "Busy" : "Later"}</span></button>`]); }
   rows.sort((a,b) => a[0].localeCompare(b[0]));
   let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${rows.map(r => r[1]).join("")}</div>`;
-  h = meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
+  h = missedCard(p) + meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
   if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${x.lat ? " · asleep after "+x.lat+" min" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+rateOf(p).filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+(x.why && x.why.length ? " · why: "+esc(x.why.join(", ")) : "")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
     h += `<div class="sec"><h3>Check-ins</h3><div class="card">${line(c.am, "Morning") || `<div class="small">Morning check-in not done yet.</div>`}${line(c.pm, "Afternoon") || (pmChk(p) ? `<div class="small" style="margin-top:6px">Afternoon check-in from 14:00.</div>` : "")}${line(c.ev, "Evening") || `<div class="small" style="margin-top:6px">Evening check-in from 20:30, before bed.</div>`}<div class="chips" style="margin-top:8px">${!c.am ? `<button class="chkbtn" data-chkopen="am">📝 Morning check-in</button>` : ""}${!c.pm && pmChk(p) ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="pm">📝 Afternoon</button>` : ""}${!c.ev ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="ev">📝 Evening</button>` : ""}</div></div></div>`; }
   const oL = logOf(other(p), TODAY);
@@ -992,7 +994,7 @@ function pPlan(){
   const st = setupOf(p), F = FLAGS[p] || [];
   const open = F.filter(f => ["still","ask"].includes((st.flags||{})[f.id]));
   const setupCard = `<div class="sec"><h3>Your medicines</h3><div class="card">${st.done ? `<div class="small">Checked ${fmt(st.done.slice(0,10))}.${open.length?" Still to sort out:":" Nothing open."}</div>${open.map(f => `<div style="margin-top:8px;font:600 13px var(--sans)"><span style="color:${f.lv==="red"?"var(--bad)":"var(--warn)"}">●</span> ${esc(f.t)}${f.who?` <span class="small">· ${esc(f.who)}</span>`:""}</div>`).join("")}` : `<div class="small">Not checked yet.</div>`}<button class="ghostbtn on" style="margin-top:12px" data-setgo="${p}" id="setagain">🌱 ${st.done?"Go through it again":"Let's get going"}</button></div></div>`;
-  return head(p, 4, "Scripts and check-ups", "Coming up") + `<div class="pad">${setupCard}${apptSec(p)}<div class="sec"><h3>Ask Claude</h3><div class="card"><div class="small">Copies both your last 7 days, what was skipped, anything else taken, and the stock, so you can paste it to Claude.</div><button class="ghostbtn on" style="margin-top:10px" data-copyweek="1" id="copyweek">Copy my week for Claude</button></div></div><div class="sec"><h3>Scripts</h3><div class="small">Red = due now, amber = this week. A last repeat always gets a reminder to ask the doctor for a new script.</div><div class="list">${sc.map(s => listItem(s,"scripts")).join("")}</div></div>
+  return head(p, 4, "Appointments, results, medicines", "Our health") + `<div class="pad">${apptSec(p)}${resultsSec(p)}${medsSec(p)}${setupCard}<div class="sec"><h3>Ask Claude</h3><div class="card"><div class="small">Copies both your last 7 days, what was skipped, anything else taken, and the stock, so you can paste it to Claude.</div><button class="ghostbtn on" style="margin-top:10px" data-copyweek="1" id="copyweek">Copy my week for Claude</button></div></div><div class="sec"><h3>Scripts</h3><div class="small">Red = due now, amber = this week. A last repeat always gets a reminder to ask the doctor for a new script.</div><div class="list">${sc.map(s => listItem(s,"scripts")).join("")}</div></div>
     <div class="sec"><h3>Check-ups</h3><div class="small">The date is a "book by" date. Change it to the appointment once booked, and tap Went afterwards.</div><div class="list">${CHECKS.map(c => listItem(c,"checks")).join("")}</div></div>
     <div class="sec"><h3>Usual wake-up times</h3><div class="card"><div class="small">Morning containers always wait for "I'm up". The usual time is only for the Good morning screen and to know when a morning has really been missed (3 hours after it). The app learns it from your "I'm up" taps over the last 3 weeks, once it has 3 mornings of each kind.</div>
       ${["michaela","jenny"].map(q => { const w = ((S.meta.settings||{}).wake||{})[q] || {}; const T = THEMES[themeOf(q)], au = autoWake(q), lw = learnedWake(q,false), le = learnedWake(q,true);
@@ -1001,6 +1003,43 @@ function pPlan(){
           ${au?`<div style="margin-top:8px;font:600 13px var(--sans);display:grid;gap:3px">${learned(lw,"Weekdays")}${learned(le,"Weekends")}</div>`:""}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><label class="small">${au?"Until then, weekdays":"Weekdays"}<br><input type="time" id="wk_${q}" data-usual="${q}|wk" value="${w.wk||WAKE[q]}"></label><label class="small">${au?"Until then, weekends":"Weekends"}<br><input type="time" id="we_${q}" data-usual="${q}|we" value="${w.we||w.wk||WAKE[q]}"></label></div></div>`; }).join("")}</div></div>
     <div class="sec"><h3>Your theme</h3><div class="card"><div class="small">${P[p].name}'s screens use:</div><div class="chips" style="margin-top:8px">${Object.entries(THEMES).map(([k,T]) => `<button class="chipb" aria-pressed="${themeOf(p)===k}" data-theme="${k}" id="th_${k}">${T.name}</button>`).join("")}</div></div></div>${window.pwChange ? `<div class="sec"><h3>Your password</h3><div class="card"><div class="small">Pick a new password for this phone app. You stay signed in.</div><div class="skbtns"><button class="skbtn" data-pwchange="1">🔒 Change my password</button></div></div></div>` : ""}</div>`;
+}
+/* ---------------- health records (19 Nov 2026): results from doctors, chronic medicines you can edit ---------------- */
+const docList = p => { const d = (DOCS[p] || []).slice(); for(const x of ["Psychiatrist", "Psychologist", "GP"]) if(!d.some(y => y.toLowerCase().includes(x.toLowerCase()))) d.push(x); return d; };
+function resultsSec(p){
+  const R = Object.entries(S.meta.results || {}).map(([id, r]) => Object.assign({id}, r)).filter(r => r.p === p && !r.del).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const F = S.resForm && S.resForm.p === p ? S.resForm : null;
+  const form = F ? `<div class="card" style="display:grid;gap:8px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="small">Date<br><input class="exin" type="date" id="rs_date" value="${esc(F.date || TODAY)}"></label><label class="small">From<br><select class="exin" id="rs_doc">${docList(p).map(d => `<option ${F.doc === d ? "selected" : ""}>${esc(d)}</option>`).join("")}<option value="">Someone else…</option></select></label></div>
+      <input class="exin" id="rs_other" placeholder="Who (if someone else)" value="${esc(F.other || "")}"><input class="exin" id="rs_what" placeholder="What it is (e.g. blood test, scan, letter)" value="${esc(F.what || "")}">
+      <textarea class="exin" id="rs_sum" rows="3" placeholder="What it says, in your own words">${esc(F.sum || "")}</textarea><textarea class="exin" id="rs_vals" rows="2" placeholder="Numbers worth keeping (e.g. ferritin 18, vitamin D 42)">${esc(F.vals || "")}</textarea>
+      ${F.img ? `<img src="${F.img}" alt="Photo of the result" style="max-width:100%;border-radius:12px">` : ""}<div class="chips"><button class="ghostbtn" data-resphoto="1">📷 ${F.img ? "Change the photo" : "Add a photo of the page"}</button><button class="ghostbtn on" data-ressave="${p}">Save</button><button class="lnk" data-resform="">cancel</button></div></div>`
+    : `<button class="ghostbtn on" data-resform="${p}">＋ Add a result</button>`;
+  const card = r => `<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><b>🧪 ${esc(r.what || "Result")}</b><div class="small">${r.date ? fmt(r.date) : ""}${r.doc ? " · " + esc(r.doc) : ""}</div></div><button class="lnk" data-resdel="${r.id}">${S.resDel === r.id ? "tap again to remove" : "remove"}</button></div>
+      ${r.sum ? `<div style="margin-top:8px;font:600 13.5px/1.45 var(--sans)">${esc(r.sum)}</div>` : ""}${r.vals ? `<div class="small" style="margin-top:6px;color:var(--text)"><b>Numbers:</b> ${esc(r.vals)}</div>` : ""}
+      ${r.img ? `<button class="resimg ${S.resBig === r.id ? "big" : ""}" data-resbig="${r.id}" style="background-image:url(${r.img})" aria-label="Photo of the result, tap to enlarge"></button>` : ""}</div>`;
+  return `<div class="sec"><h3>Results</h3><div class="small">Blood tests, scans and letters: what it said, the numbers, and a photo of the page.</div>${form}${R.map(card).join("") || `<div class="card small">No results yet. Add the next one when it comes back.</div>`}</div>`;
+}
+/* chronic medicines: edit, stop or add; saved to the private plan (plan/plan), so both phones get it */
+function planDoc(){ return {P, STOPPED, SCRIPTS, CHECKS, FLAGS, SHOP, SKIP, AVOID, DOCS}; }
+function savePlan(){ render(true); save("plan/plan", JSON.parse(JSON.stringify(planDoc()))); }
+function medsSec(p){
+  const M = S.medEdit, stopped = (STOPPED[p] || []);
+  const row = (sl, it, i) => { const [nm, q, o] = it, key = sl.id + "|" + i, ed = M && M.key === key;
+    if(ed) return `<div class="medr ed"><input class="exin" id="md_n" value="${esc(nm)}" placeholder="Medicine name"><input class="exin" id="md_q" value="${esc(q)}" placeholder="How many (e.g. 1, 2, 1 sachet)"><input class="exin" id="md_f" value="${esc((o || {}).food || "")}" placeholder="Note (e.g. with food)"><div class="chips"><button class="ghostbtn on" data-medsave="${p}|${key}">Save</button><button class="ghostbtn" data-medstop="${p}|${key}">${M.stop ? "Tap again: stopped taking it" : "Stopped taking it"}</button><button class="lnk" data-mededit="">cancel</button></div></div>`;
+    return `<div class="medr"><span><b>${esc(nm)}</b> <span class="small">${esc(q)}${(o || {}).food ? " · " + esc(o.food) : ""}</span></span><button class="lnk" data-mededit="${p}|${key}">change</button></div>`; };
+  const add = sl => M && M.add === p + "|" + sl.id ? `<div class="medr ed"><input class="exin" id="md_n" placeholder="Medicine name"><input class="exin" id="md_q" placeholder="How many (e.g. 1)"><input class="exin" id="md_f" placeholder="Note (e.g. with food)">${sl.jar ? `<label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="md_out"> Kept in its own box, not in the container</label>` : ""}<div class="chips"><button class="ghostbtn on" data-medadd="${p}|${sl.id}">Add it</button><button class="lnk" data-mededit="">cancel</button></div></div>`
+    : `<button class="lnk" data-medaddopen="${p}|${sl.id}">＋ add a medicine here</button>`;
+  return `<div class="sec"><h3>My medicines</h3><div class="small">Your chronic medicines by time of day. Change a dose, mark one as stopped, or add a new one: Today and Stock follow straight away. Check changes with your doctor first.</div>
+    ${P[p].slots.map(sl => `<div class="card"><div class="k" style="color:var(--acc)">${esc(sl.lab)}${sl.rel === undefined ? " · " + esc(sl.t) : ""}</div>${sl.items.map((it, i) => row(sl, it, i)).join("")}${add(sl)}</div>`).join("")}
+    ${stopped.length ? `<div class="card"><div class="k" style="color:var(--dim)">Stopped</div><div class="stopped" style="margin-top:6px">${stopped.map(x => `<span>${esc(typeof x === "string" ? x : x.n)}</span>`).join("")}</div></div>` : ""}</div>`;
+}
+/* a day that wasn't filled in: one tap for missed, or all taken (19 Nov 2026, Jenny) */
+function missedCard(p){
+  const rows = [];
+  for(let k = 1; k <= 3; k++){ const x = parse(TODAY); x.setDate(x.getDate() - k); const ds = ymd(x); if(ds < FRESH) break;
+    const L = logOf(p, ds); if(L.missed) continue; const open = slotsFor(p, ds).filter(sl => !L.done[sl.id]); if(!open.length) continue;
+    rows.push(`<div class="logr"><span><b>${fmt(ds)}</b> <span class="small">${open.length} not filled in</span></span><span class="chips"><button class="chipb" data-dayall="${ds}">All taken</button><button class="chipb" data-daymiss="${ds}">Missed</button></span></div>`); }
+  return rows.length ? `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">Not filled in</div><div class="small" style="margin-top:4px">One tap is enough: no need to go through every tablet.</div>${rows.join("")}</div>` : "";
 }
 /* ---------------- skin routine: one step at a time ---------------- */
 const SK_DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], SK_DOWL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -1090,8 +1129,13 @@ function skinAdd2(){
   if(!R.pm.some(x => x.id === "t_pm")) R.pm.unshift(T("t_pm", "Brush teeth", "Two minutes."), T("t_floss", "Water floss", "Along the gum line, every gap."), T("t_mouth", "Mouthwash", "Swish for 30 seconds, then spit. Nothing to eat or drink after."));
   R.done = Object.assign({}, R.done, {k19nov2: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
 }
+function skinAdd3(){
+  const p = "jenny", R = skinClone(p); if((R.done || {}).k19nov3) return;
+  const fw = R.pm.find(x => /face wash/i.test(x.n)); if(fw) fw.how = (fw.how || "") + " Wipe it off with a warm, wet microfibre heart pad instead of splashing: gentle, and it lifts BB cream and sunscreen properly. Rinse the pad, hang it to dry, and swap to the other colour the next night.";
+  R.done = Object.assign({}, R.done, {k19nov3: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
+}
 function skinImport(){
-  skinAdd(); skinAdd2();
+  skinAdd(); skinAdd2(); skinAdd3();
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
   if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
@@ -1537,6 +1581,28 @@ document.addEventListener("click", e => {
   else if(d.copyweek){ const t = weekText(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied: paste it to Claude"), () => { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); toast("Copied: paste it to Claude"); }catch(_){ toast("Couldn't copy"); } ta.remove(); }); }
   else if(d.undo){ S.when = null; saveLog(S.who, TODAY, L => { delete L.done[d.undo]; if(L.items) for(const k of Object.keys(L.items)) if(k.startsWith(d.undo+"|")) delete L.items[k]; }); }
   else if(d.up){ saveLog(S.who, TODAY, L => { L.wake = nowHM(); }); if(!logOf(other(S.who), TODAY).wake){ S.upNote = true; render(true); } else toast("Good morning ☀ " + P[other(S.who)].name + " is up too"); }
+  else if(d.daymiss){ saveLog(S.who, d.daymiss, L => { L.missed = new Date().toISOString(); }); toast("Marked as missed ✓"); }
+  else if(d.dayall){ const ds = d.dayall; saveLog(S.who, ds, L => { for(const sl of slotsFor(S.who, ds)) if(!L.done[sl.id]) L.done[sl.id] = isoAt(ds, slotTime(S.who, sl, ds)); }); toast("All taken ✓"); }
+  else if(d.resform !== undefined){ S.resForm = d.resform ? {p: d.resform, date: TODAY} : null; render(true); }
+  else if(d.resphoto){ const F = S.resForm; if(!F) return; const v = id => (document.getElementById(id) || {}).value || ""; Object.assign(F, {date: v("rs_date"), doc: v("rs_doc"), other: v("rs_other"), what: v("rs_what"), sum: v("rs_sum"), vals: v("rs_vals")}); document.getElementById("ressnap").click(); }
+  else if(d.ressave){ const F = S.resForm || {}, v = id => ((document.getElementById(id) || {}).value || "").trim();
+    const r = {p: d.ressave, date: v("rs_date") || TODAY, doc: v("rs_doc") || v("rs_other"), what: v("rs_what"), sum: v("rs_sum"), vals: v("rs_vals"), img: F.img || "", by: window.ME || "", at: new Date().toISOString()};
+    if(!r.what && !r.sum && !r.img){ toast("Type what it is, or add a photo"); return; }
+    S.meta.results = Object.assign({}, S.meta.results, {["r" + Date.now().toString(36)]: r}); S.resForm = null; saveMeta("results"); toast("Result saved ✓"); }
+  else if(d.resdel){ if(S.resDel !== d.resdel){ S.resDel = d.resdel; render(true); return; } const R = Object.assign({}, S.meta.results); R[d.resdel] = Object.assign({}, R[d.resdel], {del: new Date().toISOString()}); S.meta.results = R; S.resDel = ""; saveMeta("results"); toast("Removed"); }
+  else if(d.resbig){ S.resBig = S.resBig === d.resbig ? "" : d.resbig; render(true); }
+  else if(d.mededit !== undefined){ S.medEdit = d.mededit ? {key: d.mededit.slice(d.mededit.indexOf("|") + 1)} : null; render(true); }
+  else if(d.medaddopen){ S.medEdit = {add: d.medaddopen}; render(true); }
+  else if(d.medsave || d.medstop){ const v0 = d.medsave || d.medstop, [p, sid, i] = v0.split("|"), sl = P[p].slots.find(x => x.id === sid); if(!sl) return; const it = sl.items[+i]; if(!it) return;
+    if(d.medstop){ if(!(S.medEdit || {}).stop){ S.medEdit = Object.assign({}, S.medEdit, {stop: 1}); render(true); return; }
+      sl.items.splice(+i, 1); STOPPED[p] = (STOPPED[p] || []).concat(it[0]); S.medEdit = null; savePlan(); toast(it[0] + ": marked as stopped"); return; }
+    const v = id => ((document.getElementById(id) || {}).value || "").trim(), n = v("md_n"), q = v("md_q") || "1", fo = v("md_f"); if(!n){ toast("Type the name first"); return; }
+    const o = Object.assign({}, it[2] || {}); if(fo) o.food = fo; else delete o.food; if(!o.out) o.n = parseInt(q, 10) || o.n || 1;
+    sl.items[+i] = [n, q, o]; S.medEdit = null; savePlan(); toast("Saved ✓"); }
+  else if(d.medadd){ const [p, sid] = d.medadd.split("|"), sl = P[p].slots.find(x => x.id === sid); if(!sl) return;
+    const v = id => ((document.getElementById(id) || {}).value || "").trim(), n = v("md_n"), q = v("md_q") || "1", fo = v("md_f"), out = !!(document.getElementById("md_out") || {}).checked; if(!n){ toast("Type the name first"); return; }
+    const o = out || !sl.jar ? {out: 1} : {n: parseInt(q, 10) || 1}; if(fo) o.food = fo;
+    sl.items.push([n, q, o]); S.medEdit = null; savePlan(); toast(n + " added ✓"); }
   else if(d.walkskip){ saveLog(S.who, TODAY, L => { if(L.walkSkip) delete L.walkSkip; else { L.walkSkip = new Date().toISOString(); L.walk = 0; } }); }
   else if(d.physioskip){ saveLog(S.who, TODAY, L => { if(L.physioSkip) delete L.physioSkip; else { L.physioSkip = new Date().toISOString(); L.physio = ""; } }); }
   else if(d.exskip){ saveLog(S.who, TODAY, L => { if(L.exSkip) delete L.exSkip; else L.exSkip = new Date().toISOString(); }); S.exOpen = false; render(true); }
@@ -1576,6 +1642,10 @@ let assets = null, snapFor = "";
 function shrink(file){
   return new Promise((ok, bad) => { const img = new Image(); img.onload = () => { const s = Math.min(1, 600/Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : bad(new Error("no image")), "image/jpeg", .82); URL.revokeObjectURL(img.src); }; img.onerror = bad; img.src = URL.createObjectURL(file); });
 }
+document.getElementById("ressnap").addEventListener("change", async e => {
+  const file = e.target.files && e.target.files[0]; e.target.value = ""; if(!file || !S.resForm) return;
+  try { const b = await shrinkTo(file, 1100); S.resForm.img = await new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); }); render(true); } catch(_){ toast("Couldn't read that photo"); }
+});
 document.getElementById("foodsnap").addEventListener("change", async e => {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if(!f) return;
   S.foodAI = {st: "busy"}; render(true);
