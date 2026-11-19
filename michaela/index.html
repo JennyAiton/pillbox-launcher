@@ -272,16 +272,17 @@ html,body{background:#cfe9fa}
 .lpad.late{border:2px solid #ff7b7b}
 .banner{top:calc(150px + env(safe-area-inset-top,0px))}
 .focus-wrap{margin-top:300px}
-.focus{background:rgba(255,255,255,.66);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.85);--acc:#ffc9d9;--ink:#2c3e57;color:#2c3e57}
+.focus{background:rgba(255,255,255,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.85);--acc:#ffc9d9;--ink:#2c3e57;color:#2c3e57}
 .focus .lchip.now{background:#f19bb5;color:#fff}.focus .lchip{background:rgba(255,255,255,.75)}
 .focus .trow{background:rgba(255,255,255,.72)}.focus .whenbox,.focus .skinhow,.focus .drow{background:rgba(255,255,255,.7)}
 .scroll{color:#2c3e57;opacity:.7}
 /* everything under the top: glass cards, white headings on the pond */
-#app > .pad{--text:#2c3e57;--dim:rgba(44,62,87,.68);--panel:rgba(255,255,255,.7);--edge:rgba(255,255,255,.9);--acc:#d9668f;--ink:#fff;color:#2c3e57}
+#app > .pad{--text:#2c3e57;--dim:rgba(44,62,87,.68);--panel:rgba(255,255,255,.94);--edge:rgba(255,255,255,.9);--acc:#d9668f;--ink:#fff;color:#2c3e57}
 #app > .pad .card,#app > .pad .rowi,#app > .pad .lab,#app > .pad .it,#app > .pad .q{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 6px 18px rgba(20,40,40,.12)}
 #app > .pad .sec > h3,#app > .pad > .sec > h3{color:#2c3e57;text-shadow:0 1px 0 rgba(255,255,255,.6)}
 #app > .pad .sec > .small{color:#2c3e57;opacity:.85;text-shadow:0 1px 0 rgba(255,255,255,.5)}
-#app > .pad .rowi.cur{background:#ffc9d9;color:#2c3e57}#app > .pad .rowi.cur .st{background:#2c3e57;color:#fff}
+#app > .pad .rowi.cur{background:#ffd6e2;color:#2c3e57}
+#app > .pad .rowi.dn{opacity:1;background:rgba(240,247,252,.94)}#app > .pad .rowi.dn .t,#app > .pad .rowi.dn .s{opacity:.6}#app > .pad .rowi.cur .st{background:#2c3e57;color:#fff}
 #app > .pad .exin,#app > .pad input,#app > .pad select,#app > .pad textarea{background:rgba(255,255,255,.85);color:#2c3e57;border:1px solid rgba(44,62,87,.18)}
 /* pop-ups and sheets: warm light glass */
 .mcard,.sheet .in,.card.winepick{background:rgba(255,250,243,.97);color:#2c3e57;--text:#2c3e57;--dim:rgba(44,62,87,.68);--edge:rgba(44,62,87,.14);--panel:rgba(44,62,87,.05);--acc:#d9668f;--ink:#fff}
@@ -649,8 +650,11 @@ const ALC = ["None","1–2 drinks","3–4 drinks","5+ drinks"];
 const rateOf = p => p === "jenny" ? RATE_J : RATE;
 const sleepOf = p => p === "jenny" ? SLEEPQ_J : SLEEPQ;
 const pmChk = p => p !== "jenny" || slotsFor(p, TODAY).some(s => s.id === "noon");
-function wineSheet(){ const p = S.who; if(p !== "jenny" || !S.alcOpen || S.tab !== "today") return ""; const L = logOf(p, TODAY);
-  return `<button class="winebg" data-alcopen="1" aria-label="Close"></button><div class="card winepick"><div class="k" style="color:var(--acc)">🍷 Drinks today · tap one</div><div class="wineg">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc ?? -1) === v ? "on" : ""}" data-alcset="${v}"><span>${t.split(" ")[0]}</span>${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div><div class="small" style="margin-top:8px">Just a note next to your sleep. No judging, ever. Tap again to change it.</div></div>`; }
+const yday = () => { const x = parse(TODAY); x.setDate(x.getDate() - 1); return ymd(x); };
+const morningish = () => toMin(nowHM()) < 14*60; // before 14:00 the drinks question is about last night
+function drinksDay(){ return morningish() ? yday() : TODAY; }
+function wineSheet(){ const p = S.who; if(p !== "jenny" || !S.alcOpen || S.tab !== "today") return ""; const dd = drinksDay(), L = logOf(p, dd);
+  return `<button class="winebg" data-alcopen="1" aria-label="Close"></button><div class="card winepick"><div class="k" style="color:var(--acc)">🍷 ${dd === TODAY ? "Drinks today" : "Drinks last night"} · tap one</div><div class="wineg">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc ?? -1) === v ? "on" : ""}" data-alcset="${v}"><span>${t.split(" ")[0]}</span>${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div><div class="small" style="margin-top:8px">Just a note next to your sleep. No judging, ever. Tap again to change it.</div></div>`; }
 function chkDue(p){ if(!CHECKIN[p]) return ""; const L = logOf(p, TODAY), c = L.chk || {}, now = toMin(nowHM());
   if(now >= toMin("20:30")) return c.ev ? "" : "ev";
   if(!c.am && (L.wake || now >= toMin(usualWake(p, TODAY)))) return "am";
@@ -673,7 +677,7 @@ function chkSheet(){
       <div class="cq">What kept you up? <span>(if anything)</span></div><div class="symg">${UPQ.map(([q, l]) => one(sl.includes(q), `data-chksleep="${esc(q)}"`, esc(l))).join("")}</div>
       <div class="cq">What helped? <span>(if anything)</span></div><div class="symg">${HELPQ.map(q => one(help.includes(q), `data-chkhelp="${esc(q)}"`, esc(q))).join("")}</div>
       ${moodRow}
-      ${k.p === "jenny" ? `<div class="cq">🍷 Drinks last night</div><div class="symg three">${alcOpts(k.p).map(([v, t]) => one(k.alcY === v, `data-chkalcy="${v}"`, esc(t))).join("")}</div>` : ""}
+      ${k.p === "jenny" && logOf(k.p, yday()).alc === undefined ? `<div class="cq">🍷 Drinks last night</div><div class="symg three">${alcOpts(k.p).map(([v, t]) => one(k.alcY === v, `data-chkalcy="${v}"`, esc(t))).join("")}</div>` : ""}
       ${k.p === "michaela" ? `<div class="nums"><label>Weight this morning (kg, optional)<input type="number" step="0.1" inputmode="decimal" id="chkKg" value="${esc(k.kg||logOf(k.p,TODAY).kg||"")}"></label></div>` : ""}`
     : `${moodRow}${k.k === "ev" ? `<div class="cq">🍷 Drinks today</div><div class="symg three">${alcOpts(k.p).map(([v, t]) => one(k.alc === v, `data-chkalc="${v}"`, esc(t))).join("")}</div>` : ""}`}
     <div style="margin-top:12px"><input class="exin" style="width:100%" id="chkNote" placeholder="Anything else? (optional)" value="${esc(k.note||"")}"></div>
@@ -884,7 +888,9 @@ function pToday(){
   const skd = S.sel[p] ? null : skinDue(p);
   const showSkin = !!skd && (!cur || curSt === "later" || cur.id === "bed" || !!(S.selSkin && S.selSkin.p === p));
   const bell = `<button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button>`;
-  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip wine ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷 ${L.alc ? esc(alcLab(p, L.alc)) : L.alc === 0 ? "None" : "Drinks?"}</button>` : ""}<button class="chip ${wk?"":"up"}" data-wakeopen="1" id="upbtn">${wk ? `☀ Up ${wk} · change` : "☀ I'm up"}</button></div>`;
+  const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? (() => { const dd = drinksDay(), A = logOf(p, dd).alc, last = dd !== TODAY;
+      if(last && A !== undefined) return ""; // last night already logged: nothing to ask in the morning
+      return `<button class="chip wine ${A ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="${last ? "Drinks last night" : "Drinks today"}">🍷 ${A ? esc(alcLab(p, A)) : A === 0 ? "None" : last ? "Last night?" : "Drinks?"}</button>`; })() : ""}<button class="chip ${wk?"":"up"}" data-wakeopen="1" id="upbtn">${wk ? `☀ Up ${wk} · change` : "☀ I'm up"}</button></div>`;
   const wakeStrip = !wk && toMin(nowHM()) < 14*60 ? `<button class="wakestrip" data-wakeopen="1" id="wakestrip">☀ <span>Not marked up yet</span><b>I'm up · set the time</b></button>` : "";
   let card, bg, curKey = "";
   if(showSkin){
@@ -892,7 +898,7 @@ function pToday(){
     bg = sl === "am" ? 2 : 5;
     const back = S.selSkin && S.selSkin.p === p ? `<button class="skiplink" data-selskin="">Back to my tablets</button>` : "";
     const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(), dDay = sl === "pm" ? skinDay() : yd, dv = logOf(p, dDay).alc;
-    const drinks = p === "jenny" ? `<div class="drow"><span>🍷 ${sl === "pm" ? "Drinks today" : "Drinks last night"}</span><div>${alcOpts(p).map(([v, t]) => `<button class="${dv === v ? "on" : ""}" data-alcdayset="${dDay}|${v}">${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div></div>` : "";
+    const drinks = p === "jenny" && !(sl === "am" && logOf(p, yd).alc !== undefined) ? `<div class="drow"><span>🍷 ${sl === "pm" ? "Drinks today" : "Drinks last night"}</span><div>${alcOpts(p).map(([v, t]) => `<button class="${dv === v ? "on" : ""}" data-alcdayset="${dDay}|${v}">${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div></div>` : "";
     if(!K.cur) card = `<div class="flead"><span class="lchip">${lab}</span></div><div class="big sk">✨ All done</div><div class="what">${sl === "am" ? "Lovely. See you tonight." : "Lovely. Sleep well."}</div>${drinks}${back}`;
     else { const i = K.st.indexOf(K.cur);
       const bar = `<div class="skinbar" style="margin-top:10px">${K.st.map(x => `<i class="${K.mk[x.id] === "skip" ? "sk" : K.mk[x.id] ? "on" : ""}${K.cur.id === x.id ? " now" : ""}"></i>`).join("")}</div>`;
@@ -1195,8 +1201,14 @@ function skinAdd3(){
   const fw = R.pm.find(x => /face wash/i.test(x.n)); if(fw) fw.how = (fw.how || "") + " Wipe it off with a warm, wet microfibre heart pad instead of splashing: gentle, and it lifts BB cream and sunscreen properly. Rinse the pad, hang it to dry, and swap to the other colour the next night.";
   R.done = Object.assign({}, R.done, {k19nov3: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
 }
+function skinAdd4(){
+  const p = "jenny", R = skinClone(p); if((R.done || {}).k20nov) return;
+  if(!R.am.some(x => x.id === "t_mouth_am")){ let i = R.am.findIndex(x => x.id === "t_am"); R.am.splice(i < 0 ? 0 : i + 1, 0, {id: "t_mouth_am", n: "Mouthwash", how: "Swish for 30 seconds, then spit.", teeth: 1, noStock: 1}); }
+  R.am = R.am.filter(x => x.id !== "t_floss_am"); // water floss stays an evening thing
+  R.done = Object.assign({}, R.done, {k20nov: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
+}
 function skinImport(){
-  skinAdd(); skinAdd2(); skinAdd3();
+  skinAdd(); skinAdd2(); skinAdd3(); skinAdd4();
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
   if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
@@ -1460,7 +1472,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795125807"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795126639"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -1577,7 +1589,7 @@ document.addEventListener("click", e => {
     const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
     if(M[mp][nm]) delete M[mp][nm]; else M[mp][nm] = new Date().toISOString();
     S.meta.settings = Object.assign({}, S.meta.settings, {missing: M}); saveMeta("settings"); toast(M[mp][nm] ? "Hidden until you buy it" : "Back on your list ✓"); }
-  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(); S.chk = {p:S.who, k:d.chkopen, alcY:logOf(S.who, yd).alc || 0, sleep:(was.sleep||[]).slice(), help:(was.help||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
+  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(); S.chk = {p:S.who, k:d.chkopen, alcY:logOf(S.who, yd).alc, sleep:(was.sleep||[]).slice(), help:(was.help||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
   else if(d.chkalcy !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); k.alcY = +d.chkalcy; render(true); }
   else if(d.chkwhy || d.chkalc !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); if(d.chkwhy){ const q = d.chkwhy; k.why = k.why.includes(q) ? k.why.filter(x => x !== q) : k.why.concat(q); } else k.alc = k.alc === +d.chkalc ? undefined : +d.chkalc; render(true); }
   else if(d.chkone){ const k = S.chk; if(!k) return; chkKeep(k); const q = d.chkone, had = (k.sleep||[]).includes(q); k.sleep = (k.sleep||[]).filter(x => !FALLQ.includes(x)); if(!had) k.sleep.push(q); render(true); }
@@ -1588,7 +1600,7 @@ document.addEventListener("click", e => {
   else if(d.chksave){ const k = S.chk; if(!k) return; const hrs = (document.getElementById("chkHrs")||{}).value || "", kg = (document.getElementById("chkKg")||{}).value || "", note = ((document.getElementById("chkNote")||{}).value || "").trim();
     const lat = (document.getElementById("chkLat")||{}).value || "";
     saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, help:k.help||[], why:k.why, rate:k.rate, hrs:hrs ? +hrs : "", lat:lat ? +lat : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; if(k.k === "ev" && k.alc !== undefined) L.alc = k.alc; });
-    if(k.k === "am" && k.p === "jenny" && k.alcY !== undefined){ const x = parse(TODAY); x.setDate(x.getDate()-1); saveLog(k.p, ymd(x), L => { if(k.alcY) L.alc = k.alcY; else delete L.alc; }); }
+    if(k.k === "am" && k.p === "jenny" && k.alcY !== undefined && logOf(k.p, yday()).alc === undefined){ const x = parse(TODAY); x.setDate(x.getDate()-1); saveLog(k.p, ymd(x), L => { if(k.alcY) L.alc = k.alcY; else delete L.alc; }); }
     const wasAm = k.k === "am" && k.p === "jenny"; S.chk = null; if(wasAm && EXS.some(e => !(logOf("jenny", TODAY).ex||{})[e.k])) S.exOpen = true; render(true); toast("Saved ✓ Thank you"); }
   else if(d.apptform !== undefined){ S.apptForm = d.apptform ? {p:d.apptform} : null; render(true); }
   else if(d.apptsave){ const v = id => ((document.getElementById(id)||{}).value || "").trim(); const doc = v("ap_doc") || v("ap_other"), date = v("ap_date");
@@ -1633,7 +1645,7 @@ document.addEventListener("click", e => {
     S.foodAI = null; saveLog(S.who, TODAY, L => { L.food = (L.food || []).concat({t, at: new Date().toISOString(), kcal: k || undefined, prot: r.protein_g, carb: r.carbs_g, fat: r.fat_g, ai: 1}); }); toast("Added ✓"); }
   else if(d.pwchange){ if(window.pwChange) window.pwChange(); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
-  else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
+  else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, drinksDay(), L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
   else if(d.alcdayset){ const [ds, v0] = d.alcdayset.split("|"), v = +v0; saveLog(S.who, ds, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); toast(v ? "Noted 🍷" : "No drinks ✓"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
   else if(d.sym){ const k = S.symPick && S.symPick.p === S.who ? S.symPick : {p:S.who, list:[], lv:{}, food:[]}; const el = document.getElementById("symNote"); if(el) k.note = el.value;
