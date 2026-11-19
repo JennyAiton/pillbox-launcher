@@ -1085,7 +1085,7 @@ function pToday(){
   } else if(!cur){
     bg = 5;
     if(windDown() && !L.lights) card = `<div class="flead"><span class="lchip now">${pr.n} of ${pr.n} · all done 🪷</span></div><div class="big">Ready for bed?</div><div class="what">Tap when the lights go out. It helps spot what gives you your best nights.</div><div class="act"><button class="pill" data-lights="1">🌙 Lights out</button></div>`; else
-    card = `<div class="flead"><span class="lchip">${pr.n} of ${pr.n} · today</span></div><div class="big">All done</div><div class="what">Everything for today is ticked. Well done${p === "michaela" ? ", my love" : ""} 💛</div><div class="act"><button class="pill" data-tab="plan" id="seeweek">See your garden</button>${bell}</div>`;
+    card = `<div class="flead"><span class="lchip">${pr.n} of ${pr.n} · today</span></div><div class="big">All done</div><div class="what">Everything for today is ticked. Well done${p === "michaela" ? ", my love" : ""} 💛</div><div class="act"><button class="pill" data-gardenview="1" id="seeweek">🪷 See your garden</button>${bell}</div>`;
   } else {
     curKey = cur.id;
     const tm = slotTime(p, cur, TODAY), st = curSt, its = itemsFor(p, cur, TODAY), doneAt = L.done[cur.id], skAll = allSkipped(p, cur, TODAY);
@@ -1324,6 +1324,15 @@ function gardenSvg(p, ym, big){
     return `<ellipse cx="${x}" cy="${y + 6}" rx="${cw*.38}" ry="${ch*.16}" fill="${d > TODAY ? "rgba(79,163,106,.25)" : "#4fa36a"}"/>${f ? lotusFlower(x, y + 4, Math.min(cw, ch) / 95, petals, k % 4) : part ? bud(x, y + 2, Math.min(cw, ch) / 110, petals) : ""}<text x="${x - cw*.36}" y="${y - ch*.36}" font-size="${big ? 11 : 9}" fill="#2c3e57" opacity=".55" font-family="Manrope,sans-serif">${+d.slice(8)}</text>`; }).join("");
   const title = big ? `<text x="200" y="64" text-anchor="middle" font-size="34" font-family="Cormorant Garamond,Georgia,serif" fill="#2c3e57">${esc(P[p].name)}'s ${parse(ym + "-01").toLocaleDateString("en-ZA", {month: "long"})} garden</text><text x="200" y="98" text-anchor="middle" font-size="16" font-family="Manrope,sans-serif" fill="#d9668f">${full.length} day${full.length === 1 ? "" : "s"} in full bloom</text>` : "";
   return `<svg class="garden" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gw${big ? 1 : 0}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f3fb"/><stop offset="1" stop-color="#bfe3f2"/></linearGradient></defs><rect width="${W}" height="${H}" rx="18" fill="url(#gw${big ? 1 : 0})"/>${big ? `<rect y="0" width="${W}" height="120" rx="18" fill="#fde4ee"/>` : ""}${title}${cells}</svg>`;
+}
+function gardenView(){
+  if(!S.gardenView) return ""; const p = S.who, ym = TODAY.slice(0, 7), full = monthDays(ym).filter(d => d >= FRESH && d <= TODAY && fullDay(p, d)).length, st = streak(p), today = fullDay(p, TODAY);
+  return `<div class="sheet gardensheet" role="dialog" aria-modal="true"><div class="in" style="text-align:center"><div class="k" style="color:#d9668f">${today ? "Today is in full bloom" : "Your garden"}</div>
+    <h3 style="font:700 38px/1.05 Caveat,cursive;margin:6px 0">${today ? "You did it! 🪷" : "Look how it's growing"}</h3>
+    <div style="font:700 13px var(--sans);margin-bottom:10px">${full} day${full === 1 ? "" : "s"} in full bloom this month${st >= 2 ? ` · ${st} days in a row` : ""}</div>
+    ${gardenSvg(p, ym, false)}
+    <div class="small" style="margin:10px 0 0">Every day with everything ticked plants a lotus. At the end of the month, save the whole garden as a picture.</div>
+    <div class="mbtns"><button data-gardenpic="${ym}">Save the garden picture</button><button data-gardenclose="1">Close</button></div></div></div>`;
 }
 function gardenCard(p){ const ym = TODAY.slice(0, 7), days = monthDays(ym), full = days.filter(d => d >= FRESH && d <= TODAY && fullDay(p, d)).length, left = days.length - +TODAY.slice(8);
   return `<div class="sec"><h3>Bloom garden</h3><div class="small">Every day with everything ticked plants a lotus. ${left <= 2 ? "Your month's garden picture is ready to save." : "At the end of the month you get a picture of the whole garden."}</div><div class="card">${gardenSvg(p, ym, false)}<div class="chips" style="margin-top:10px;justify-content:space-between;align-items:center"><span class="small"><b style="color:#d9668f;font-size:18px">${full}</b> in full bloom this month</span><button class="ghostbtn on" data-gardenpic="${ym}">🪷 Save the garden picture</button></div></div></div>`; }
@@ -1916,7 +1925,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = windDown() ? 5 : S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795131761"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795132046"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -1931,7 +1940,7 @@ function render(keepScroll){
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, skin:pSkin, plan:pHealth, lists:pLists, fill:pLists, shop:pLists, week:pHealth}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet() + wakeSheet() + whenSheet() + boatSheet();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, skin:pSkin, plan:pHealth, lists:pLists, fill:pLists, shop:pLists, week:pHealth}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet() + wakeSheet() + whenSheet() + boatSheet() + gardenView();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr); paintScene(); if(S.tab === "today" || !S.tab) pondMood(S.who); else document.body.classList.remove("mist", "onToday");
   if(keepScroll) window.scrollTo(0, y);
@@ -2183,6 +2192,8 @@ document.addEventListener("click", e => {
     all[p] = mine; S.meta.skinstock = all; saveMeta("skinstock"); toast("On your shelf ✓ Tell me when to add it to your steps"); }
   else if(d.lantern){ toast("From 21:00 the pond goes to night, and the lantern is your Lights out 🌙"); }
   else if(d.scrollto){ const el = document.querySelector(".ponds"); if(el) el.scrollIntoView({behavior: "smooth", block: "center"}); }
+  else if(d.gardenview){ S.gardenView = true; render(true); if(fullDay(S.who, TODAY)) celebrate(true, ""); }
+  else if(d.gardenclose){ S.gardenView = false; render(true); }
   else if(d.logopen){ S.logOpen = true; render(true); }
   else if(d.logclose){ S.logOpen = false; render(true); }
   else if(d.daymiss){ saveLog(S.who, d.daymiss, L => { L.missed = new Date().toISOString(); }); toast("Marked as missed ✓"); }
