@@ -211,6 +211,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .docday{margin-top:14px;border-left:4px solid #f19bb5}
 .lights{margin-top:14px;text-align:center}
 .howto{display:block;margin-top:6px;padding:7px 9px;border-radius:10px;background:rgba(143,203,232,.16);font:600 12px/1.4 var(--sans);color:#2c3e57}
+.kbar{height:12px;border-radius:6px;background:rgba(44,62,87,.1);overflow:hidden;margin-top:8px}.kbar i{display:block;height:100%}
+.fcalc{margin-top:10px;padding:10px;border-radius:14px;background:rgba(143,203,232,.14)}
+.frow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(44,62,87,.08)}.frow input{width:78px;margin-left:4px}
+.rdgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.rdgrid label{display:grid;gap:3px}.rdgrid input{width:100%}
+.plat{font:800 10.5px var(--sans);background:#ffe4ec;color:#d9668f;border-radius:99px;padding:3px 9px;white-space:nowrap}
+.installbar{display:block;width:100%;margin-top:14px;padding:13px;border-radius:16px;background:#2c3e57;color:#fff;font:800 14px var(--sans)}
 .cq{font:800 14px var(--sans);margin:16px 0 6px}.cq span{font-weight:600;opacity:.6}
 .symg.two{display:grid;grid-template-columns:1fr 1fr}.symg.three{display:grid;grid-template-columns:repeat(3,1fr)}
 .moodg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -498,12 +504,19 @@ input[type=date],input[type=time]{font:600 12.5px var(--sans);color:var(--text);
 @media (prefers-reduced-motion:no-preference){ .dotp.now{animation:glow 2.4s ease-in-out infinite} .pill:not(.done){animation:pulse 3s ease-in-out infinite} }
 @keyframes glow{50%{box-shadow:0 0 0 6px rgba(255,255,255,.12),0 0 34px var(--acc)}}
 @keyframes pulse{50%{box-shadow:0 0 0 9px rgba(255,255,255,.08),0 0 42px var(--acc)}}
+
+/* pop-ups and sheets: always light (must come last) */
+.sheet{background:rgba(30,50,70,.45)!important}
+.sheet .in,.mcard,.card.winepick,.logsheet .in{background:rgba(250,252,255,.98)!important;color:#2c3e57!important;border-color:rgba(44,62,87,.12)!important}
+.sheet .in h3,.mcard h3{color:#2c3e57}
+.sheet .in .small,.mcard .small{color:rgba(44,62,87,.7)}
+.logsheet .in .sec > h3{background:none!important;padding:0!important}
 </style>
 
 <div class="app" id="app"></div>
 <nav class="tb" id="tabs" role="tablist"></nav>
 <div class="toast" id="toast" role="status"></div>
-<input type="file" id="snap" accept="image/*" capture="environment" hidden><input type="file" id="foodsnap" accept="image/*" capture="environment" hidden><input type="file" id="ressnap" accept="image/*" hidden>
+<input type="file" id="snap" accept="image/*" capture="environment" hidden><input type="file" id="foodsnap" accept="image/*" capture="environment" hidden><input type="file" id="ressnap" accept="image/*" hidden><input type="file" id="fgsnap" accept="image/*" hidden><input type="file" id="rdsnap" accept="image/*" hidden>
 
 <script>
 /* ---------------- the plan (same as before) ---------------- */
@@ -1011,7 +1024,7 @@ function pTodayMore(p, curKey){
     rows.push([tm, `<button class="rowi ${curKey === "skin:"+k ? "cur" : ""} ${done ? "dn" : ""}" data-selskin="${k}" data-top="1" id="row_skin_${k}"><div class="th skth">🧴</div><div><div class="t">${k === "am" ? "Morning care" : "Evening care"}</div><div class="s">${k === "am" ? "after your morning tablets" : "before bed"} · ${K.done} of ${K.n} steps</div></div><span class="st ${done ? "done" : K.done ? "now" : "later"}">${done ? "Done" : K.done ? "Busy" : "Later"}</span></button>`]); }
   rows.sort((a,b) => a[0].localeCompare(b[0]));
   if(windDown()) return lightsCard(p) + pondsCard(p) + `<div class="sec"><h3>Tonight</h3>${rows.filter(r => r[0] >= "18:00").map(r => r[1]).join("")}</div>`;
-  let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${rows.map(r => r[1]).join("")}</div>` + waterCard(p) + pondsCard(p) + refillCard(p, true);
+  let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${rows.map(r => r[1]).join("")}</div>` + kcalMini(p) + waterCard(p) + pondsCard(p) + refillCard(p, true);
   h = doctorDayCard(p) + missedCard(p) + meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
   const topH = h; h = "";
   if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${x.lat ? " · asleep after "+x.lat+" min" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+rateOf(p).filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+(x.why && x.why.length ? " · why: "+esc(x.why.join(", ")) : "")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
@@ -1030,10 +1043,8 @@ function pTodayMore(p, curKey){
         <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="symNote" value="${esc(pick.note || "")}" placeholder="${pick.list.includes("bloated") ? "e.g. espresso, fat-free milk, vanilla + caramel syrup, ice" : "Anything to add? (optional)"}"></div>
         <div class="skbtns"><button class="skbtn" data-symsave="1">Save ${pick.list.length > 1 ? "all " + pick.list.length : ""}</button><button class="skbtn alt" data-symcancel="1">Cancel</button></div>` : ""}
       ${p === "michaela" ? `<div class="nums"><label>Weight today (kg)<input type="number" step="0.1" inputmode="decimal" data-num="kg" value="${L.kg || ""}" placeholder="kg"></label><label>Heart rate (beats/min)<input type="number" inputmode="numeric" data-num="hr" value="${L.hr || ""}" placeholder="optional"></label></div>` : ""}</div>
-      ${p === "michaela" ? `<div class="card"><div class="k" style="color:var(--acc)">🍽 What I ate or drank</div><div class="small" style="margin-top:4px">Also a coffee, a drink or skipping a meal. Write it the way you'd tell a friend.</div>
-      <div class="symg">${FOODQ.slice(0,7).map(f => `<button data-foodq="${esc(f)}">${esc(f)}</button>`).join("")}</div>
-      <div style="display:flex;gap:8px;margin-top:8px"><input class="exin" id="foodIn" placeholder="e.g. iced coffee: espresso, fat-free milk, vanilla, caramel"><button class="ghostbtn" data-foodadd="1">Add</button></div><div class="skbtns"><button class="skbtn" data-foodcam="1">📷 Snap my food · get a calorie guess</button></div>${foodAiCard()}</div>` : ""}
-      ${rows.length ? `<div class="card"><div class="k" style="color:var(--dim)">Today so far${fd.some(x => x.kcal) ? ` · about ${fd.reduce((n, x) => n + (x.kcal || 0), 0)} kcal (guessed from photos)` : ""}</div>${rows.map(r => `<div class="logr"><span class="tm">${new Date(r.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span>${r.h}</span><button class="lnk" data-logrm="${r.k}|${r.i}">remove</button></div>`).join("")}</div>` : ""}
+      ${foodCard(p)}${readingsCard(p)}
+      ${rows.length ? `<div class="card"><div class="k" style="color:var(--dim)">Today so far${fd.some(x => x.kcal) ? ` · ${fd.reduce((n, x) => n + (x.kcal || 0), 0)} kcal` : ""}</div>${rows.map(r => `<div class="logr"><span class="tm">${new Date(r.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span>${r.h}</span><button class="lnk" data-logrm="${r.k}|${r.i}">remove</button></div>`).join("")}</div>` : ""}
       <button class="ghostbtn on" style="margin-top:4px" data-report="${p}">📋 Make a report for the doctor</button></div>`; }
   if(av.length) h += `<div class="sec"><h3>Took something else?</h3><div class="card"><div class="small">Tap it if you took it today. That's fine: it just means we know.</div><div class="chips" style="margin-top:8px">${av.map(([n]) => `<button class="chipb" data-extra="${esc(n)}">${esc(n)}</button>`).join("")}</div>
     <div style="display:flex;gap:8px;margin-top:10px"><input class="exin" id="exIn" placeholder="Something else? Name it"><button class="ghostbtn" data-extratxt="1">Add</button></div>
@@ -1063,7 +1074,7 @@ function pTodayMore(p, curKey){
     h += `<div class="sec"><h3>Gut plan</h3><div class="card"><div class="k" style="color:var(--acc)">Antibiotic course</div>${rx}</div>
       <div class="card"><div class="small">Some items take turns every second day: today's list already shows the right one.</div><div class="k" style="margin:10px 0 6px;color:var(--dim)">Stopped</div><div class="stopped">${STOPPED.michaela.map(x=>`<span>${x}</span>`).join("")}</div></div></div>`;
   }
-  return topH + `<button class="logfab" data-logopen="1" aria-label="Log something">＋ Log</button>` + (S.logOpen ? `<div class="sheet logsheet" role="dialog" aria-modal="true"><div class="in"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Log</h3><button class="ghostbtn" data-logclose="1">Close</button></div><div class="small">How you feel, food, check-ins, moving, wake-up time.</div>${h}<div class="mbtns"><button data-logclose="1">Done</button></div></div></div>` : "") + `<div class="status" id="status">Connecting…</div>`;
+  return installBar() + topH + `<button class="logfab" data-logopen="1" aria-label="Log something">＋ Log</button>` + (S.logOpen ? `<div class="sheet logsheet" role="dialog" aria-modal="true"><div class="in"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Log</h3><button class="ghostbtn" data-logclose="1">Close</button></div><div class="small">How you feel, food, check-ins, moving, wake-up time.</div>${h}<div class="mbtns"><button data-logclose="1">Done</button></div></div></div>` : "") + `<div class="status" id="status">Connecting…</div>`;
 }
 function head(p, idx, eyebrow, title){ S.sceneIdx = 0; if(S.noHead) return `<div class="subhead pad"><h3>${title}</h3><div class="small">${eyebrow}</div></div>`; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div>${postcard(p, title, 6)}<div class="tt pad"><div class="k">${eyebrow}</div></div></div>`; }
 function headOld(p, idx, eyebrow, title){ return `<div class="head"><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
@@ -1267,6 +1278,111 @@ function waterCard(p){ const L = logOf(p, TODAY), n = L.water || 0, hot = S.wx &
 /* --- 8. wind-down: after 21:00 only the evening things, and Lights out --- */
 function lightsCard(p){ const L = logOf(p, TODAY);
   return `<div class="card lights">${L.lights ? `<div style="font:600 22px var(--serif)">🌙 Lights out at ${esc(L.lights)}</div><div class="small">Sleep well. Tomorrow's check-in will ask how it went.</div><button class="lnk" data-lightsundo="1">undo</button>` : `<div style="font:600 22px var(--serif)">Ready for bed?</div><div class="small">Tap when the lights go out. It helps spot what gives you your best nights.</div><button class="pill" style="margin-top:10px;width:100%;background:#2c3e57;color:#fff" data-lights="1">🌙 Lights out</button>`}</div>`; }
+
+/* ================= food, calories, scale/watch readings, watch list (20 Nov 2026) ================= */
+/* typed food: a built-in list first (kcal per usual unit), then Open Food Facts online (free) */
+const FOODS = [
+  [/white bread|bread/, "Slice of bread", 80, "slice"], [/brown bread|whole ?wheat|rye/, "Slice of brown bread", 75, "slice"], [/toast/, "Slice of toast", 80, "slice"],
+  [/cheese slice|slices? of cheese|cheddar|gouda|cheese/, "Slice of cheese", 70, "slice"], [/cream cheese/, "Cream cheese (tbsp)", 50, "tbsp"], [/butter|marg/, "Butter (teaspoon)", 35, "tsp"],
+  [/boiled egg|fried egg|scrambled|egg/, "Egg", 80, "egg"], [/bacon/, "Rasher of bacon", 45, "rasher"], [/ham/, "Slice of ham", 30, "slice"],
+  [/banana/, "Banana", 105, "banana"], [/apple/, "Apple", 95, "apple"], [/orange|naartjie/, "Orange", 60, "fruit"], [/grapes/, "Handful of grapes", 60, "handful"],
+  [/cappuccino/, "Cappuccino", 110, "cup"], [/latte/, "Latte", 150, "cup"], [/iced coffee/, "Iced coffee with syrup", 220, "glass"], [/coffee/, "Coffee with milk", 40, "cup"],
+  [/rooibos|tea/, "Tea with milk", 20, "cup"], [/sugar/, "Teaspoon of sugar", 16, "tsp"], [/milk/, "Glass of milk", 120, "glass"], [/coke|cola|soft drink|fanta|sprite/, "Can of fizzy drink", 140, "can"],
+  [/wine/, "Glass of wine", 125, "glass"], [/beer|lager/, "Beer", 150, "bottle"], [/gin|vodka|whisky|brandy/, "Spirit + mixer", 120, "drink"],
+  [/yoghurt|yogurt/, "Tub of yoghurt", 120, "tub"], [/oats|porridge/, "Bowl of oats", 160, "bowl"], [/pap|mielie/, "Cup of pap", 120, "cup"], [/rice/, "Cup of cooked rice", 205, "cup"],
+  [/pasta|spaghetti|macaroni/, "Cup of cooked pasta", 220, "cup"], [/potato|mash/, "Potato", 160, "potato"], [/chips|fries/, "Portion of chips", 365, "portion"], [/crisps/, "Packet of crisps", 160, "packet"],
+  [/chicken/, "Piece of chicken (100 g)", 190, "piece"], [/boerewors|wors|sausage/, "Piece of boerewors (100 g)", 300, "piece"], [/steak|beef/, "Steak (150 g)", 330, "steak"], [/mince/, "Cup of mince", 330, "cup"],
+  [/fish|hake|salmon|tuna/, "Piece of fish (120 g)", 200, "piece"], [/salad/, "Side salad", 80, "bowl"], [/soup/, "Bowl of soup", 180, "bowl"], [/pizza/, "Slice of pizza", 285, "slice"],
+  [/burger/, "Burger", 550, "burger"], [/wrap/, "Wrap", 350, "wrap"], [/sandwich/, "Sandwich", 330, "sandwich"], [/muffin/, "Muffin", 380, "muffin"], [/rusk/, "Rusk", 120, "rusk"],
+  [/biscuit|cookie/, "Biscuit", 60, "biscuit"], [/chocolate/, "Row of chocolate", 110, "row"], [/peanut butter/, "Peanut butter (tbsp)", 95, "tbsp"], [/avo|avocado/, "Half an avocado", 120, "half"],
+  [/nuts|almonds|cashew/, "Handful of nuts", 170, "handful"], [/biltong/, "Handful of biltong (30 g)", 90, "handful"], [/smoothie/, "Smoothie", 250, "glass"], [/juice/, "Glass of juice", 110, "glass"]
+];
+const NUMW = {a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, half: .5, "½": .5, quarter: .25};
+function parseFoodText(t){ return t.split(/,|\band\b|\+|\n|;/i).map(x => x.trim()).filter(Boolean).map(x => { const m = /^(\d+(?:[.,]\d+)?|a|an|one|two|three|four|five|six|half|½|quarter)\s+(?:x\s+)?(.*)$/i.exec(x); return m ? {q: NUMW[m[1].toLowerCase()] ?? parseFloat(m[1].replace(",", ".")), text: m[2], raw: x} : {q: 1, text: x, raw: x}; }); }
+async function lookUpFood(it){
+  const t = it.text.toLowerCase(), hit = FOODS.find(f => f[0].test(t));
+  if(hit) return Object.assign(it, {n: hit[1], kcal: Math.round(hit[2] * it.q), src: "app list", per: hit[2], unit: hit[3]});
+  try { const words = t.replace(/\b(slices?|cups?|glass(es)?|bowls?|pieces?|of|tbsp|tsp|grams?|g)\b/g, " ").trim();
+    const r = await (await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(words)}&search_simple=1&action=process&json=1&page_size=8&fields=product_name,brands,nutriments,serving_quantity,countries_tags`)).json();
+    const ps = (r.products || []).filter(p => p.nutriments && p.nutriments["energy-kcal_100g"]);
+    const p = ps.find(x => (x.countries_tags || []).includes("en:south-africa")) || ps[0];
+    if(p){ const g = Math.round((+p.serving_quantity || 100) * it.q), k100 = p.nutriments["energy-kcal_100g"];
+      return Object.assign(it, {n: (p.product_name || words) + (p.brands ? " (" + p.brands.split(",")[0] + ")" : ""), kcal: Math.round(k100 * g / 100), src: "found online", per100: Math.round(k100), g}); } } catch(_){}
+  return Object.assign(it, {n: it.text, kcal: 0, src: "not found: type the calories"});
+}
+/* photo: guessed on the phone itself (Food-101 recogniser, free, no internet service) */
+const F101 = {apple_pie:320,baby_back_ribs:600,baklava:330,beef_carpaccio:200,beef_tartare:300,beet_salad:180,beignets:400,bibimbap:550,bread_pudding:350,breakfast_burrito:450,bruschetta:200,caesar_salad:350,cannoli:300,caprese_salad:250,carrot_cake:420,ceviche:200,cheese_plate:450,cheesecake:400,chicken_curry:450,chicken_quesadilla:530,chicken_wings:430,chocolate_cake:420,chocolate_mousse:350,churros:350,clam_chowder:300,club_sandwich:600,crab_cakes:300,creme_brulee:350,croque_madame:550,cup_cakes:300,deviled_eggs:150,donuts:300,dumplings:300,edamame:190,eggs_benedict:550,escargots:250,falafel:330,filet_mignon:450,fish_and_chips:800,foie_gras:450,french_fries:365,french_onion_soup:350,french_toast:400,fried_calamari:350,fried_rice:450,frozen_yogurt:200,garlic_bread:300,gnocchi:400,greek_salad:300,grilled_cheese_sandwich:450,grilled_salmon:400,guacamole:230,gyoza:300,hamburger:550,hot_and_sour_soup:150,hot_dog:350,huevos_rancheros:450,hummus:250,ice_cream:270,lasagna:550,lobster_bisque:350,lobster_roll_sandwich:450,macaroni_and_cheese:500,macarons:200,miso_soup:80,mussels:350,nachos:600,omelette:300,onion_rings:400,oysters:150,pad_thai:600,paella:550,pancakes:400,panna_cotta:350,peking_duck:550,pho:450,pizza:570,pork_chop:400,poutine:700,prime_rib:650,pulled_pork_sandwich:550,ramen:550,ravioli:400,red_velvet_cake:450,risotto:450,samosa:250,sashimi:200,scallops:250,seaweed_salad:100,shrimp_and_grits:500,spaghetti_bolognese:600,spaghetti_carbonara:650,spring_rolls:250,steak:550,strawberry_shortcake:350,sushi:350,tacos:400,takoyaki:300,tiramisu:450,tuna_tartare:250,waffles:400};
+let foodClf = null;
+async function foodGuess(file){
+  S.fg = {st: "load", pct: 0}; render(true);
+  try {
+    const T = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1");
+    if(!foodClf) foodClf = await T.pipeline("image-classification", "onnx-community/swin-finetuned-food101-ONNX", {dtype: "q4", progress_callback: p => { if(p.status === "progress" && /onnx/.test(p.file || "")){ S.fg.pct = Math.round(p.progress || 0); const el = document.getElementById("fgpct"); if(el) el.textContent = S.fg.pct + "%"; } }});
+    S.fg = {st: "think"}; render(true);
+    const url = URL.createObjectURL(file), out = await foodClf(url, {top_k: 3}); URL.revokeObjectURL(url);
+    S.fg = {st: "pick", opts: out.map(o => ({label: o.label, score: o.score})), size: "m"};
+  } catch(e){ S.fg = {st: "err"}; }
+  render(true);
+}
+const f101name = l => l.replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+const SIZES = [["s", "Small", .7], ["m", "Medium", 1], ["l", "Large", 1.4]];
+/* daily calories: eaten vs your target (+ a little for steps) */
+const kcalTarget = p => (((S.meta.settings || {}).kcal) || {})[p] || (p === "michaela" ? 1500 : 1800);
+function kcalToday(p){ const L = logOf(p, TODAY), eaten = (L.food || []).reduce((n, x) => n + (x.kcal || 0), 0), steps = L.steps || 0, bonus = Math.round(steps * .04); return {eaten, steps, bonus, target: kcalTarget(p) + bonus}; }
+function kcalBar(p){ const k = kcalToday(p), pct = Math.min(100, Math.round(100 * k.eaten / k.target)), over = k.eaten > k.target;
+  return `<div class="kbar"><i style="width:${pct}%;background:${over ? "#e07a8f" : "#8fcbe8"}"></i></div><div class="small" style="margin-top:4px"><b style="color:#2c3e57">${k.eaten}</b> of ${k.target} kcal${k.bonus ? ` (incl. +${k.bonus} for ${k.steps.toLocaleString("en-ZA")} steps)` : ""} · ${over ? `${k.eaten - k.target} over` : `${k.target - k.eaten} left`}</div>`; }
+function kcalMini(p){ const L = logOf(p, TODAY); if(!(L.food || []).length && !(((S.meta.settings || {}).kcal) || {})[p]) return "";
+  return `<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center"><b>🍽 Food today</b><button class="lnk" data-logopen="1">＋ add</button></div>${kcalBar(p)}</div>`; }
+function foodCard(p){
+  const C = S.fcalc, G = S.fg;
+  const calc = C ? `<div class="fcalc">${C.items.map((it, k) => `<div class="frow"><span><b>${esc(it.n || it.raw)}</b>${it.q !== 1 ? ` ×${it.q}` : ""}<br><span class="small">${it.loading ? "looking it up…" : esc(it.src)}${it.g ? ` · ${it.g} g at ${it.per100} kcal/100 g` : ""}</span></span><label class="small">kcal<input type="number" inputmode="numeric" data-fkcal="${k}" value="${it.kcal || ""}" ${it.loading ? "disabled" : ""}></label></div>`).join("")}
+      <div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-faddall="1" ${C.items.some(x => x.loading) ? "disabled" : ""}>Add to today · ${C.items.reduce((n, x) => n + (x.kcal || 0), 0)} kcal</button><button class="lnk" data-fcancel="1">cancel</button></div></div>` : "";
+  const ph = !G ? "" : G.st === "load" ? `<div class="fcalc"><b>Getting the food recogniser ready…</b> <span id="fgpct">${G.pct || 0}%</span><div class="small">Only the first time (about 60 MB), then it works straight away.</div></div>`
+    : G.st === "think" ? `<div class="fcalc"><b>Looking at your photo…</b></div>`
+    : G.st === "err" ? `<div class="fcalc"><b>Couldn't read that photo.</b> <span class="small">Type it instead, that's the reliable way.</span> <button class="lnk" data-fgclose="1">close</button></div>`
+    : `<div class="fcalc"><b>Which one is it?</b> <span class="small">A guess from the photo: pick the closest, then the size.</span><div class="chips" style="margin-top:8px">${G.opts.map((o, k) => `<button class="chipb" aria-pressed="${G.pick === k}" data-fgpick="${k}">${esc(f101name(o.label))} <span class="small">${Math.round(o.score * 100)}%</span></button>`).join("")}</div>
+       <div class="chips" style="margin-top:8px">${SIZES.map(([k, l]) => `<button class="chipb" aria-pressed="${G.size === k}" data-fgsize="${k}">${l}</button>`).join("")}</div>
+       <div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-fgadd="1" ${G.pick === undefined ? "disabled" : ""}>Add${G.pick !== undefined ? " · about " + Math.round((F101[G.opts[G.pick].label] || 400) * SIZES.find(x => x[0] === G.size)[2]) + " kcal" : ""}</button><button class="lnk" data-fgclose="1">none of these</button></div></div>`;
+  return `<div class="card"><div class="k" style="color:#d9668f">🍽 Food & calories</div>${kcalBar(p)}
+    <div class="small" style="margin-top:10px"><b>Type it</b> (the reliable way): what you had, the way you'd say it.</div>
+    <div style="display:flex;gap:8px;margin-top:6px"><input class="exin" id="foodIn" style="flex:1" placeholder="2 slices white bread, 1 slice cheese, Tastic rice"><button class="ghostbtn on" data-fcalc="1">Work it out</button></div>${calc}
+    <div class="chips" style="margin-top:10px"><button class="ghostbtn" data-fgcam="1">📷 Photo guess</button><button class="lnk" data-ktarget="1">target ${kcalTarget(p)} kcal · change</button></div>${ph}
+    ${S.kEdit ? `<div style="display:flex;gap:8px;margin-top:8px;align-items:center"><input class="exin" type="number" id="kIn" value="${kcalTarget(p)}" style="width:110px"> <span class="small">kcal a day</span><button class="ghostbtn on" data-ksave="1">Save</button></div>` : ""}</div>`;
+}
+/* scale + watch: read the numbers from a screenshot, on the phone (Tesseract, free) */
+async function readShot(file){
+  S.rd = {st: "busy"}; render(true);
+  try { const M = await import("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.esm.min.js"), T = M.createWorker ? M : M.default;
+    const w = await T.createWorker("eng"); const r = await w.recognize(file); await w.terminate();
+    const t = r.data.text.replace(/,(?=\d{3}\b)/g, "").replace(/(\d),(\d)/g, "$1.$2"), num = re => { const m = re.exec(t); return m ? m : null; };
+    const v = {};
+    let m = num(/(\d{2,3}(?:\.\d)?)\s*kg/i); if(m) v.kg = +m[1];
+    m = num(/(?:body\s*fat|fat)[^\d]{0,12}(\d{1,2}(?:\.\d)?)\s*%/i) || num(/(\d{1,2}\.\d)\s*%/); if(m) v.fat = +m[1];
+    m = num(/(\d{2,3})\s*\/\s*(\d{2,3})/); if(m && +m[1] > 80 && +m[1] < 220) v.bp = m[1] + "/" + m[2];
+    m = num(/(\d{2,3})\s*(?:bpm|beats)/i) || num(/(?:heart rate|pulse|hr)[^\d]{0,12}(\d{2,3})/i); if(m) v.hr = +m[1];
+    m = num(/(\d{3,6})\s*steps/i) || num(/steps[^\d]{0,12}(\d{3,6})/i); if(m) v.steps = +m[1];
+    S.rd = {st: "ok", v, raw: t.slice(0, 400)};
+  } catch(e){ S.rd = {st: "err"}; }
+  render(true);
+}
+function readingsCard(p){ const L = logOf(p, TODAY), R = S.rd, V = R && R.v ? R.v : {};
+  const f = (k, lab, unit, ph) => `<label class="small">${lab}<input class="exin" ${k === "bp" ? 'inputmode="text"' : 'type="number" inputmode="decimal"'} data-rdf="${k}" value="${esc(V[k] !== undefined ? V[k] : L[k] !== undefined ? L[k] : "")}" placeholder="${ph}"><span>${unit}</span></label>`;
+  return `<div class="card"><div class="k" style="color:#d9668f">⚖ Scale & watch</div><div class="small" style="margin-top:4px">Screenshot your scale app or watch, then let the app read the numbers. Check them, then save.</div>
+    <div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-rdcam="1">📷 Read a screenshot</button></div>
+    ${R && R.st === "busy" ? `<div class="fcalc"><b>Reading the numbers…</b> <span class="small">The first time takes a little longer.</span></div>` : R && R.st === "err" ? `<div class="fcalc">Couldn't read it. Type the numbers below.</div>` : R && R.st === "ok" ? `<div class="fcalc small">Found: ${Object.keys(V).length ? Object.entries(V).map(([k, x]) => k + " " + x).join(" · ") : "nothing clear, type them below"}</div>` : ""}
+    <div class="rdgrid">${f("kg", "Weight", "kg", "e.g. 72.4")}${f("fat", "Body fat", "%", "e.g. 31.2")}${f("bp", "Blood pressure", "", "120/80")}${f("hr", "Heart rate", "bpm", "e.g. 68")}${f("steps", "Steps", "", "e.g. 6500")}</div>
+    <div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-rdsave="1">Save today's readings</button></div></div>`; }
+/* watch list: what to watch, where, and who has seen it */
+const PLATS = ["Netflix", "Apple TV+", "Prime Video", "Disney+", "Showmax", "YouTube", "Other"];
+function watchSec(){
+  const W = Object.entries(S.meta.watch || {}).map(([id, w]) => Object.assign({id}, w)).filter(w => !w.del).sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+  const notSeen = w => !(w.seen || {}).both && !((w.seen || {}).jenny && (w.seen || {}).michaela), list = S.watchAll ? W : W.filter(notSeen);
+  const tick = (w, k, l) => `<button class="chipb" aria-pressed="${!!(w.seen || {})[k]}" data-wseen="${w.id}|${k}">${(w.seen || {})[k] ? "✓ " : ""}${l}</button>`;
+  return `<div class="sec"><h3>Watch list</h3><div class="small">Series and films to watch, where they are, and who has seen them.</div>
+    <div class="card"><div style="display:grid;grid-template-columns:1fr auto;gap:8px"><input class="exin" id="wT" placeholder="Name of the series or film"><select class="exin" id="wP">${PLATS.map(x => `<option>${x}</option>`).join("")}</select></div><div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-wadd="1">＋ Add to the list</button></div></div>
+    <div class="chips"><button class="chipb" aria-pressed="${!S.watchAll}" data-wall="0">Not seen yet · ${W.filter(notSeen).length}</button><button class="chipb" aria-pressed="${!!S.watchAll}" data-wall="1">Everything · ${W.length}</button></div>
+    ${list.map(w => `<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font:600 18px var(--serif)">${esc(w.t)}</b><span class="plat">${esc(w.plat)}</span></div><div class="chips" style="margin-top:8px">${tick(w, "jenny", "Jenny")}${tick(w, "michaela", "Michaela")}${tick(w, "both", "Together")}<button class="lnk" data-wdel="${w.id}">${S.wDel === w.id ? "tap again to remove" : "remove"}</button></div></div>`).join("") || `<div class="card small">${W.length ? "You've seen everything on the list 🍿" : "Nothing on the list yet. Add the next thing someone recommends."}</div>`}</div>`;
+}
 
 /* ---------------- skin routine: one step at a time ---------------- */
 const SK_DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], SK_DOWL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -1511,7 +1627,7 @@ function pShop(){
 }
 /* Health = appointments, results, medicines + our progress (garden, patterns, the week); Lists = refill radar, stock, shopping */
 function pHealth(){ const a = pPlan(); S.noHead = true; const b = pWeek(); S.noHead = false; return a + b; }
-function pLists(){ const p = S.who; S.noHead = false; const a = pFill().replace('"Stock")', '"Stock")'); S.noHead = true; const b = pShop(); S.noHead = false; return a + b; }
+function pLists(){ const p = S.who; S.noHead = false; const a = pFill(); S.noHead = true; const b = pShop(); S.noHead = false; return a + `<div class="pad">${watchSec()}</div>` + b; }
 /* ---------------- let's get going ---------------- */
 function setupSteps(p){ return ["hi","wake", ...P[p].slots.map(s => "slot:"+s.id), "flags", "done"]; }
 function goCard(p){
@@ -1664,11 +1780,15 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795128636"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795129099"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
 document.addEventListener("visibilitychange", () => { if(!document.hidden){ checkUpdate(); if(!S.wx || S.wx.d !== TODAY) loadWeather(); } }); setTimeout(checkUpdate, 3000); setTimeout(loadWeather, 1500);
+let installEv = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEv = e; render(true); });
+window.addEventListener("appinstalled", () => { installEv = null; toast("Installed ✓ Find Well Together on your home screen"); render(true); });
+const installBar = () => installEv && !matchMedia("(display-mode: standalone)").matches ? `<button class="installbar" data-install="1">📲 Put Well Together on my home screen</button>` : "";
 function render(keepScroll){
   TODAY = dayNow();
   const T = THEMES[themeOf(S.who)];
@@ -1893,6 +2013,30 @@ document.addEventListener("click", e => {
   else if(d.water !== undefined){ const n = +d.water; saveLog(S.who, TODAY, L => { L.water = n; }); if(n >= WATER_GOAL + (S.wx && S.wx.max >= 30 ? 2 : 0)) celebrate(false, "Water goal reached 💧"); }
   else if(d.lights){ saveLog(S.who, TODAY, L => { L.lights = toHM(toMin(nowHM())); }); celebrate(false, "Sleep well 🌙"); }
   else if(d.lightsundo){ saveLog(S.who, TODAY, L => { delete L.lights; }); }
+  else if(d.fcalc){ const t = ((document.getElementById("foodIn") || {}).value || "").trim(); if(!t){ toast("Type what you had first"); return; }
+    const items = parseFoodText(t).map(x => Object.assign(x, {loading: true})); S.fcalc = {items}; render(true);
+    Promise.all(items.map(it => lookUpFood(it).then(() => { it.loading = false; render(true); }))); }
+  else if(d.faddall){ const C = S.fcalc; if(!C) return; document.querySelectorAll("[data-fkcal]").forEach(el => { const it = C.items[+el.dataset.fkcal]; if(it) it.kcal = Math.round(+el.value || 0); });
+    const at = new Date().toISOString(); saveLog(S.who, TODAY, L => { L.food = (L.food || []).concat(C.items.map(it => ({t: (it.q !== 1 ? it.q + " × " : "") + (it.n || it.raw), kcal: it.kcal || undefined, at, src: it.src}))); });
+    S.fcalc = null; render(true); toast("Added ✓ " + C.items.reduce((n, x) => n + (x.kcal || 0), 0) + " kcal"); }
+  else if(d.fcancel){ S.fcalc = null; render(true); }
+  else if(d.fgcam){ document.getElementById("fgsnap").click(); }
+  else if(d.fgpick !== undefined){ S.fg.pick = +d.fgpick; render(true); }
+  else if(d.fgsize){ S.fg.size = d.fgsize; render(true); }
+  else if(d.fgclose){ S.fg = null; render(true); }
+  else if(d.fgadd){ const G = S.fg; if(!G || G.pick === undefined) return; const o = G.opts[G.pick], sz = SIZES.find(x => x[0] === G.size), k = Math.round((F101[o.label] || 400) * sz[2]);
+    saveLog(S.who, TODAY, L => { L.food = (L.food || []).concat({t: f101name(o.label) + " (" + sz[1].toLowerCase() + ", photo guess)", kcal: k, at: new Date().toISOString(), src: "photo"}); }); S.fg = null; render(true); toast("Added ✓ about " + k + " kcal"); }
+  else if(d.ktarget){ S.kEdit = !S.kEdit; render(true); }
+  else if(d.ksave){ const v = Math.round(+((document.getElementById("kIn") || {}).value || 0)); if(v < 800){ toast("That looks too low"); return; } const K = Object.assign({}, (S.meta.settings || {}).kcal); K[S.who] = v; S.meta.settings = Object.assign({}, S.meta.settings, {kcal: K}); S.kEdit = false; saveMeta("settings"); toast("Target saved ✓"); }
+  else if(d.rdcam){ document.getElementById("rdsnap").click(); }
+  else if(d.rdsave){ const v = {}; document.querySelectorAll("[data-rdf]").forEach(el => { const x = el.value.trim(); if(x) v[el.dataset.rdf] = el.dataset.rdf === "bp" ? x : +x; });
+    if(!Object.keys(v).length){ toast("Nothing to save yet"); return; } saveLog(S.who, TODAY, L => { Object.assign(L, v); }); S.rd = null; render(true); toast("Readings saved ✓"); }
+  else if(d.wadd){ const t = ((document.getElementById("wT") || {}).value || "").trim(), pl = (document.getElementById("wP") || {}).value || "Other"; if(!t){ toast("Type the name first"); return; }
+    S.meta.watch = Object.assign({}, S.meta.watch, {["w" + Date.now().toString(36)]: {t, plat: pl, by: S.who, at: new Date().toISOString(), seen: {}}}); saveMeta("watch"); toast("On the list 🍿"); }
+  else if(d.wseen){ const [id, k] = d.wseen.split("|"), W = Object.assign({}, S.meta.watch), w = Object.assign({}, W[id]); w.seen = Object.assign({}, w.seen); if(w.seen[k]) delete w.seen[k]; else w.seen[k] = new Date().toISOString(); W[id] = w; S.meta.watch = W; saveMeta("watch"); }
+  else if(d.wall !== undefined){ S.watchAll = d.wall === "1"; render(true); }
+  else if(d.wdel){ if(S.wDel !== d.wdel){ S.wDel = d.wdel; render(true); return; } const W = Object.assign({}, S.meta.watch); W[d.wdel] = Object.assign({}, W[d.wdel], {del: new Date().toISOString()}); S.meta.watch = W; S.wDel = ""; saveMeta("watch"); }
+  else if(d.install){ if(installEv){ installEv.prompt(); installEv.userChoice.finally(() => { installEv = null; render(true); }); } }
   else if(d.logopen){ S.logOpen = true; render(true); }
   else if(d.logclose){ S.logOpen = false; render(true); }
   else if(d.daymiss){ saveLog(S.who, d.daymiss, L => { L.missed = new Date().toISOString(); }); toast("Marked as missed ✓"); }
@@ -1960,6 +2104,8 @@ let assets = null, snapFor = "";
 function shrink(file){
   return new Promise((ok, bad) => { const img = new Image(); img.onload = () => { const s = Math.min(1, 600/Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : bad(new Error("no image")), "image/jpeg", .82); URL.revokeObjectURL(img.src); }; img.onerror = bad; img.src = URL.createObjectURL(file); });
 }
+document.getElementById("fgsnap").addEventListener("change", e => { const file = e.target.files && e.target.files[0]; e.target.value = ""; if(file) foodGuess(file); });
+document.getElementById("rdsnap").addEventListener("change", e => { const file = e.target.files && e.target.files[0]; e.target.value = ""; if(file) readShot(file); });
 document.getElementById("ressnap").addEventListener("change", async e => {
   const file = e.target.files && e.target.files[0]; e.target.value = ""; if(!file || !S.resForm) return;
   try { const b = await shrinkTo(file, 1100); S.resForm.img = await new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); }); render(true); } catch(_){ toast("Couldn't read that photo"); }
