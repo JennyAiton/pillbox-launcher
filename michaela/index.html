@@ -257,7 +257,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
   .scene .rays{animation:spin 60s linear infinite}
   .scene .birds{animation:birds 26s linear infinite}
   .scene .bfly{animation:fly1 18s ease-in-out infinite}.scene .bfly.b2{animation:fly2 22s ease-in-out infinite}
-  .scene .wing{animation:flap .35s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:right center}.scene .wing.r{transform:scaleX(-1);animation-name:flapr;transform-origin:left center}
+  .scene .wing{animation:flap .2s cubic-bezier(.45,0,.55,1) infinite alternate;transform-box:fill-box;transform-origin:right center}.scene .wing.r{transform:scaleX(-1);animation-name:flapr;transform-origin:left center}
   .scene .shim{animation:shim 3.5s ease-in-out infinite alternate}
   .scene .tw{animation:tw 3s ease-in-out infinite alternate}.scene .ffly{animation:ffly 7s ease-in-out infinite}
 }
@@ -266,7 +266,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 @keyframes birds{from{transform:translate(-60px,70px)}to{transform:translate(460px,40px)}}
 @keyframes fly1{0%{transform:translate(40px,250px)}25%{transform:translate(150px,215px)}50%{transform:translate(250px,262px)}75%{transform:translate(140px,290px)}100%{transform:translate(40px,250px)}}
 @keyframes fly2{0%{transform:translate(360px,230px)}30%{transform:translate(260px,200px)}60%{transform:translate(200px,250px)}100%{transform:translate(360px,230px)}}
-@keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.35)}}@keyframes flapr{from{transform:scaleX(-1)}to{transform:scaleX(-.35)}}
+@keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.12)}}@keyframes flapr{from{transform:scaleX(-1)}to{transform:scaleX(-.12)}}
 @keyframes shim{from{opacity:.15}to{opacity:.6}}
 @keyframes tw{from{opacity:.25}to{opacity:1}}
 @keyframes ffly{0%,100%{transform:translate(0,0);opacity:.2}50%{transform:translate(14px,-10px);opacity:1}}
@@ -318,7 +318,7 @@ html,body{background:#cfe9fa}
 .celeb{position:fixed;inset:0;z-index:120;pointer-events:none;overflow:hidden}
 .celeb .cb{position:absolute;bottom:-60px;animation:cfly 3s ease-out forwards}
 .celeb .cb.bird{animation-name:cbird}.celeb .cb.petal2{bottom:auto;top:-30px;animation-name:cpetal}
-.celeb .cw{animation:flap .25s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:right center}.celeb .cw.r{transform:scaleX(-1);animation-name:flapr;transform-origin:left center}
+.celeb .cw{animation:flap .18s cubic-bezier(.45,0,.55,1) infinite alternate;transform-box:fill-box;transform-origin:right center}.celeb .cw.r{transform:scaleX(-1);animation-name:flapr;transform-origin:left center}
 .cmsg{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);background:rgba(255,250,243,.95);color:#2c3e57;border-radius:20px;padding:14px 20px;font:600 22px var(--serif);text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.25);animation:cpop 3.4s ease forwards;max-width:84%}
 .celeb.big .cmsg{font-size:26px}
 @keyframes cfly{0%{transform:translate(0,0) rotate(-8deg);opacity:0}10%{opacity:1}100%{transform:translate(30px,-110vh) rotate(12deg);opacity:.9}}
@@ -636,8 +636,19 @@ function lotusFlower(x, y, sc, p, d){ // layered petals with a soft gradient, go
 }
 function bud(x, y, sc, p){ return `<g transform="translate(${x} ${y}) scale(${sc})"><g class="bob"><path d="M0 0 v 24" stroke="#3f7a52" stroke-width="2.5"/><path d="M0 0 C -9 -12 -6 -26 0 -32 C 6 -26 9 -12 0 0Z" fill="${p[1]}"/><path d="M0 0 C -4 -10 -3 -22 0 -28" stroke="${p[0]}" stroke-width="2" fill="none"/></g></g>`; }
 function lilyPad(x, y, rx, col, rot){ return `<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M0 0 L ${rx} -${rx*.12} A ${rx} ${rx*.36} 0 1 1 ${rx} ${rx*.12} Z" fill="${col}"/><path d="M0 0 L ${-rx*.7} ${-rx*.12} M0 0 L ${-rx*.5} ${rx*.2} M0 0 L ${rx*.3} ${rx*.28}" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.2"/></g>`; }
-function butterfly(cls, c1, c2){ const w = `<path d="M0 0 C -10 -12 -18 -6 -14 2 C -12 8 -4 6 0 0Z" fill="${c1}"/><path d="M0 0 C -8 6 -12 14 -6 14 C -2 13 0 6 0 0Z" fill="${c2}"/>`;
-  return `<g class="bfly ${cls}"><g class="wing">${w}</g><g class="wing r">${w}</g><path d="M0 -4 v 10" stroke="#3b2a2a" stroke-width="1.6"/></g>`; }
+/* a proper butterfly: kind "monarch" (orange, black veins, white dots) or "blue" (pale blue morpho) */
+const BF_KINDS = {monarch: {a: "#f7a234", b: "#d9661a", edge: "#2a1d16", vein: "#2a1d16", dot: "#fff"}, blue: {a: "#bfe6ff", b: "#4fa3e0", edge: "#1f3550", vein: "#2a4f75", dot: "#fff"}, pink: {a: "#ffe0ea", b: "#f19bb5", edge: "#5a2a3a", vein: "#8a4a5c", dot: "#fff"}};
+function bfWing(k, id){ const K = BF_KINDS[k] || BF_KINDS.monarch;
+  return `<path d="M0 -1 C -4 -12 -16 -22 -27 -19 C -31 -17 -31 -9 -25 -4 C -18 1 -8 1 0 -1Z" fill="url(#${id}f)" stroke="${K.edge}" stroke-width="1.6"/>
+    <path d="M0 -1 C -9 -6 -19 -12 -25 -14 M0 -1 C -8 -3 -17 -5 -24 -8 M-12 -5 C -16 -10 -20 -14 -22 -16" stroke="${K.vein}" stroke-width=".8" fill="none" opacity=".8"/>
+    <path d="M0 0 C -9 2 -17 8 -16 15 C -15 20 -8 20 -4 15 C -1 11 0 5 0 0Z" fill="url(#${id}h)" stroke="${K.edge}" stroke-width="1.6"/>
+    <path d="M0 1 C -6 5 -10 9 -11 14 M0 1 C -4 5 -6 10 -6 15" stroke="${K.vein}" stroke-width=".8" fill="none" opacity=".8"/>
+    ${[[-27,-16],[-29,-12],[-26,-7],[-22,-19],[-15,16],[-10,18]].map(([x, y]) => `<circle cx="${x + 2}" cy="${y}" r="1" fill="${K.dot}"/>`).join("")}`; }
+function bfDefs(k, id){ const K = BF_KINDS[k] || BF_KINDS.monarch;
+  return `<defs><radialGradient id="${id}f" cx="15%" cy="70%" r="95%"><stop offset="0" stop-color="${K.a}"/><stop offset="1" stop-color="${K.b}"/></radialGradient><radialGradient id="${id}h" cx="10%" cy="20%" r="100%"><stop offset="0" stop-color="${K.a}"/><stop offset="1" stop-color="${K.b}"/></radialGradient></defs>`; }
+function bfBody(){ return `<ellipse cx="0" cy="2" rx="1.8" ry="9" fill="#2a1d16"/><circle cx="0" cy="-8" r="2.2" fill="#2a1d16"/><path d="M-0.6 -9.5 C -3 -15 -5 -17 -7 -18 M0.6 -9.5 C 3 -15 5 -17 7 -18" stroke="#2a1d16" stroke-width=".8" fill="none"/><circle cx="-7" cy="-18" r="1" fill="#2a1d16"/><circle cx="7" cy="-18" r="1" fill="#2a1d16"/>`; }
+function butterfly(cls, kind){ const k = kind || (cls === "b2" ? "blue" : "monarch"), id = "bf" + cls;
+  return `<g class="bfly ${cls}">${bfDefs(k, id)}<g transform="scale(.75)"><g class="wing">${bfWing(k, id)}</g><g class="wing r">${bfWing(k, id)}</g>${bfBody()}</g></g>`; }
 function scene(p, i, bloom){ if(bloom === undefined) bloom = 4; const starry = i === 5; i = i === 5 ? 7 : 6; // soft blue by day, soft lilac in the evening
   const c = SKY[i] || SKY[2], night = starry, dusk = i === 4 || i === 1;
   const petals = ["#fff4f2", "#f6b8bf", "#ee9fad"]; // same pond for both
@@ -647,7 +658,7 @@ function scene(p, i, bloom){ if(bloom === undefined) bloom = 4; const starry = i
   const stars = night ? [...Array(22)].map((_, k) => `<circle class="tw" style="animation-delay:-${(k*.37)%3}s" cx="${(k*73)%400}" cy="${20 + (k*41)%170}" r="${k % 3 ? 1.1 : 1.8}" fill="#fff"/>`).join("") : "";
   const birds = night ? "" : `<g class="birds" fill="none" stroke="#2c3e46" stroke-width="2" stroke-linecap="round"><path d="M0 0 q 6 -6 12 0 q 6 -6 12 0"/><path d="M30 14 q 5 -5 10 0 q 5 -5 10 0"/><path d="M-22 18 q 4 -4 8 0 q 4 -4 8 0"/></g>`;
   const flyers = night ? [...Array(6)].map((_, k) => `<circle class="ffly" style="animation-delay:-${k*1.3}s" cx="${50 + k*55}" cy="${250 + (k%3)*22}" r="2.2" fill="#fff3a8"/>`).join("")
-    : butterfly("b1", "#f6a65a", "#f4c26a") + butterfly("b2", "#9fd0f0", "#c7a7e8");
+    : butterfly("b1", "monarch") + butterfly("b2", "blue");
   return `<svg class="scene" viewBox="0 0 400 860" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><defs><linearGradient id="sky${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient><linearGradient id="wat${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[2]}"/><stop offset=".5" stop-color="${c[3]}"/></linearGradient></defs>
     <rect width="400" height="235" fill="url(#sky${i})"/>${stars}${sun}${birds}
     <path d="M0 222 Q 50 196 110 214 T 230 206 T 330 210 T 400 204 V 240 H 0Z" fill="${leaf2}" opacity=".55"/><path d="M0 232 Q 80 214 170 228 T 400 222 V 240 H 0Z" fill="${leaf}" opacity=".6"/>
@@ -1905,7 +1916,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = windDown() ? 5 : S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795131404"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795131761"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -1959,7 +1970,8 @@ function celebrate(big, msg){
   const fly = (k, kind) => { const x = 8 + Math.random() * 84, d = Math.random() * (big ? 1.4 : .6), dur = 2.6 + Math.random() * 1.6, sc = .7 + Math.random() * .8, c = pick([["#f6a65a","#f4c26a"],["#9fd0f0","#c7a7e8"],["#f6b8bf","#ffd1dc"],["#ffc9d9","#ffe4ec"]]);
     if(kind === "bird") return `<svg class="cb bird" style="left:${x}%;animation-delay:${d}s;animation-duration:${dur + 1}s" viewBox="0 0 40 16" width="${34*sc}"><path d="M2 12 q 9 -10 18 0 q 9 -10 18 0" fill="none" stroke="#5a3d2b" stroke-width="2.4" stroke-linecap="round"/></svg>`;
     if(kind === "petal") return `<svg class="cb petal2" style="left:${x}%;animation-delay:${d}s;animation-duration:${dur + 1.5}s" viewBox="0 0 14 10" width="${16*sc}"><path d="M1 5 c 4 -6 10 -6 12 0 c -4 5 -9 5 -12 0z" fill="${c[0]}"/></svg>`;
-    return `<svg class="cb" style="left:${x}%;animation-delay:${d}s;animation-duration:${dur}s" viewBox="-16 -14 32 30" width="${38*sc}"><g class="cw"><path d="M0 0 C -10 -12 -18 -6 -14 2 C -12 8 -4 6 0 0Z" fill="${c[0]}"/><path d="M0 0 C -8 6 -12 14 -6 14 C -2 13 0 6 0 0Z" fill="${c[1]}"/></g><g class="cw r"><path d="M0 0 C -10 -12 -18 -6 -14 2 C -12 8 -4 6 0 0Z" fill="${c[0]}"/><path d="M0 0 C -8 6 -12 14 -6 14 C -2 13 0 6 0 0Z" fill="${c[1]}"/></g><path d="M0 -4 v 10" stroke="#3b2a2a" stroke-width="1.6"/></svg>`; };
+    const bk = pick(["monarch", "blue", "pink"]), id = "cbf" + Math.random().toString(36).slice(2, 7);
+    return `<svg class="cb" style="left:${x}%;animation-delay:${d}s;animation-duration:${dur}s" viewBox="-34 -24 68 48" width="${44*sc}">${bfDefs(bk, id)}<g class="cw">${bfWing(bk, id)}</g><g class="cw r">${bfWing(bk, id)}</g>${bfBody()}</svg>`; };
   let h = ""; for(let k = 0; k < (big ? 14 : 6); k++) h += fly(k, "fly"); if(big){ for(let k = 0; k < 5; k++) h += fly(k, "bird"); for(let k = 0; k < 14; k++) h += fly(k, "petal"); }
   box.innerHTML = h + (msg ? `<div class="cmsg">${esc(msg)}</div>` : ""); document.body.appendChild(box); setTimeout(() => box.remove(), big ? 5200 : 3600);
 }
