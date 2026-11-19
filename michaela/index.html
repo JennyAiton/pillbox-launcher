@@ -30,7 +30,7 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch
  </form>
 </div>
 <title>Well Together</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@500;600;700;800&family=Caveat:wght@600;700&display=swap">
 <style>
 /* Layout: the photo is the screen. One theme per person (Michaela: jungle, Jenny: lotus), photos move from dawn to night.
    Deliberately dark, single-look design so the photographs carry the colour. */
@@ -323,6 +323,18 @@ html,body{background:#cfe9fa}
 .banner .in{background:rgba(255,255,255,.72);color:#2c3e57;border-color:rgba(255,255,255,.9)}.banner .in b{color:#d9668f}
 .banner .in .sb{background:#f19bb5;color:#fff}.banner .in .sb.ghost{background:rgba(44,62,87,.1);color:#2c3e57}
 .lpad.on{color:#2c3e57}
+/* look B: the postcard */
+.postcard{position:absolute;left:20px;right:20px;top:calc(58px + env(safe-area-inset-top,0px));height:118px;border:6px solid #fff;border-radius:14px;overflow:hidden;box-shadow:0 10px 24px rgba(40,70,100,.22);transform:rotate(-1.8deg);z-index:3;background:#cfe9fa}
+.postcard .scene.pc{position:absolute;left:0;top:-128px;width:100%;height:auto}
+.postcard .hand{position:absolute;right:12px;bottom:4px;font:700 26px/1 Caveat,cursive;color:#fff;text-shadow:0 1px 6px rgba(30,50,80,.55)}
+.pads{top:calc(196px + env(safe-area-inset-top,0px))}
+.banner{top:calc(276px + env(safe-area-inset-top,0px))}
+.focus-wrap{margin-top:330px}
+.head{height:220px}.head .postcard{transform:rotate(1.4deg)}.head .postcard .hand{left:14px;right:auto;font-size:34px}
+.head .tt{bottom:10px}.head .tt .k{color:#d9668f!important;font:800 10px var(--sans);letter-spacing:1.6px;text-transform:uppercase}
+.topbar{gap:6px}.topbar .chip,.topbar .chip.wine{font:800 11.5px var(--sans);padding:7px 10px;border-width:1px}.who button{padding:6px 10px}
+.head .tt .k{display:inline-block;background:rgba(255,255,255,.85);border-radius:99px;padding:4px 10px}
+#app > .pad .sec > h3{display:inline-block;background:rgba(255,255,255,.75);border-radius:14px;padding:2px 12px;justify-self:start}
 /* tab bar */
 .tb{color:#2c3e57;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(452px,calc(100% - 28px));display:flex;justify-content:space-around;padding:8px 4px;font:700 9.5px var(--sans);background:rgba(255,255,255,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 6px 20px rgba(0,0,0,.15);border-radius:24px;z-index:20}
 .tb button{display:grid;justify-items:center;gap:2px;opacity:.55;padding:2px 8px}
@@ -841,6 +853,8 @@ function whoSwitch(){
   return `<div class="who" role="group" aria-label="Whose day">${["michaela","jenny"].map(p => { const T = THEMES[themeOf(p)]; return `<button style="--wacc:${T.acc};--wink:${T.ink}" aria-pressed="${S.who===p}" data-who="${p}" id="who_${p}">${P[p].name}</button>`; }).join("")}</div>`;
 }
 /* the day as lily pads across the pond: green = done, gold = the one you're on */
+function postcard(p, text, i){ return `<div class="postcard" aria-hidden="true">${scene(p, i === 5 ? 5 : 6, 4).replace('class="scene"', 'class="scene pc"')}<div class="hand">${esc(text)}</div></div>`; }
+const dayWord = () => parse(TODAY).toLocaleDateString("en-ZA", {weekday: "long"});
 function padsRow(p, cur, skinSl){
   const sl = slotsFor(p, TODAY).filter(s => slotState(p, s, TODAY) !== "gone" && (!windDown() || slotTime(p, s, TODAY) >= "18:00"));
   return `<div class="pads pad">${sl.map(s => { const st = slotState(p, s, TODAY), on = cur && cur.id === s.id, sk = allSkipped(p, s, TODAY);
@@ -950,7 +964,7 @@ function pToday(){
     card = `<div class="flead">${lead}</div>${cur.rel !== undefined ? wakeStrip : ""}${warn}${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}<div class="act">${act}</div>${chkLine}${exLine}`;
   }
   S.sceneIdx = windDown() ? 5 : bg;
-  const hero = `<section class="hero fl">${top}${padsRow(p, showSkin ? null : cur, showSkin ? skd.sl : "")}${banner(p)}${boatFloat(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
+  const hero = `<section class="hero fl">${top}${postcard(p, dayWord() + (windDown() ? " · sleep well" : " · well together"), windDown() ? 5 : 6)}${padsRow(p, showSkin ? null : cur, showSkin ? skd.sl : "")}${banner(p)}${boatFloat(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
   return hero + `<div class="pad">${pTodayMore(p, curKey)}</div>`;
 }
 const pillImg = nm => (S.pimg||{})[nm] || "";
@@ -1025,7 +1039,8 @@ function pTodayMore(p, curKey){
   }
   return h + `<div class="status" id="status">Connecting…</div>`;
 }
-function head(p, idx, eyebrow, title){ S.sceneIdx = 0; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
+function head(p, idx, eyebrow, title){ S.sceneIdx = 0; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div>${postcard(p, title, 6)}<div class="tt pad"><div class="k">${eyebrow}</div></div></div>`; }
+function headOld(p, idx, eyebrow, title){ return `<div class="head"><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
 function orderHtml(){
   const rows = [], uncounted = [];
   for(const q of ["michaela","jenny"]) for(const r of stockRows(q)){ if(missing(q, r.nm)) continue; if(r.left === null) uncounted.push(q); else if(r.days !== null && r.days <= 14) rows.push([q, r]); }
@@ -1274,8 +1289,8 @@ function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf
 /* how to use the gifts and samples that aren't steps yet (DermaFix's own directions, 19 Nov 2026) */
 const SHELF_HOW = {
   "DermaFix DNA Defence SPF50 · 30 ml": "Light sunscreen for your handbag. At lunch on sunny days, press a thin layer over your face (over make-up is fine). DermaFix: reapply after sweating or towel drying.",
-  "DermaFix MD Mandelic Cleanser · free sample sachet": "A gentle acid face wash made for oilier skin, and yours is dry. Try it once on a Tuesday or Thursday night instead of your face wash: lather, leave it on for 2 minutes, rinse well. Skip it if your skin feels dry or sore.",
-  "DermaFix DermaPolish · free sample sachet": "Use it on Saturday night when your tub runs out: half the sachet with a little water in your palm, massage for a minute, rinse. Not on retinal nights.",
+  "DermaFix MD Mandelic Cleanser · free sample sachet": "A gentle acid face wash made for oilier skin, and yours is dry. Try it once on a Tuesday night instead of your evening face wash: lather, leave it on for 2 minutes, rinse well. Skip it if your skin feels dry or sore.",
+  "DermaFix DermaPolish · free sample sachet": "Use it on a Thursday night when your tub runs out: half the sachet with a little water in your palm, massage for a minute, rinse.",
   "DermaFix ACC Retinal + Complex · 15 ml": "Travel size of your retinal. Pack it for trips; at home keep using the big bottle.",
   "DermaFix Ferulic + C + E · 10 ml": "Travel size of your vitamin C. Pack it for trips.",
   "DermaFix HydraSooth SOS · 15 ml": "Travel size of your calming cream. Pack it for trips, or keep it in your bag for sore, dry patches.",
@@ -1337,8 +1352,20 @@ function skinAdd4(){
   R.am = R.am.filter(x => x.id !== "t_floss_am"); // water floss stays an evening thing
   R.done = Object.assign({}, R.done, {k20nov: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
 }
+function skinAdd5(){
+  const p = "jenny", R = skinClone(p); if((R.done || {}).k20nov2) return;
+  const set = (word, days, how) => { const x = R.pm.find(y => ((y.b || "") + " " + y.n).toLowerCase().includes(word)); if(x){ x.days = days; if(how) x.how = how; } };
+  set("retinal eye", [1, 3, 5]);                    // Mon, Wed, Fri
+  for(const x of R.pm) if(/retinal/i.test(x.n) && !/eye/i.test(x.n)) x.days = [1, 3, 5];
+  set("copper", [2]);                               // Tue
+  set("polish", [4], "Thursday: half a teaspoon of powder and a little water in your palm. Massage gently over your face for a minute, then rinse.");
+  set("hydrasooth", [4], "Thursday, after the polish: a generous layer as a calming mask. Leave it on.");
+  set("regenrx", [4], "Thursday: a few drops pressed into any red or dry patches.");
+  R.note = "Special treatments are on weekdays (Mon/Wed/Fri retinal, Tue copper, Thu polish + calming mask). Weekends are the easy basics.";
+  R.done = Object.assign({}, R.done, {k20nov2: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
+}
 function skinImport(){
-  skinAdd(); skinAdd2(); skinAdd3(); skinAdd4();
+  skinAdd(); skinAdd2(); skinAdd3(); skinAdd4(); skinAdd5();
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
   if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
@@ -1602,7 +1629,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795127273"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795127758"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
