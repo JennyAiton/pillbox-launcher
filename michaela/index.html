@@ -359,6 +359,25 @@ html,body{background:#cfe9fa}
 .setfold{margin-top:22px;background:rgba(255,255,255,.85);border-radius:18px;padding:10px 14px}.setfold summary{font:800 14px var(--sans);color:#2c3e57;cursor:pointer}
 /* at night the background is dark: keep text on it readable */
 body.night #app > .pad .sec > .small,body.night .scroll,body.night .subhead .small{color:#eef2ff!important;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+/* Storybook pond */
+.story{position:absolute;left:0;right:0;top:0;height:350px;z-index:4;pointer-events:none}
+.sobj{position:absolute;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:1px;background:none;pointer-events:auto;padding:4px}
+.sobj .e{font-size:30px;line-height:1;filter:drop-shadow(0 3px 4px rgba(20,40,60,.25))}
+.sobj.small .e{font-size:22px}
+.sobj .l{font:800 9px var(--sans);color:#2c3e57;background:rgba(255,255,255,.9);border-radius:8px;padding:1px 6px;white-space:nowrap;box-shadow:0 2px 6px rgba(20,40,60,.12)}
+.sobj.late .l{background:#ffd6dc}
+.sobj.glow .l{background:#f19bb5;color:#fff}
+@media (prefers-reduced-motion:no-preference){.sobj.glow .e{animation:storyglow 1.8s ease-in-out infinite}.sobj.boat .e{animation:bob 2.6s ease-in-out infinite alternate}.sobj.lantern{transform-origin:50% 0}.sobj.lantern .e{animation:swing 3s ease-in-out infinite alternate;transform-origin:50% 0}}
+@keyframes storyglow{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(241,155,181,0))}50%{transform:scale(1.18);filter:drop-shadow(0 0 10px rgba(241,155,181,.9))}}
+@keyframes swing{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.storytop{position:absolute;left:0;right:0;top:calc(58px + env(safe-area-inset-top,0px));z-index:5;display:flex;justify-content:space-between;align-items:center}
+.storytop .hand2,.storytop span:last-child{background:rgba(255,255,255,.85);border-radius:14px;padding:4px 12px;color:#2c3e57;box-shadow:0 2px 8px rgba(20,40,60,.12)}
+.storytop .hand2{font:700 22px/1.1 Caveat,cursive}.storytop span:last-child{font:800 11px var(--sans)}
+.storyhint{position:absolute;left:0;right:0;top:calc(98px + env(safe-area-inset-top,0px));z-index:5;text-align:center}
+.storyhint span{display:inline-block;background:rgba(44,62,87,.82);color:#fff;border-radius:99px;padding:5px 12px;font:700 11px var(--sans)}
+.banner.inwrap{position:relative;top:auto;left:auto;right:auto;margin:0 0 8px}
+.story-on .focus-wrap{margin-top:356px}
+.focus.pop{animation:skpop .45s ease}
 /* tab bar */
 .tb{color:#2c3e57;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(452px,calc(100% - 28px));display:flex;justify-content:space-around;padding:8px 4px;font:700 9.5px var(--sans);background:rgba(255,255,255,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 6px 20px rgba(0,0,0,.15);border-radius:24px;z-index:20}
 .tb button{display:grid;justify-items:center;gap:2px;opacity:.55;padding:2px 8px}
@@ -887,6 +906,27 @@ function whoSwitch(){
 /* the day as lily pads across the pond: green = done, gold = the one you're on */
 function postcard(p, text, i){ return `<div class="postcard" aria-hidden="true">${scene(p, i === 5 ? 5 : 6, 4).replace('class="scene"', 'class="scene pc"')}<div class="hand">${esc(text)}</div></div>`; }
 const dayWord = () => parse(TODAY).toLocaleDateString("en-ZA", {weekday: "long"});
+function storyFocus(){ requestAnimationFrame(() => { const el = document.getElementById("focus"); if(el){ el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); } }); }
+function storyLayer(p, cur, skinSl){
+  const L = logOf(p, TODAY), night = windDown();
+  const sl = slotsFor(p, TODAY).filter(s => slotState(p, s, TODAY) !== "gone" && (!night || slotTime(p, s, TODAY) >= "18:00"));
+  const n = sl.length, objs = [];
+  sl.forEach((s, k) => { const st = slotState(p, s, TODAY), sk = allSkipped(p, s, TODAY), on = cur && cur.id === s.id, x = n === 1 ? 50 : 16 + k * (68 / (n - 1)), y = 268 + (k % 2 ? 26 : 0);
+    const e = st === "done" ? (sk ? "🍃" : "🪷") : on ? "🌸" : st === "late" ? "🌺" : "🌱";
+    objs.push(`<button class="sobj ${on ? "glow" : ""} ${st === "late" && !on ? "late" : ""}" style="left:${x}%;top:${y}px" data-sel="${s.id}" data-story="1" aria-label="${esc(s.lab)}"><span class="e">${e}</span><span class="l">${st === "done" ? (sk ? "not today" : "✓ ") : ""}${esc(s.lab)}${st === "done" ? "" : " · " + slotTime(p, s, TODAY)}</span></button>`); });
+  const ds = skinDay(), ck = (toMin(nowHM()) >= 14*60) ? "pm" : "am", K = skinState(p, ck, ds);
+  if(K.st.length){ const done = K.n && K.done >= K.n; objs.push(`<button class="sobj ${skinSl === ck ? "glow" : ""}" style="left:12%;top:206px" data-selskin="${ck}" data-story="1" aria-label="Care routine"><span class="e">🧴</span><span class="l">${done ? "✓ care" : `Care · ${K.done}/${K.n}`}</span></button>`); }
+  const wn = L.water || 0, goal = WATER_GOAL + (S.wx && S.wx.max >= 30 ? 2 : 0);
+  objs.push(`<button class="sobj" style="left:88%;top:206px" data-water="${Math.min(goal, wn + 1)}" aria-label="Add a glass of water"><span class="e">${wn >= goal ? "💧" : "🫗"}</span><span class="l">Water ${wn}/${goal}</span></button>`);
+  const b = boatsFor(p).find(x => !x.read);
+  objs.push(b ? `<button class="sobj glow boat" style="left:66%;top:318px" data-boatread="${b.id}" aria-label="A note from ${esc(P[b.from] ? P[b.from].name : "")}"><span class="e">⛵</span><span class="l">Note from ${esc(P[b.from] ? P[b.from].name : "")}</span></button>`
+              : `<button class="sobj boat small" style="left:66%;top:318px" data-boatopen="1" aria-label="Send a paper boat"><span class="e">⛵</span><span class="l">Send a note</span></button>`);
+  const a = progress(p), o = progress(other(p)), both = a.n && o.n && a.d >= a.n && o.d >= o.n;
+  objs.push(`<button class="sobj small" style="left:34%;top:322px" data-scrollto="ponds" aria-label="Together"><span class="e">${both ? "🐟🐟" : "🐟"}</span><span class="l">${both ? "both done!" : "Together"}</span></button>`);
+  objs.push(`<button class="sobj lantern ${night && !L.lights ? "glow" : ""}" style="left:86%;top:118px" ${night ? 'data-lights="1"' : 'data-lantern="1"'} aria-label="Lights out"><span class="e">🏮</span><span class="l">${L.lights ? "lights out " + L.lights : night ? "Lights out" : "bedtime"}</span></button>`);
+  const glowObj = skinSl ? "the little bottle: time for your " + (skinSl === "am" ? "morning" : "evening") + " care" : cur ? "the pink flower: " + cur.lab.toLowerCase() + " tablets" : night && !L.lights ? "the lantern when the lights go out" : "";
+  return `<div class="story" aria-label="Today's pond">${objs.join("")}</div><div class="storytop pad"><span class="hand2">${esc(dayWord())}</span><span>🪷 ${a.d} of ${a.n}</span></div>${glowObj ? `<div class="storyhint pad"><span>Tap ${glowObj}</span></div>` : ""}`;
+}
 function padsRow(p, cur, skinSl){
   const sl = slotsFor(p, TODAY).filter(s => slotState(p, s, TODAY) !== "gone" && (!windDown() || slotTime(p, s, TODAY) >= "18:00"));
   return `<div class="pads pad">${sl.map(s => { const st = slotState(p, s, TODAY), on = cur && cur.id === s.id, sk = allSkipped(p, s, TODAY);
@@ -1005,7 +1045,7 @@ function pToday(){
     card = `<div class="flead">${lead}</div>${cur.rel !== undefined ? wakeStrip : ""}${warn}${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}<div class="act">${act}</div>${chkLine}${exLine}`;
   }
   S.sceneIdx = windDown() ? 5 : bg;
-  const hero = `<section class="hero fl">${top}${postcard(p, dayWord() + (windDown() ? " · sleep well" : " · well together"), windDown() ? 5 : 6)}${padsRow(p, showSkin ? null : cur, showSkin ? skd.sl : "")}${banner(p)}${boatFloat(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
+  const hero = `<section class="hero fl story-on">${top}${storyLayer(p, showSkin ? null : cur, showSkin ? skd.sl : "")}<div class="focus-wrap pad">${banner(p).replace('class="banner pad"', 'class="banner inwrap"')}<div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
   return hero + `<div class="pad">${pTodayMore(p, curKey)}</div>`;
 }
 const pillImg = nm => (S.pimg||{})[nm] || "";
@@ -1811,7 +1851,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = windDown() ? 5 : S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795130327"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795130795"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -1887,8 +1927,8 @@ document.addEventListener("click", e => {
   if(d.setdone){ const p = d.setdone; saveSetup(p, c => { c.done = new Date().toISOString(); }); S.setup = null; S.who = p; S.tab = "today"; render(); window.scrollTo(0,0); toast("All set ✓ Thank you!"); return; }
   if(d.who){ S.who = d.who; try{localStorage.setItem("pillbox.who", S.who)}catch(_){}; render(); }
   else if(d.tab){ S.tab = d.tab; render(); window.scrollTo(0,0); if(d.tab === "skin") skinJump(); }
-  else if(d.sel){ S.sel[S.who] = d.sel; S.selSkin = null; S.when = null; render(!d.top); if(d.top) window.scrollTo({top:0, behavior:"smooth"}); }
-  else if(d.selskin !== undefined){ S.selSkin = d.selskin ? {p:S.who, sl:d.selskin} : null; delete S.sel[S.who]; S.when = null; render(!d.top); if(d.top) window.scrollTo({top:0, behavior:"smooth"}); }
+  else if(d.sel){ S.sel[S.who] = d.sel; S.selSkin = null; S.when = null; render(!d.top); if(d.top) window.scrollTo({top:0, behavior:"smooth"}); if(d.story) storyFocus(); }
+  else if(d.selskin !== undefined){ S.selSkin = d.selskin ? {p:S.who, sl:d.selskin} : null; delete S.sel[S.who]; S.when = null; render(!d.top); if(d.top) window.scrollTo({top:0, behavior:"smooth"}); if(d.story) storyFocus(); }
   /* wake-up time: set or change it, from the top (19 Nov 2026) */
   else if(d.wakeopen){ S.wakeOpen = true; render(true); }
   else if(d.wakeclose){ S.wakeOpen = false; render(true); }
@@ -2075,6 +2115,8 @@ document.addEventListener("click", e => {
     R.wish = R.wish.filter((_, k) => k !== i); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
     const all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[p]); mine[n] = {n: 1, got: [new Date().toISOString()], name: n.replace(/^DermaFix /, "").replace(/ \(.*\)$/, ""), b: n};
     all[p] = mine; S.meta.skinstock = all; saveMeta("skinstock"); toast("On your shelf ✓ Tell me when to add it to your steps"); }
+  else if(d.lantern){ toast("From 21:00 the pond goes to night, and the lantern is your Lights out 🌙"); }
+  else if(d.scrollto){ const el = document.querySelector(".ponds"); if(el) el.scrollIntoView({behavior: "smooth", block: "center"}); }
   else if(d.logopen){ S.logOpen = true; render(true); }
   else if(d.logclose){ S.logOpen = false; render(true); }
   else if(d.daymiss){ saveLog(S.who, d.daymiss, L => { L.missed = new Date().toISOString(); }); toast("Marked as missed ✓"); }
