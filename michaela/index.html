@@ -1431,14 +1431,14 @@ function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf
 /* every product: the ones in the routine (in step order), then shelf-only ones (19 Nov 2026) */
 /* how to use the gifts and samples that aren't steps yet (DermaFix's own directions, 19 Nov 2026) */
 const SHELF_HOW = {
-  "DermaFix DNA Defence SPF50 · 30 ml": "Light sunscreen for your handbag. At lunch on sunny days, press a thin layer over your face (over make-up is fine). DermaFix: reapply after sweating or towel drying.",
-  "DermaFix MD Mandelic Cleanser · free sample sachet": "A gentle acid face wash made for oilier skin, and yours is dry. Try it once on a Tuesday night instead of your evening face wash: lather, leave it on for 2 minutes, rinse well. Skip it if your skin feels dry or sore.",
-  "DermaFix DermaPolish · free sample sachet": "Use it on a Thursday night when your tub runs out: half the sachet with a little water in your palm, massage for a minute, rinse.",
-  "DermaFix ACC Retinal + Complex · 15 ml": "Travel size of your retinal. Pack it for trips; at home keep using the big bottle.",
-  "DermaFix Ferulic + C + E · 10 ml": "Travel size of your vitamin C. Pack it for trips.",
-  "DermaFix HydraSooth SOS · 15 ml": "Travel size of your calming cream. Pack it for trips, or keep it in your bag for sore, dry patches.",
-  "Microfibre heart pads (blue + purple)": "In your evening face wash: wet with warm water and wipe the wash off. Rinse, hang to dry, swap colours each night.",
-  "DermaFix Gentle Cleansing Gel · 50 ml": "Now your evening face wash: a pea-sized amount, massage 30 seconds, rinse."
+  "DermaFix DNA Defence SPF50 · 30 ml": "Handbag sunscreen: thin layer at lunch.",
+  "DermaFix MD Mandelic Cleanser · free sample sachet": "Try once on a Tuesday night instead of your face wash. Leave on 2 minutes.",
+  "DermaFix DermaPolish · free sample sachet": "For a Thursday night when your tub runs out.",
+  "DermaFix ACC Retinal + Complex · 15 ml": "Travel size: for trips.",
+  "DermaFix Ferulic + C + E · 10 ml": "Travel size: for trips.",
+  "DermaFix HydraSooth SOS · 15 ml": "Travel size: for trips or sore patches.",
+  "Microfibre heart pads (blue + purple)": "Wipe off your evening face wash. Swap colours each night.",
+  "DermaFix Gentle Cleansing Gel · 50 ml": "Your evening face wash."
 };
 /* products wanted but not owned yet: a To buy list (Jenny 20 Nov: "if I don't have them yet, keep them on as to buy") */
 const WISH_INFO = {
@@ -1528,8 +1528,19 @@ function skinAdd7(){ // 20 Nov: Regenerate Rx and RetinEye were only on her wish
   R.wish = ["DermaFix Regenerate Rx (redness repair serum)", "DermaFix RetinEye (retinal eye cream)"];
   R.done = Object.assign({}, R.done, {k20nov4: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
 }
+function skinAdd8(){ // 20 Nov: "can the write-ups be shorter?" - a few words per step
+  const p = "jenny", R = skinClone(p); if((R.done || {}).k20nov5) return;
+  const SHORT = [[/^t_am$|^t_pm$/, "2 minutes."], [/^t_floss$/, "Along the gum line."], [/^t_mouth/, "Swish 30 seconds, spit."],
+    [/gentle cleansing/i, "Pea-size, 30 seconds, wipe off with a warm pad."], [/face wash|cleanser/i, "Pea-size, 30 seconds, rinse."], [/toner/i, "Swipe on with a cotton pad."],
+    [/ferulic|vitamin c/i, "3–4 drops: face, neck, chest, hands."], [/azelaic/i, "2–3 drops. May tingle."], [/melanoderm|pigment/i, "Thin layer, whole face."],
+    [/eye complex|eye cream/i, "Rice grain, tap under the eyes."], [/vitamin b|moistur/i, "Small blob, smooth in."], [/bb cream/i, "Dab on blemishes and under the eyes, blend."],
+    [/dermashield|sunscreen/i, "Last step: face, neck, chest, hands."], [/retinal/i, "Pea-size. Not near the eyes."], [/copper/i, "Thin layer."],
+    [/polish/i, "½ teaspoon + water, massage 1 minute, rinse."], [/hydrasooth|calming/i, "Thick layer, leave it on."], [/zinc|spot/i, "Tiny dab on pimples only."]];
+  for(const x of R.am.concat(R.pm)){ const t = x.id + " " + (x.b || "") + " " + x.n; const hit = SHORT.find(([re]) => re.test(x.id) || re.test(t)); if(hit) x.how = hit[1]; }
+  R.done = Object.assign({}, R.done, {k20nov5: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
+}
 function skinImport(){
-  skinAdd(); skinAdd2(); skinAdd3(); skinAdd4(); skinAdd5(); skinAdd6(); skinAdd7();
+  skinAdd(); skinAdd2(); skinAdd3(); skinAdd4(); skinAdd5(); skinAdd6(); skinAdd7(); skinAdd8();
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
   if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
@@ -1797,7 +1808,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795129838"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795129922"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
