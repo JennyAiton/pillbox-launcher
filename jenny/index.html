@@ -357,6 +357,8 @@ html,body{background:#cfe9fa}
 .subhead{padding-top:22px}.subhead h3{display:inline-block;font:600 28px var(--serif);margin:0;background:rgba(255,255,255,.8);border-radius:14px;padding:2px 12px}.subhead .small{margin-top:4px;color:#2c3e57}
 .grpall{display:inline-block;margin-top:8px;font:700 12.5px var(--sans);color:#2c3e57;text-decoration:underline}
 .setfold{margin-top:22px;background:rgba(255,255,255,.85);border-radius:18px;padding:10px 14px}.setfold summary{font:800 14px var(--sans);color:#2c3e57;cursor:pointer}
+/* at night the background is dark: keep text on it readable */
+body.night #app > .pad .sec > .small,body.night .scroll,body.night .subhead .small{color:#eef2ff!important;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* tab bar */
 .tb{color:#2c3e57;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(452px,calc(100% - 28px));display:flex;justify-content:space-around;padding:8px 4px;font:700 9.5px var(--sans);background:rgba(255,255,255,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.9);box-shadow:0 6px 20px rgba(0,0,0,.15);border-radius:24px;z-index:20}
 .tb button{display:grid;justify-items:center;gap:2px;opacity:.55;padding:2px 8px}
@@ -561,7 +563,7 @@ const themeOf = p => THEMES[(S.meta.settings.theme||{})[p] || P[p].theme] ? ((S.
 const photo = (p, i) => miniScene(p, i);
 /* drawn scene, round 2 (19 Nov 2026, Jenny: "combine lotus and palm trees ... lively and inspiring"). i = time of day 1..5.
    The scene is a fixed-height backdrop at the top; the pond sits in the strip between the day curve and the card. */
-const SKY = {6:["#cfe9fa","#fde4ee","#a8dcec","#79c2dc"], 7:["#8d8fd8","#efcfe4","#8fbde0","#5f99c6"], 1:["#ffd9b8","#f7b39a","#5fa8a3","#1f6466"], 2:["#bfe6f0","#e6f5e9","#4fb0a5","#16696a"], 3:["#9fd8ef","#dff3f4","#3fa79d","#126361"], 4:["#ffc58f","#f08f74","#3f8f93","#17505d"], 5:["#1c2a48","#33467a","#1d4f63","#0e2a3a"]};
+const SKY = {6:["#cfe9fa","#fde4ee","#a8dcec","#79c2dc"], 7:["#141c43","#4a3f7d","#27507a","#14304f"], 1:["#ffd9b8","#f7b39a","#5fa8a3","#1f6466"], 2:["#bfe6f0","#e6f5e9","#4fb0a5","#16696a"], 3:["#9fd8ef","#dff3f4","#3fa79d","#126361"], 4:["#ffc58f","#f08f74","#3f8f93","#17505d"], 5:["#1c2a48","#33467a","#1d4f63","#0e2a3a"]};
 function frond(x, y, a, len, col){ // one palm frond: a curved rib with leaflets
   let leaves = ""; const n = 12;
   for(let k = 1; k <= n; k++){ const t = k/(n+1), px = t*len, py = Math.sin(t*Math.PI)*len*.12, l = len*(.36 - t*.2);
@@ -1077,7 +1079,7 @@ function pTodayMore(p, curKey){
   }
   return installBar() + topH + `<button class="logfab" data-logopen="1" aria-label="Log something">＋ Log</button>` + (S.logOpen ? `<div class="sheet logsheet" role="dialog" aria-modal="true"><div class="in"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Log</h3><button class="ghostbtn" data-logclose="1">Close</button></div><div class="small">How you feel, food, check-ins, moving, wake-up time.</div>${h}<div class="mbtns"><button data-logclose="1">Done</button></div></div></div>` : "") + `<div class="status" id="status">Connecting…</div>`;
 }
-function head(p, idx, eyebrow, title){ S.sceneIdx = 0; if(S.noHead) return `<div class="subhead pad"><h3>${title}</h3><div class="small">${eyebrow}</div></div>`; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div>${postcard(p, title, 6)}<div class="tt pad"><div class="k">${eyebrow}</div></div></div>`; }
+function head(p, idx, eyebrow, title){ S.sceneIdx = 0; if(S.noHead) return `<div class="subhead pad"><h3>${title}</h3><div class="small">${eyebrow}</div></div>`; return `<div class="head"><div class="topbar pad">${whoSwitch()}</div>${postcard(p, title, windDown() ? 5 : 6)}<div class="tt pad"><div class="k">${eyebrow}</div></div></div>`; }
 function headOld(p, idx, eyebrow, title){ return `<div class="head"><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
 function orderHtml(){
   const rows = [], uncounted = [];
@@ -1804,11 +1806,12 @@ function weekText(){
   return out.join("\n");
 }
 function paintScene(){
+  document.body.classList.toggle("night", windDown());
   let el = document.getElementById("bgscene"); if(!el){ el = document.createElement("div"); el.id = "bgscene"; el.setAttribute("aria-hidden", "true"); document.body.prepend(el); }
-  const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
+  const p = S.who, pr = progress(p), i = windDown() ? 5 : S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795130067"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795130327"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
