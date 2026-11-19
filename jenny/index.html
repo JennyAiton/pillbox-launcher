@@ -184,6 +184,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .stk{border-left:4px solid var(--acc)}.stk.todo{border-left-color:var(--warn)}.stk .k{color:var(--acc)}.stk.todo .k{color:var(--warn)}
 .stkbar{height:10px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:8px}.stkbar i{display:block;height:100%;background:var(--acc)}
 .skst2.nolvl{border:2px dashed var(--warn)}
+.trav{border-left:4px solid #8fc7ff}.trav .k{color:#8fc7ff}
 .tagn{display:inline-block;font:800 9.5px var(--sans);letter-spacing:.5px;text-transform:uppercase;background:rgba(255,211,107,.18);color:var(--warn);border-radius:8px;padding:2px 7px;vertical-align:2px}
 .lvls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
 .lvls button{border:1px solid var(--edge);border-radius:12px;padding:9px 2px;background:rgba(255,255,255,.06);font:800 12.5px var(--sans);color:var(--text)}
@@ -885,7 +886,7 @@ function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf
 function skinShelf(p){
   const R = skinR(p), st = ((S.meta.skinstock||{})[p]) || {}, out = [], seen = {};
   for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key]) continue; seen[key] = 1; out.push({key, n: x.n, b: x.b}); }
-  for(const [key, r] of Object.entries(st)){ if(key[0] === "_" || seen[key]) continue; seen[key] = 1; out.push({key, n: r.name || key, b: r.b || "", shelf: 1}); }
+  for(const [key, r] of Object.entries(st)){ if(key[0] === "_" || seen[key]) continue; seen[key] = 1; out.push({key, n: r.name || key, b: r.b || "", shelf: 1, travel: !!r.travel}); }
   return out;
 }
 /* Jenny's DermaFix delivery, 19 Nov 2026 (her photos): added once as unopened spares */
@@ -907,7 +908,7 @@ const SKIN_DELIVERY = {id: "d19nov", p: "jenny", items: [
 ]};
 function skinImport(){
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
-  if(mine["_" + D.id]) return;
+  if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
   for(const it of D.items){
     let key = it.b;
@@ -917,6 +918,28 @@ function skinImport(){
     mine[key] = r;
   }
   mine["_" + D.id] = at; all[D.p] = mine; S.meta.skinstock = all; save("meta/skinstock", all);
+  skinFixes();
+}
+/* one-time fixes, in order (19 Nov 2026, Jenny's photos) */
+const SKIN_FIXES = [
+  // "where I use a normal product and now got the travel size, I want to keep the travel size for travelling"
+  {id: "t19nov", run(mine, find){
+    for(const [m, name, b] of [["ferulic", "Vitamin C serum, travel size", "DermaFix Ferulic + C + E · 10 ml"], ["hydrasooth", "Calming cream, travel size", "DermaFix HydraSooth SOS · 15 ml"]]){
+      const k = find(m); if(k && mine[k] && k !== b) mine[k] = Object.assign({}, mine[k], {n: Math.max(0, (mine[k].n || 0) - 1)});
+      mine[b] = Object.assign({n: 1, got: [new Date().toISOString()]}, mine[b], {name, b, travel: 1}); }
+    const rk = "DermaFix ACC Retinal + Complex · 15 ml"; if(mine[rk]) mine[rk] = Object.assign({}, mine[rk], {name: "Retinal, travel size", travel: 1}); }},
+  // stock take of the ones in use
+  {id: "s19nov", run(mine, find){ const at = new Date().toISOString();
+    for(const [m, lvl, not] of [["toner", "low"], ["polish", "low"], ["ferulic", "half"], ["hydrasooth", "full"], ["copper", "full"]]){ const k = find(m, not); if(k) mine[k] = Object.assign({n: 0, got: []}, mine[k], {lvl, lvlAt: at}); }
+    const bb = "DermaFix BB Cream SPF20"; mine[bb] = Object.assign({n: 0, got: []}, mine[bb], {name: "BB cream (tinted, SPF20)", b: bb, lvl: "half", lvlAt: at}); }}
+];
+function skinFixes(){
+  const p = "jenny", all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[p]); let did = false;
+  if(!mine._d19nov) return;
+  const R = skinR(p), steps = (R.am||[]).concat(R.pm||[]);
+  const find = (m, not) => { const hit = steps.find(x => { const t = (x.b || x.n || "").toLowerCase(); return t.includes(m) && !(not && t.includes(not)); }); return hit ? (hit.b || hit.n) : ""; };
+  for(const F of SKIN_FIXES){ if(mine["_" + F.id]) continue; F.run(mine, find); mine["_" + F.id] = new Date().toISOString(); did = true; }
+  if(did){ all[p] = mine; S.meta.skinstock = all; save("meta/skinstock", all); }
 }
 function skinJump(){ requestAnimationFrame(() => { const c = document.querySelector(".skincur"); if(c) c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); }); }
 function skinToday(p){
@@ -943,7 +966,7 @@ function pSkin(){
     h += `<div class="card"><div class="k" style="color:var(--dim)">Last 7 days</div><div class="skwk">${days.map(d => `<div>${SK_DOW[parse(d).getDay()]}<i class="${f(skinState(p, "am", d))}"></i><i class="${f(skinState(p, "pm", d))}"></i></div>`).join("")}</div><div class="small">Top dot morning, bottom dot night.</div></div>`;
   }
   // my products (19 Nov 2026): the one in use (Full / Half / Low / Empty) + spares; stock take; to order
-  { const prods = skinShelf(p), st = ((S.meta.skinstock||{})[p]) || {};
+  { const all = skinShelf(p), prods = all.filter(x => !x.travel), trav = all.filter(x => x.travel), st = ((S.meta.skinstock||{})[p]) || {};
     if(prods.length){
       const counted = prods.filter(x => (st[x.key]||{}).lvl).length, order = prods.filter(x => { const r = st[x.key] || {}; return !r.n && ["low","empty"].includes(r.lvl); });
       const LV = [["full","Full"],["half","Half"],["low","Low"],["empty","Empty"]];
@@ -953,7 +976,8 @@ function pSkin(){
         ${prods.map(x => { const r = st[x.key] || {}, n = r.n || 0, last = (r.got||[]).slice(-1)[0];
           return `<div class="card skst2 ${r.lvl ? "" : "nolvl"}"><div class="skstn"><b>${esc(x.n)}</b>${x.shelf ? ` <span class="tagn">not in your routine yet</span>` : ""}${x.b && x.b !== x.n ? `<div class="small">${esc(x.b)}</div>` : ""}</div>
             <div class="small" style="margin-top:8px">The one in use${r.lvlAt ? ` · checked ${fmt(r.lvlAt.slice(0,10))}` : ""}</div><div class="lvls">${LV.map(([k,l]) => `<button class="${r.lvl === k ? "on " + k : ""}" data-sklvl="${esc(x.key)}|${k}">${l}</button>`).join("")}</div>
-            <div class="spr"><span><b>${n}</b> unopened spare${n === 1 ? "" : "s"}${last ? `<br><span class="small">last got ${fmt(last.slice(0,10))}</span>` : ""}</span><span class="sprb">${r.lvl === "empty" && n ? `<button class="skbtn" data-skopen="${esc(x.key)}">Open a new one</button>` : ""}<button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One spare less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+ Got one</button></span></div></div>`; }).join("")}</div>`;
+            <div class="spr"><span><b>${n}</b> unopened spare${n === 1 ? "" : "s"}${last ? `<br><span class="small">last got ${fmt(last.slice(0,10))}</span>` : ""}</span><span class="sprb">${r.lvl === "empty" && n ? `<button class="skbtn" data-skopen="${esc(x.key)}">Open a new one</button>` : ""}<button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One spare less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+ Got one</button></span></div></div>`; }).join("")}
+        ${trav.length ? `<div class="card trav"><div class="k">🧳 Travel bag · kept for trips</div><div class="small" style="margin-top:4px">Small bottles of products you use. They don't count as spares at home.</div>${trav.map(x => { const n = (st[x.key]||{}).n || 0; return `<div class="spr"><span><b>${n}</b> ${esc(x.n.replace(/, travel size$/, ""))}<br><span class="small">${esc(x.b)}</span></span><span class="sprb"><button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+</button></span></div>`; }).join("")}</div>` : ""}</div>`;
     } }
   const ed = S.skinEdit;
   h += `<button class="ghostbtn ${ed ? "on" : ""}" style="margin-top:14px" data-skinedit="${ed ? "" : slot}">${ed ? "Close" : "✏️ Change my steps or add a new product"}</button>`;
