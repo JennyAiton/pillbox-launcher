@@ -1808,7 +1808,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795129922"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795130067"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -1845,7 +1845,10 @@ function saveLog(p, date, change){
   if(p !== S.who) return;
   const pr = progress(p), skA = ["am","pm"].map(k => { const K = skinState(p, k, ds); return K.n && K.done >= K.n; });
   if(before >= 0 && pr.d > before){ if(pr.n && pr.d >= pr.n){ const st = streak(p); celebrate(true, st >= 2 ? `All done today · ${st} days in a row! 🦋` : "All done today! Your pond is in full bloom 🪷"); } else celebrate(false, pick(WINS)); }
-  else if(skA.some((v, k) => v && !skB[k])) celebrate(false, skA[1] && !skB[1] ? "Evening care done ✨ Sleep well" : "Morning care done ✨ Glowing");
+  else if(skA.some((v, k) => v && !skB[k])){ const next = current(p), ev = skA[1] && !skB[1];
+    // care done but tablets still to take: say so, and bring the tablets card into view (Jenny 20 Nov: "it didn't make me do my medicine")
+    if(next && !logOf(p, TODAY).done[next.id]){ celebrate(false, (ev ? "Evening" : "Morning") + " care done ✨ Now: " + next.lab.toLowerCase() + " tablets 👇"); window.scrollTo({top: 0, behavior: "smooth"}); }
+    else celebrate(false, ev ? "Evening care done ✨ Sleep well" : "Morning care done ✨ Glowing"); }
 }
 const WINS = ["Lovely! 🦋", "Well done 🌸", "Look at you go 🌿", "Another lotus opens 🪷", "Proud of you 💛"];
 const pick = a => a[Math.floor(Math.random() * a.length)];
