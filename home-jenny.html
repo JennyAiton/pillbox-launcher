@@ -193,6 +193,24 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .drow div{display:flex;gap:4px}.drow button{border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:6px 8px;background:#fff;color:var(--ink);font:700 11.5px var(--sans)}.drow button.on{background:var(--ink);color:#fff}
 .resimg{display:block;width:100%;height:120px;margin-top:10px;border-radius:12px;border:1px solid var(--edge);background:#111 center/cover no-repeat}.resimg.big{height:auto;aspect-ratio:3/4;background-size:contain}
 .medr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--edge);font:600 14px var(--sans)}.medr.ed{display:grid;gap:6px}
+.ponds{display:grid;grid-template-columns:1fr 1fr;gap:10px;position:relative;text-align:center}
+.pond1{display:grid;justify-items:center;gap:2px}.pond1 b{font:600 18px var(--serif)}.pond1 span{font:700 11px var(--sans);opacity:.7}
+.pondimg{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:hidden;border:4px solid #fff;box-shadow:0 6px 16px rgba(40,70,100,.18)}
+.pondimg .scene.mini{position:absolute;left:-20%;top:-26%;width:140%;height:auto}
+.pondmsg,.ponds .chips{grid-column:1/-1}.pondmsg{font:600 13px var(--sans)}
+.koi{position:absolute;left:50%;top:40%;width:120px;transform:translateX(-50%)}
+@media (prefers-reduced-motion:no-preference){.koi .k1{animation:koi1 6s ease-in-out infinite alternate}.koi .k2{animation:koi2 6s ease-in-out infinite alternate}}
+@keyframes koi1{from{transform:translate(0,0)}to{transform:translate(14px,4px)}}@keyframes koi2{from{transform:translate(0,0)}to{transform:translate(-14px,-4px)}}
+.boatrow{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--edge);text-align:left}
+.boatfloat{position:absolute;left:56%;top:250px;z-index:6;display:grid;justify-items:center;gap:2px;font:800 10px var(--sans);color:#2c3e57;background:none}
+.boatfloat span{background:rgba(255,255,255,.85);border-radius:10px;padding:2px 7px}
+@media (prefers-reduced-motion:no-preference){.boatfloat svg{animation:bob 2.5s ease-in-out infinite alternate}}
+.garden{width:100%;height:auto;display:block}
+.patt{font:600 13.5px/1.45 var(--sans);padding:7px 0;border-bottom:1px solid var(--edge)}
+.glasses{display:flex;flex-wrap:wrap;gap:6px}.gl{width:34px;height:42px;border-radius:10px;background:rgba(143,203,232,.12);display:grid;place-items:center;padding:4px}.gl svg{width:100%;height:100%}.gl.on{background:rgba(143,203,232,.3)}
+.docday{margin-top:14px;border-left:4px solid #f19bb5}
+.lights{margin-top:14px;text-align:center}
+.howto{display:block;margin-top:6px;padding:7px 9px;border-radius:10px;background:rgba(143,203,232,.16);font:600 12px/1.4 var(--sans);color:#2c3e57}
 .cq{font:800 14px var(--sans);margin:16px 0 6px}.cq span{font-weight:600;opacity:.6}
 .symg.two{display:grid;grid-template-columns:1fr 1fr}.symg.three{display:grid;grid-template-columns:repeat(3,1fr)}
 .moodg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -502,7 +520,7 @@ const themeOf = p => THEMES[(S.meta.settings.theme||{})[p] || P[p].theme] ? ((S.
 const photo = (p, i) => miniScene(p, i);
 /* drawn scene, round 2 (19 Nov 2026, Jenny: "combine lotus and palm trees ... lively and inspiring"). i = time of day 1..5.
    The scene is a fixed-height backdrop at the top; the pond sits in the strip between the day curve and the card. */
-const SKY = {6:["#cfe9fa","#fde4ee","#a8dcec","#79c2dc"], 7:["#d3cff3","#f7dbe9","#9cc9e6","#6aa8d0"], 1:["#ffd9b8","#f7b39a","#5fa8a3","#1f6466"], 2:["#bfe6f0","#e6f5e9","#4fb0a5","#16696a"], 3:["#9fd8ef","#dff3f4","#3fa79d","#126361"], 4:["#ffc58f","#f08f74","#3f8f93","#17505d"], 5:["#1c2a48","#33467a","#1d4f63","#0e2a3a"]};
+const SKY = {6:["#cfe9fa","#fde4ee","#a8dcec","#79c2dc"], 7:["#8d8fd8","#efcfe4","#8fbde0","#5f99c6"], 1:["#ffd9b8","#f7b39a","#5fa8a3","#1f6466"], 2:["#bfe6f0","#e6f5e9","#4fb0a5","#16696a"], 3:["#9fd8ef","#dff3f4","#3fa79d","#126361"], 4:["#ffc58f","#f08f74","#3f8f93","#17505d"], 5:["#1c2a48","#33467a","#1d4f63","#0e2a3a"]};
 function frond(x, y, a, len, col){ // one palm frond: a curved rib with leaflets
   let leaves = ""; const n = 12;
   for(let k = 1; k <= n; k++){ const t = k/(n+1), px = t*len, py = Math.sin(t*Math.PI)*len*.12, l = len*(.36 - t*.2);
@@ -526,8 +544,8 @@ function bud(x, y, sc, p){ return `<g transform="translate(${x} ${y}) scale(${sc
 function lilyPad(x, y, rx, col, rot){ return `<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M0 0 L ${rx} -${rx*.12} A ${rx} ${rx*.36} 0 1 1 ${rx} ${rx*.12} Z" fill="${col}"/><path d="M0 0 L ${-rx*.7} ${-rx*.12} M0 0 L ${-rx*.5} ${rx*.2} M0 0 L ${rx*.3} ${rx*.28}" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.2"/></g>`; }
 function butterfly(cls, c1, c2){ const w = `<path d="M0 0 C -10 -12 -18 -6 -14 2 C -12 8 -4 6 0 0Z" fill="${c1}"/><path d="M0 0 C -8 6 -12 14 -6 14 C -2 13 0 6 0 0Z" fill="${c2}"/>`;
   return `<g class="bfly ${cls}"><g class="wing">${w}</g><g class="wing r">${w}</g><path d="M0 -4 v 10" stroke="#3b2a2a" stroke-width="1.6"/></g>`; }
-function scene(p, i, bloom){ if(bloom === undefined) bloom = 4; i = i === 5 ? 7 : 6; // soft blue by day, soft lilac in the evening
-  const c = SKY[i] || SKY[2], night = i === 5, dusk = i === 4 || i === 1;
+function scene(p, i, bloom){ if(bloom === undefined) bloom = 4; const starry = i === 5; i = i === 5 ? 7 : 6; // soft blue by day, soft lilac in the evening
+  const c = SKY[i] || SKY[2], night = starry, dusk = i === 4 || i === 1;
   const petals = ["#fff4f2", "#f6b8bf", "#ee9fad"]; // same pond for both
   const leaf = night ? "#1c4a3a" : "#2f7a4f", leaf2 = night ? "#255a45" : "#46955f", pad1 = night ? "#2a5e46" : "#4fa36a", pad2 = night ? "#234f3c" : "#3d8c58";
   const sun = night ? `<circle cx="300" cy="160" r="20" fill="#fbf4dc"/><circle cx="292" cy="154" r="20" fill="${c[0]}" opacity=".0"/>`
@@ -796,7 +814,7 @@ function slotState(p, s, date){
 }
 function phIdx(hm){ const m = toMin(hm); return m < 480 ? 1 : m < 630 ? 2 : m < 960 ? 3 : m < 1230 ? 4 : 5; }
 function current(p){
-  const sl = slotsFor(p, TODAY);
+  const sl = slotsFor(p, TODAY).filter(s => !windDown() || slotTime(p, s, TODAY) >= "18:00"); // at night: only the evening
   if(S.sel[p] && sl.find(s => s.id === S.sel[p])) return sl.find(s => s.id === S.sel[p]);
   return sl.find(s => ["late","now"].includes(slotState(p,s,TODAY))) || sl.find(s => !["done","gone"].includes(slotState(p,s,TODAY))) || null;
 }
@@ -824,7 +842,7 @@ function whoSwitch(){
 }
 /* the day as lily pads across the pond: green = done, gold = the one you're on */
 function padsRow(p, cur, skinSl){
-  const sl = slotsFor(p, TODAY).filter(s => slotState(p, s, TODAY) !== "gone");
+  const sl = slotsFor(p, TODAY).filter(s => slotState(p, s, TODAY) !== "gone" && (!windDown() || slotTime(p, s, TODAY) >= "18:00"));
   return `<div class="pads pad">${sl.map(s => { const st = slotState(p, s, TODAY), on = cur && cur.id === s.id, sk = allSkipped(p, s, TODAY);
     return `<button class="lpad ${st === "done" ? (sk ? "skipd" : "done") : ""} ${on ? "on" : ""} ${st === "late" && !on ? "late" : ""}" data-sel="${s.id}" id="dot_${s.id}" aria-label="${esc(s.lab)} at ${slotTime(p, s, TODAY)}"><b>${st === "done" ? (sk ? "– " : "✓ ") : ""}${slotTime(p, s, TODAY)}</b><span>${esc(s.lab)}</span></button>`; }).join("")}</div>`;
 }
@@ -845,7 +863,7 @@ function banner(p){
   }
   const o = other(p), op = progress(o);
   if(!isUp(o, TODAY) && toMin(nowHM()) < toMin(usualWake(o,TODAY)) + GRACE) return "";
-  const ls0 = slotsFor(o, TODAY).find(s => slotState(o,s,TODAY)==="late" && !pastLatest(o,s,TODAY) && !allSkipped(o,s,TODAY));
+  const ls0 = slotsFor(o, TODAY).find(s => slotState(o,s,TODAY)==="late" && !pastLatest(o,s,TODAY) && !allSkipped(o,s,TODAY) && (!windDown() || slotTime(o,s,TODAY) >= "18:00"));
   if(ls0){ const ls = ls0; const sent = S.nudge[o] && S.nudge[o].slot===ls.id && (S.nudge[o].at||"").slice(0,10)===TODAY && !S.nudge[o].ok;
     return `<div class="banner pad"><div class="in other">⏰ <span>${P[o].name}: ${esc(ls.lab)} not ticked yet</span><button class="sb ${sent?"ghost":""}" data-remind="${o}|${ls.id}" id="rm_late">${sent?"Sent · again":"Remind"}</button><button class="sb ghost" data-bskip="${o}|${ls.id}">Skip</button></div></div>`; }
   return "";
@@ -931,8 +949,8 @@ function pToday(){
       : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(its.length > 1 ? "All taken now" : doLab)}</button><button class="pill2" data-whenopen="${cur.id}" id="earlier_${cur.id}">🕐 ${its.length > 1 ? "All earlier" : "Earlier"}</button>${bell}`;
     card = `<div class="flead">${lead}</div>${cur.rel !== undefined ? wakeStrip : ""}${warn}${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}<div class="act">${act}</div>${chkLine}${exLine}`;
   }
-  S.sceneIdx = bg;
-  const hero = `<section class="hero fl">${top}${padsRow(p, showSkin ? null : cur, showSkin ? skd.sl : "")}${banner(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
+  S.sceneIdx = windDown() ? 5 : bg;
+  const hero = `<section class="hero fl">${top}${padsRow(p, showSkin ? null : cur, showSkin ? skd.sl : "")}${banner(p)}${boatFloat(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
   return hero + `<div class="pad">${pTodayMore(p, curKey)}</div>`;
 }
 const pillImg = nm => (S.pimg||{})[nm] || "";
@@ -953,8 +971,9 @@ function pTodayMore(p, curKey){
     const done = K.n ? K.done >= K.n : !K.cur, tm = k === "am" ? toHM(toMin(firstM ? slotTime(p, firstM, TODAY) : "07:00") + 1) : toHM(toMin(bedS ? slotTime(p, bedS, TODAY) : "21:00") - 1);
     rows.push([tm, `<button class="rowi ${curKey === "skin:"+k ? "cur" : ""} ${done ? "dn" : ""}" data-selskin="${k}" data-top="1" id="row_skin_${k}"><div class="th skth">🧴</div><div><div class="t">${k === "am" ? "Morning care" : "Evening care"}</div><div class="s">${k === "am" ? "after your morning tablets" : "before bed"} · ${K.done} of ${K.n} steps</div></div><span class="st ${done ? "done" : K.done ? "now" : "later"}">${done ? "Done" : K.done ? "Busy" : "Later"}</span></button>`]); }
   rows.sort((a,b) => a[0].localeCompare(b[0]));
-  let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${rows.map(r => r[1]).join("")}</div>`;
-  h = missedCard(p) + meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
+  if(windDown()) return lightsCard(p) + pondsCard(p) + `<div class="sec"><h3>Tonight</h3>${rows.filter(r => r[0] >= "18:00").map(r => r[1]).join("")}</div>`;
+  let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${rows.map(r => r[1]).join("")}</div>` + waterCard(p) + pondsCard(p) + refillCard(p, true);
+  h = doctorDayCard(p) + missedCard(p) + meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
   if(CHECKIN[p]){ const c = L.chk || {}, line = (x, lab) => x ? `<div class="logr"><span class="tm">${new Date(x.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><span><b>${lab}</b>${x.sleep && x.sleep.length ? " · "+esc(x.sleep.join(", ")) : ""}${x.hrs ? " · "+x.hrs+" h" : ""}${x.lat ? " · asleep after "+x.lat+" min" : ""}${Object.keys(x.rate||{}).length ? "<br><span class='small'>"+rateOf(p).filter(r => x.rate[r[0]] !== undefined).map(r => r[1].replace(/^\S+ /,"")+": "+RLAB[r[2]][x.rate[r[0]]]).join(" · ")+(x.why && x.why.length ? " · why: "+esc(x.why.join(", ")) : "")+"</span>" : ""}</span><button class="lnk" data-chkopen="${lab === "Morning" ? "am" : lab === "Evening" ? "ev" : "pm"}">change</button></div>` : "";
     h += `<div class="sec"><h3>Check-ins</h3><div class="card">${line(c.am, "Morning") || `<div class="small">Morning check-in not done yet.</div>`}${line(c.pm, "Afternoon") || (pmChk(p) ? `<div class="small" style="margin-top:6px">Afternoon check-in from 14:00.</div>` : "")}${line(c.ev, "Evening") || `<div class="small" style="margin-top:6px">Evening check-in from 20:30, before bed.</div>`}<div class="chips" style="margin-top:8px">${!c.am ? `<button class="chkbtn" data-chkopen="am">📝 Morning check-in</button>` : ""}${!c.pm && pmChk(p) ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="pm">📝 Afternoon</button>` : ""}${!c.ev ? `<button class="chkbtn" style="background:rgba(255,255,255,.1);color:var(--text)" data-chkopen="ev">📝 Evening</button>` : ""}</div></div></div>`; }
   const oL = logOf(other(p), TODAY);
@@ -1022,7 +1041,7 @@ function stockSec(p){
 }
 function pFill(){
   const p = S.who, jars = P[p].slots.filter(s => s.jar);
-  return head(p, 2, "What we have, and what to order", "Stock") + `<div class="pad">${stockSec(p)}<div class="sec"><h3>The containers</h3>
+  return head(p, 2, "What we have, and what to order", "Stock") + `<div class="pad">${refillCard(p, false)}${stockSec(p)}<div class="sec"><h3>The containers</h3>
     <div class="card small">Each container holds <b style="color:var(--text)">a month of every tablet for that time</b>, loose together. At that time, fish out one of each (two where it says ×2). Tap a 📷 to photograph one tablet, so you can always see what you're looking for.</div>
     ${jars.map(s => { const its = s.items.filter(i => !(i[2]||{}).out), tot = its.reduce((a,i)=>a+i[2].n,0), left = topLeft(p, s.id);
       const pct = left === null ? 0 : Math.max(0, Math.min(1, left/SUPPLY)), col = left === null ? "var(--dim)" : left <= 5 ? "var(--bad)" : left <= 10 ? "var(--warn)" : "var(--acc)";
@@ -1034,13 +1053,13 @@ function pFill(){
   </div></div>`;
 }
 function pWeek(){
-  const p = S.who, days = []; for(let i=6;i>=0;i--){ const d = new Date(); d.setDate(d.getDate()-i); days.push(ymd(d)); }
+  const p = S.who, extra = gardenCard(p) + patternsCard(p), days = []; for(let i=6;i>=0;i--){ const d = new Date(); d.setDate(d.getDate()-i); days.push(ymd(d)); }
   const rows = P[p].slots.filter(s => s.day === undefined && !s.rifaxOnly);
   let full = 0, walksN = 0;
   const cols = days.map(d => { const sl = slotsFor(p,d).filter(s => s.day===undefined && !s.rifaxOnly), L = logOf(p,d); if(d<=TODAY && sl.length && sl.every(s=>L.done[s.id])) full++; if(L.walk) walksN++; return {d, L}; });
   const grid = rows.map(s => cols.map(({d,L}) => { const done = L.done[s.id], fut = d > TODAY; return `<div class="c" style="${d===TODAY&&!done?"outline:2px solid var(--acc);outline-offset:1px":""}">${fut?"":`<i class="${done?"":"grey"}" style="background-image:url(${photo(p,phIdx(slotTime(p,s,d)))})"></i>`}</div>`; }).join("")).join("");
   const alcRow = `<div class="card"><div class="k" style="color:var(--acc)">🍷 Alcohol days</div><div class="small" style="margin-top:4px">${p === "jenny" ? "Tap a day: none, moderate, balls to the walls." : "Tap a day to say how much: none, 1–2, 3–4, 5+."}</div><div class="symg" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">${cols.map(({d,L}) => `<button class="${L.alc ? "on" : ""}" data-alcday="${d}" ${d > TODAY ? "disabled" : ""} style="padding:7px 0;border-radius:12px;display:grid;gap:2px;justify-items:center"><span style="font-size:11px">${fmt(d,{weekday:"short"})}</span><span>${L.alc ? (p === "jenny" ? (L.alc >= 3 ? "🍾" : "🍷") : ["","1–2","3–4","5+"][L.alc]) : "·"}</span></button>`).join("")}</div></div>`;
-  return head(p, 3, "The last 7 days", "This week") + `<div class="pad"><div class="sec">${alcRow}
+  return head(p, 3, "Garden, patterns and the last 7 days", "This week") + `<div class="pad">${extra}<div class="sec"><h3>The last 7 days</h3>${alcRow}
     <div class="card"><div class="mos">${cols.map(({d}) => `<div class="d">${fmt(d,{weekday:"short"})}</div>`).join("")}${grid}${cols.map(({L}) => `<div class="d" style="color:var(--acc)">${L.walk?L.walk+"′":"·"}</div>`).join("")}</div><div class="small" style="margin-top:10px;text-align:center">Dawn at the top, night at the bottom · colour = taken · ′ = walk minutes</div></div>
     <div class="card" style="display:grid;grid-template-columns:1fr 1fr;text-align:center"><div><div class="serif" style="font-size:40px;font-weight:600;line-height:1;color:var(--acc)">${full}<span style="font-size:22px;color:var(--dim)">/7</span></div><div class="small">days in full colour</div></div><div style="border-left:1px solid var(--edge)"><div class="serif" style="font-size:40px;font-weight:600;line-height:1;color:var(--acc)">${walksN}<span style="font-size:22px;color:var(--dim)">/7</span></div><div class="small">days with a walk</div></div></div>
   </div></div>`;
@@ -1108,6 +1127,106 @@ function missedCard(p){
     rows.push(`<div class="logr"><span><b>${fmt(ds)}</b> <span class="small">${open.length} not filled in</span></span><span class="chips"><button class="chipb" data-dayall="${ds}">All taken</button><button class="chipb" data-daymiss="${ds}">Missed</button></span></div>`); }
   return rows.length ? `<div class="card" style="margin-top:14px;border-left:4px solid var(--warn)"><div class="k" style="color:var(--warn)">Not filled in</div><div class="small" style="margin-top:4px">One tap is enough: no need to go through every tablet.</div>${rows.join("")}</div>` : "";
 }
+/* ================= Jenny's 8 ideas (20 Nov 2026) ================= */
+const NIGHT_FROM = 21*60;                                   // wind-down from 21:00 until 05:00
+const windDown = () => toMin(nowHM()) >= NIGHT_FROM;
+const fullDay = (p, ds) => { const L = logOf(p, ds), sl = slotsFor(p, ds).filter(s => slotState(p, s, ds) !== "gone"); return sl.length > 0 && sl.every(s => L.done[s.id]); };
+const partDay = (p, ds) => { const L = logOf(p, ds); return Object.keys(L.done || {}).length > 0; };
+
+/* --- 1. two ponds: yours and theirs, koi when both are in full bloom --- */
+function pondsCard(p){
+  const o = other(p), a = progress(p), b = progress(o), both = a.n && b.n && a.d >= a.n && b.d >= b.n;
+  const mini = q => { const pr = progress(q), bl = pr.n ? Math.round(4 * pr.d / pr.n) : 0; return `<div class="pond1"><div class="pondimg">${scene(q, 6, bl).replace('class="scene"', 'class="scene mini"')}</div><b>${esc(P[q].name)}</b><span>${pr.d} of ${pr.n} today</span></div>`; };
+  const koi = both ? `<svg class="koi" viewBox="0 0 120 40" aria-hidden="true"><g class="k1"><ellipse cx="30" cy="20" rx="16" ry="7" fill="#f6a65a"/><path d="M14 20 l-10 -7 v14z" fill="#f6a65a"/><circle cx="40" cy="18" r="1.6" fill="#2c3e57"/></g><g class="k2"><ellipse cx="80" cy="22" rx="16" ry="7" fill="#fff"/><circle cx="76" cy="20" r="4" fill="#f19bb5"/><path d="M96 22 l10 -7 v14z" fill="#fff"/><circle cx="70" cy="20" r="1.6" fill="#2c3e57"/></g></svg>` : "";
+  const inbox = boatsFor(p).filter(b => !b.read).length;
+  return `<div class="sec"><h3>Together</h3><div class="card ponds">${mini(p)}${mini(o)}${koi}<div class="pondmsg">${both ? "Both ponds in full bloom today 🐟🐟" : "Your pond and " + esc(P[o].name) + "'s, side by side."}</div>
+    <div class="chips" style="margin-top:10px;justify-content:center"><button class="ghostbtn on" data-boatopen="1">⛵ Send ${esc(P[o].name)} a paper boat</button>${boatsFor(p).length ? `<button class="ghostbtn" data-boatlist="1">${inbox ? inbox + " new · " : ""}Boats</button>` : ""}</div>
+    ${S.boatList ? `<div style="margin-top:10px">${boatsFor(p).slice(0, 8).map(b => `<div class="boatrow"><span>⛵</span><div><div style="font:600 13.5px/1.4 var(--sans)">${esc(b.text)}</div><div class="small">From ${esc(P[b.from] ? P[b.from].name : b.from)} · ${fmt(b.at.slice(0,10))}</div></div></div>`).join("")}</div>` : ""}</div></div>`;
+}
+/* --- 2. paper boats: a little love note that floats into the other pond --- */
+const boatsFor = p => Object.entries(S.meta.boats || {}).map(([id, b]) => Object.assign({id}, b)).filter(b => b.to === p).sort((a, b) => b.at.localeCompare(a.at));
+function boatFloat(p){ const b = boatsFor(p).find(x => !x.read); if(!b) return "";
+  return `<button class="boatfloat" data-boatread="${b.id}" aria-label="A paper boat from ${esc(P[b.from] ? P[b.from].name : "")}: tap to read"><svg viewBox="0 0 64 40" width="58"><path d="M6 24 L58 24 L48 36 L16 36Z" fill="#fff" stroke="#c9d6e6"/><path d="M32 4 L32 24 L14 24Z" fill="#ffe4ec" stroke="#f3b6c8"/><path d="M32 8 L32 24 L48 24Z" fill="#fff" stroke="#c9d6e6"/></svg><span>A boat from ${esc(P[b.from] ? P[b.from].name : "")}</span></button>`; }
+function boatSheet(){
+  if(S.boatOpen) return `<button class="winebg" data-boatclose="1" aria-label="Close"></button><div class="card winepick"><div class="k" style="color:var(--acc)">⛵ Paper boat to ${esc(P[other(S.who)].name)}</div><h3 class="sheeth">Write a little note</h3><textarea class="exin" id="boatT" rows="3" style="width:100%;margin-top:8px" placeholder="Proud of you. Love you. Drink some water 💛"></textarea><div class="mbtns"><button data-boatsend="1">Send the boat</button><button data-boatclose="1">Close</button></div></div>`;
+  if(S.boatRead){ const b = (S.meta.boats || {})[S.boatRead]; if(!b) return "";
+    return `<button class="winebg" data-boatkeep="1" aria-label="Close"></button><div class="card winepick" style="text-align:center"><svg viewBox="0 0 64 40" width="90"><path d="M6 24 L58 24 L48 36 L16 36Z" fill="#fff" stroke="#c9d6e6"/><path d="M32 4 L32 24 L14 24Z" fill="#ffe4ec" stroke="#f3b6c8"/><path d="M32 8 L32 24 L48 24Z" fill="#fff" stroke="#c9d6e6"/></svg><div class="k" style="color:var(--acc)">From ${esc(P[b.from] ? P[b.from].name : "")}</div><div style="font:600 24px/1.3 var(--serif);margin:8px 0">${esc(b.text)}</div><div class="mbtns"><button data-boatkeep="1">💛 Keep it</button><button data-boatopen="1">Send one back</button></div></div>`; }
+  return "";
+}
+
+/* --- 3. bloom garden: every full day plants a lotus; a picture of the month --- */
+function monthDays(ym){ const [y, m] = ym.split("-").map(Number), n = new Date(y, m, 0).getDate(); return [...Array(n)].map((_, k) => `${ym}-${pad(k+1)}`); }
+function gardenSvg(p, ym, big){
+  const days = monthDays(ym), full = days.filter(d => d >= FRESH && d <= TODAY && fullDay(p, d));
+  const W = 400, H = big ? 520 : 300, rows = Math.ceil(days.length / 7), cw = W / 7, top = big ? 150 : 40, ch = (H - top - 20) / rows;
+  const petals = ["#fff4f2", "#f6b8bf", "#ee9fad"];
+  const cells = days.map((d, k) => { const x = (k % 7) * cw + cw/2, y = top + Math.floor(k/7) * ch + ch*.62, f = d >= FRESH && d <= TODAY && fullDay(p, d), part = !f && d <= TODAY && d >= FRESH && partDay(p, d);
+    return `<ellipse cx="${x}" cy="${y + 6}" rx="${cw*.38}" ry="${ch*.16}" fill="${d > TODAY ? "rgba(79,163,106,.25)" : "#4fa36a"}"/>${f ? lotusFlower(x, y + 4, Math.min(cw, ch) / 95, petals, k % 4) : part ? bud(x, y + 2, Math.min(cw, ch) / 110, petals) : ""}<text x="${x - cw*.36}" y="${y - ch*.36}" font-size="${big ? 11 : 9}" fill="#2c3e57" opacity=".55" font-family="Manrope,sans-serif">${+d.slice(8)}</text>`; }).join("");
+  const title = big ? `<text x="200" y="64" text-anchor="middle" font-size="34" font-family="Cormorant Garamond,Georgia,serif" fill="#2c3e57">${esc(P[p].name)}'s ${parse(ym + "-01").toLocaleDateString("en-ZA", {month: "long"})} garden</text><text x="200" y="98" text-anchor="middle" font-size="16" font-family="Manrope,sans-serif" fill="#d9668f">${full.length} day${full.length === 1 ? "" : "s"} in full bloom</text>` : "";
+  return `<svg class="garden" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gw${big ? 1 : 0}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f3fb"/><stop offset="1" stop-color="#bfe3f2"/></linearGradient></defs><rect width="${W}" height="${H}" rx="18" fill="url(#gw${big ? 1 : 0})"/>${big ? `<rect y="0" width="${W}" height="120" rx="18" fill="#fde4ee"/>` : ""}${title}${cells}</svg>`;
+}
+function gardenCard(p){ const ym = TODAY.slice(0, 7), days = monthDays(ym), full = days.filter(d => d >= FRESH && d <= TODAY && fullDay(p, d)).length, left = days.length - +TODAY.slice(8);
+  return `<div class="sec"><h3>Bloom garden</h3><div class="small">Every day with everything ticked plants a lotus. ${left <= 2 ? "Your month's garden picture is ready to save." : "At the end of the month you get a picture of the whole garden."}</div><div class="card">${gardenSvg(p, ym, false)}<div class="chips" style="margin-top:10px;justify-content:space-between;align-items:center"><span class="small"><b style="color:#d9668f;font-size:18px">${full}</b> in full bloom this month</span><button class="ghostbtn on" data-gardenpic="${ym}">🪷 Save the garden picture</button></div></div></div>`; }
+async function saveGarden(ym){
+  const svg = gardenSvg(S.who, ym, true).replace('class="garden"', 'width="1200" height="1560"');
+  const img = new Image(); img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  await img.decode(); const c = document.createElement("canvas"); c.width = 1200; c.height = 1560; c.getContext("2d").drawImage(img, 0, 0, 1200, 1560);
+  const a = document.createElement("a"); a.download = `Well Together - ${P[S.who].name} ${ym} garden.png`; a.href = c.toDataURL("image/png"); document.body.appendChild(a); a.click(); a.remove(); toast("Garden picture saved 🪷");
+}
+
+/* --- 4. patterns spotted from the check-ins (plain sentences, only with enough days) --- */
+function patterns(p){
+  const out = [], days = [...Array(30)].map((_, k) => { const d = parse(TODAY); d.setDate(d.getDate() - k - 1); return ymd(d); });
+  const next = ds => { const d = parse(ds); d.setDate(d.getDate() + 1); return ymd(d); };
+  const nights = days.map(ds => { const L = logOf(p, ds), am = (logOf(p, next(ds)).chk || {}).am; return {ds, alc: L.alc, lights: L.lights, sleep: am ? am.sleep || [] : null, mood: am && am.rate ? am.rate.mood : undefined}; }).filter(n => n.sleep);
+  const easy = n => n.sleep.includes("Fell asleep easily"), rate = a => a.length ? Math.round(100 * a.filter(easy).length / a.length) : 0;
+  const dry = nights.filter(n => !n.alc), wet = nights.filter(n => n.alc > 0);
+  if(dry.length >= 3 && wet.length >= 2 && rate(dry) !== rate(wet)) out.push(`You fell asleep easily on ${dry.filter(easy).length} of ${dry.length} nights with no drinks, and ${wet.filter(easy).length} of ${wet.length} nights with drinks.`);
+  const early = nights.filter(n => n.lights && toMin(n.lights) < 23*60), late = nights.filter(n => n.lights && toMin(n.lights) >= 23*60);
+  if(early.length >= 2 && late.length >= 2) out.push(`Lights out before 23:00: you fell asleep easily ${rate(early)}% of the time. After 23:00: ${rate(late)}%.`);
+  const mo = nights.filter(n => n.mood !== undefined); const mDry = mo.filter(n => !n.alc), mWet = mo.filter(n => n.alc > 0);
+  if(mDry.length >= 3 && mWet.length >= 2){ const fine = a => a.filter(n => n.mood === 0).length; out.push(`You woke up feeling fine on ${fine(mDry)} of ${mDry.length} mornings after no drinks, and ${fine(mWet)} of ${mWet.length} after drinks.`); }
+  const flares = days.flatMap(ds => (logOf(p, ds).sym || []).filter(y => y.s === "psor" || y.s === "eczema").map(y => ({ds, s: y.s})));
+  if(flares.length){ const rough = flares.filter(f => { const d = parse(f.ds); d.setDate(d.getDate() - 1); return roughNight(p, ymd(d)) || roughNight(p, f.ds); }).length;
+    out.push(`${flares.length} skin flare-up${flares.length > 1 ? "s" : ""} in the last month${rough ? `, ${rough} of them after a rough night` : ""}.`); }
+  const sk = {}; days.forEach(ds => { const L = logOf(p, ds); Object.keys(L.skip || {}).forEach(k => { const n = k.split("|")[1]; sk[n] = sk[n] || {n: 0, why: {}}; sk[n].n++; const w = (L.skipWhy || {})[k]; if(w) sk[n].why[w] = (sk[n].why[w] || 0) + 1; }); });
+  const top = Object.entries(sk).sort((a, b) => b[1].n - a[1].n)[0]; if(top && top[1].n >= 2){ const w = Object.entries(top[1].why).sort((a, b) => b[1] - a[1])[0]; out.push(`${top[0]} was the one most often not taken (${top[1].n} times${w ? `, mostly "${w[0].toLowerCase()}"` : ""}).`); }
+  return out;
+}
+function patternsCard(p){ const P2 = patterns(p);
+  return `<div class="sec"><h3>Patterns</h3><div class="card">${P2.length ? P2.map(t => `<div class="patt">✨ ${esc(t)}</div>`).join("") : `<div class="small">Patterns show up here after about a week of check-ins and lights out. Just keep ticking.</div>`}<div class="small" style="margin-top:8px">Spotted from your own logs. Something to notice, not a diagnosis.</div></div></div>`; }
+
+/* --- 5. refill radar: what runs out soon, and a ready message for the pharmacy --- */
+function refillCard(p, soonOnly){
+  const rows = stockRows(p).filter(r => !missing(p, r.nm) && r.days !== null && r.days <= 10).sort((a, b) => a.days - b.days);
+  const sc = SCRIPTS.filter(s => (s.w === (p === "jenny" ? "j" : "m"))).map(s => { const m = (S.meta.scripts || {})[s.id] || {}, d = m.d || s.d; return {t: s.t, d, done: m.done}; }).filter(s => s.d && !s.done && s.d >= FRESH && dayDiff(s.d, TODAY) <= 7);
+  if(soonOnly && !rows.some(r => r.days <= 5) && !sc.some(s => dayDiff(s.d, TODAY) <= 2)) return "";
+  if(!rows.length && !sc.length) return soonOnly ? "" : `<div class="sec"><h3>Refill radar</h3><div class="card small">Nothing running out in the next 10 days. Count your stock below so the radar stays right.</div></div>`;
+  const msg = `Hi, please may I order a repeat of: ${rows.map(r => r.nm).join(", ")}. Thank you!`;
+  return `<div class="sec"><h3>Refill radar</h3><div class="card">${rows.map(r => `<div class="logr"><span><b>${esc(r.nm)}</b></span><span style="color:${r.days <= 5 ? "#d9466f" : "#c98a1e"};font-weight:800">${r.days <= 0 ? "out" : r.days + " day" + (r.days === 1 ? "" : "s") + " left"}</span></div>`).join("")}${sc.map(s => `<div class="logr"><span>📄 ${esc(s.t)}</span><span class="small">${fmt(s.d)}</span></div>`).join("")}
+    ${rows.length ? `<a class="ghostbtn on" style="display:inline-block;margin-top:10px;text-decoration:none" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 WhatsApp the pharmacy</a>` : ""}</div></div>`; }
+
+/* --- 6. doctor day: on the day (and the day before), the summary and your questions ready --- */
+function doctorDayCard(p){
+  const a = appts().find(x => x.p === p && x.st !== "cancelled" && (x.date === TODAY || dayDiff(x.date, TODAY) === 1)); if(!a) return "";
+  const today = a.date === TODAY;
+  return `<div class="card docday"><div class="k" style="color:#d9668f">🩺 ${today ? "Doctor day" : "Tomorrow"} · ${esc(a.doc)}${a.time ? " · " + esc(a.time) : ""}</div><div style="font:600 13.5px var(--sans);margin-top:6px">${today ? "Take this along: the one-page summary of the last month." : "Get ready: here is the summary, and jot down what you want to ask."}</div>
+    <textarea class="exin" style="width:100%;margin-top:8px" rows="2" data-apptask="${a.id}" placeholder="Questions to ask (saved as you type)">${esc(a.ask || "")}</textarea><div class="chips" style="margin-top:8px"><button class="ghostbtn on" data-report="${p}|${a.id}">📋 Open the summary</button></div></div>`; }
+
+/* --- 7. hot-day nudges + water (weather: Open-Meteo, free, Johannesburg area, once a day) --- */
+const WX_AT = {lat: -26.2, lon: 28.05};
+async function loadWeather(){ try { const c = JSON.parse(localStorage.getItem("wt.wx") || "null"); if(c && c.d === TODAY){ S.wx = c; return; } } catch(_){}
+  try { const r = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${WX_AT.lat}&longitude=${WX_AT.lon}&daily=temperature_2m_max,uv_index_max&timezone=Africa%2FJohannesburg&forecast_days=1`)).json();
+    S.wx = {d: TODAY, max: Math.round(r.daily.temperature_2m_max[0]), uv: Math.round(r.daily.uv_index_max[0])}; try { localStorage.setItem("wt.wx", JSON.stringify(S.wx)); } catch(_){} render(true); } catch(_){} }
+const WATER_GOAL = 8;
+function waterCard(p){ const L = logOf(p, TODAY), n = L.water || 0, hot = S.wx && S.wx.max >= 30, goal = WATER_GOAL + (hot ? 2 : 0);
+  const nudge = S.wx && (S.wx.max >= 28 || S.wx.uv >= 8) ? `<div class="patt" style="margin-bottom:8px">☀ ${S.wx.max >= 30 ? "Hot today" : "Warm today"} (${S.wx.max}°${S.wx.uv >= 8 ? ", UV " + S.wx.uv : ""}): ${hot ? "2 extra glasses of water, and " : ""}top up your sunscreen at lunch.</div>` : "";
+  return `<div class="sec"><h3>Water</h3><div class="card">${nudge}<div class="glasses">${[...Array(goal)].map((_, k) => `<button class="gl ${k < n ? "on" : ""}" data-water="${k < n && k === n - 1 ? n - 1 : k + 1}" aria-label="Glass ${k + 1}"><svg viewBox="0 0 20 26"><path d="M3 2 h14 l-2 22 h-10z" fill="${k < n ? "#8fcbe8" : "none"}" stroke="#5aa9c9" stroke-width="1.6"/></svg></button>`).join("")}</div><div class="small" style="margin-top:6px">${n} of ${goal} glasses${n >= goal ? " · well done 💧" : ""}</div></div></div>`; }
+
+/* --- 8. wind-down: after 21:00 only the evening things, and Lights out --- */
+function lightsCard(p){ const L = logOf(p, TODAY);
+  return `<div class="card lights">${L.lights ? `<div style="font:600 22px var(--serif)">🌙 Lights out at ${esc(L.lights)}</div><div class="small">Sleep well. Tomorrow's check-in will ask how it went.</div><button class="lnk" data-lightsundo="1">undo</button>` : `<div style="font:600 22px var(--serif)">Ready for bed?</div><div class="small">Tap when the lights go out. It helps spot what gives you your best nights.</div><button class="pill" style="margin-top:10px;width:100%;background:#2c3e57;color:#fff" data-lights="1">🌙 Lights out</button>`}</div>`; }
+
 /* ---------------- skin routine: one step at a time ---------------- */
 const SK_DOW = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], SK_DOWL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const SKIN_SEED = {
@@ -1152,6 +1271,17 @@ function skinAdd(){
 function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf(p, ds).skin||{})[slot]) || {}, need = st.filter(x => !x.opt);
   return {st, mk, n: need.length, done: need.filter(x => mk[x.id]).length, cur: st.find(x => !mk[x.id])}; }
 /* every product: the ones in the routine (in step order), then shelf-only ones (19 Nov 2026) */
+/* how to use the gifts and samples that aren't steps yet (DermaFix's own directions, 19 Nov 2026) */
+const SHELF_HOW = {
+  "DermaFix DNA Defence SPF50 · 30 ml": "Light sunscreen for your handbag. At lunch on sunny days, press a thin layer over your face (over make-up is fine). DermaFix: reapply after sweating or towel drying.",
+  "DermaFix MD Mandelic Cleanser · free sample sachet": "A gentle acid face wash made for oilier skin, and yours is dry. Try it once on a Tuesday or Thursday night instead of your face wash: lather, leave it on for 2 minutes, rinse well. Skip it if your skin feels dry or sore.",
+  "DermaFix DermaPolish · free sample sachet": "Use it on Saturday night when your tub runs out: half the sachet with a little water in your palm, massage for a minute, rinse. Not on retinal nights.",
+  "DermaFix ACC Retinal + Complex · 15 ml": "Travel size of your retinal. Pack it for trips; at home keep using the big bottle.",
+  "DermaFix Ferulic + C + E · 10 ml": "Travel size of your vitamin C. Pack it for trips.",
+  "DermaFix HydraSooth SOS · 15 ml": "Travel size of your calming cream. Pack it for trips, or keep it in your bag for sore, dry patches.",
+  "Microfibre heart pads (blue + purple)": "In your evening face wash: wet with warm water and wipe the wash off. Rinse, hang to dry, swap colours each night.",
+  "DermaFix Gentle Cleansing Gel · 50 ml": "Now your evening face wash: a pea-sized amount, massage 30 seconds, rinse."
+};
 function skinShelf(p){
   const R = skinR(p), st = ((S.meta.skinstock||{})[p]) || {}, out = [], seen = {};
   for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key] || x.noStock) continue; seen[key] = 1; out.push({key, n: x.n, b: x.b}); }
@@ -1276,10 +1406,10 @@ function pSkin(){
         <div class="card stk ${counted < prods.length ? "todo" : ""}"><div class="k">${counted < prods.length ? "Stock take" : "Stock take done ✓"}</div><div class="stkbar"><i style="width:${Math.round(counted/prods.length*100)}%"></i></div><div class="small" style="margin-top:6px">${counted} of ${prods.length} products counted. For each one: how full is the one you're using, and how many unopened spares.</div></div>
         ${order.length ? `<div class="card" style="border-left:4px solid var(--bad)"><div class="k" style="color:var(--bad)">To order · ${order.length}</div>${order.map(x => `<div style="margin-top:6px;font:700 14px var(--sans)">${esc(x.n)} <span class="small">${esc(x.b || "")}</span></div>`).join("")}</div>` : ""}
         ${prods.map(x => { const r = st[x.key] || {}, n = r.n || 0, last = (r.got||[]).slice(-1)[0];
-          return `<div class="card skst2 ${r.lvl ? "" : "nolvl"}"><div class="skstn"><b>${esc(x.n)}</b>${x.shelf ? ` <span class="tagn">not in your routine yet</span>` : ""}${x.b && x.b !== x.n ? `<div class="small">${esc(x.b)}</div>` : ""}</div>
+          return `<div class="card skst2 ${r.lvl ? "" : "nolvl"}"><div class="skstn"><b>${esc(x.n)}</b>${x.shelf ? ` <span class="tagn">not in your routine yet</span>` : ""}${x.b && x.b !== x.n ? `<div class="small">${esc(x.b)}</div>` : ""}${SHELF_HOW[x.key] ? `<div class="howto">💡 ${esc(SHELF_HOW[x.key])}</div>` : ""}</div>
             <div class="small" style="margin-top:8px">The one in use${r.lvlAt ? ` · checked ${fmt(r.lvlAt.slice(0,10))}` : ""}</div><div class="lvls">${LV.map(([k,l]) => `<button class="${r.lvl === k ? "on " + k : ""}" data-sklvl="${esc(x.key)}|${k}">${l}</button>`).join("")}</div>
             <div class="spr"><span><b>${n}</b> unopened spare${n === 1 ? "" : "s"}${last ? `<br><span class="small">last got ${fmt(last.slice(0,10))}</span>` : ""}</span><span class="sprb">${r.lvl === "empty" && n ? `<button class="skbtn" data-skopen="${esc(x.key)}">Open a new one</button>` : ""}<button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One spare less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+ Got one</button></span></div></div>`; }).join("")}
-        ${trav.length ? `<div class="card trav"><div class="k">🧳 Travel bag · kept for trips</div><div class="small" style="margin-top:4px">Small bottles of products you use. They don't count as spares at home.</div>${trav.map(x => { const n = (st[x.key]||{}).n || 0; return `<div class="spr"><span><b>${n}</b> ${esc(x.n.replace(/, travel size$/, ""))}<br><span class="small">${esc(x.b)}</span></span><span class="sprb"><button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+</button></span></div>`; }).join("")}</div>` : ""}</div>`;
+        ${trav.length ? `<div class="card trav"><div class="k">🧳 Travel bag · kept for trips</div><div class="small" style="margin-top:4px">Small bottles of products you use. They don't count as spares at home.</div>${trav.map(x => { const n = (st[x.key]||{}).n || 0; return `<div class="spr"><span><b>${n}</b> ${esc(x.n.replace(/, travel size$/, ""))}<br><span class="small">${esc(x.b)}</span>${SHELF_HOW[x.key] ? `<br><span class="howto">💡 ${esc(SHELF_HOW[x.key])}</span>` : ""}</span><span class="sprb"><button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+</button></span></div>`; }).join("")}</div>` : ""}</div>`;
     } }
   const ed = S.skinEdit;
   h += `<button class="ghostbtn ${ed ? "on" : ""}" style="margin-top:14px" data-skinedit="${ed ? "" : slot}">${ed ? "Close" : "✏️ Change my steps or add a new product"}</button>`;
@@ -1472,18 +1602,18 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795126639"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795127273"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
-document.addEventListener("visibilitychange", () => { if(!document.hidden) checkUpdate(); }); setTimeout(checkUpdate, 3000);
+document.addEventListener("visibilitychange", () => { if(!document.hidden){ checkUpdate(); if(!S.wx || S.wx.d !== TODAY) loadWeather(); } }); setTimeout(checkUpdate, 3000); setTimeout(loadWeather, 1500);
 function render(keepScroll){
   TODAY = dayNow();
   const T = THEMES[themeOf(S.who)];
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
   if(S.setup){ const T2 = THEMES[themeOf(S.setup.p)]; document.documentElement.style.setProperty("--acc", T2.acc); document.documentElement.style.setProperty("--ink", T2.ink); }
-  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, skin:pSkin, plan:pPlan, shop:pShop}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet() + wakeSheet() + whenSheet();
+  document.getElementById("app").innerHTML = S.setup ? pSetup() : ({today:pToday, fill:pFill, week:pWeek, skin:pSkin, plan:pPlan, shop:pShop}[S.tab] || pToday)() + skipModal() + reportHtml() + chkSheet() + exSheet() + wineSheet() + wakeSheet() + whenSheet() + boatSheet();
   document.getElementById("tabs").style.display = S.setup ? "none" : "";
   paintTabs(); status(lastStatus, lastErr); paintScene();
   if(keepScroll) window.scrollTo(0, y);
@@ -1685,6 +1815,17 @@ document.addEventListener("click", e => {
   else if(d.copyweek){ const t = weekText(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied: paste it to Claude"), () => { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); toast("Copied: paste it to Claude"); }catch(_){ toast("Couldn't copy"); } ta.remove(); }); }
   else if(d.undo){ S.when = null; saveLog(S.who, TODAY, L => { delete L.done[d.undo]; if(L.items) for(const k of Object.keys(L.items)) if(k.startsWith(d.undo+"|")) delete L.items[k]; }); }
   else if(d.up){ saveLog(S.who, TODAY, L => { L.wake = nowHM(); }); if(!logOf(other(S.who), TODAY).wake){ S.upNote = true; render(true); } else toast("Good morning ☀ " + P[other(S.who)].name + " is up too"); }
+  else if(d.boatopen){ S.boatRead = null; S.boatOpen = true; render(true); }
+  else if(d.boatclose){ S.boatOpen = false; render(true); }
+  else if(d.boatsend){ const t = ((document.getElementById("boatT") || {}).value || "").trim(); if(!t){ toast("Write a few words first"); return; }
+    S.meta.boats = Object.assign({}, S.meta.boats, {["b" + Date.now().toString(36)]: {from: S.who, to: other(S.who), text: t, at: new Date().toISOString(), read: ""}}); S.boatOpen = false; saveMeta("boats"); celebrate(false, "Your boat is sailing to " + P[other(S.who)].name + " ⛵"); }
+  else if(d.boatread){ S.boatRead = d.boatread; render(true); }
+  else if(d.boatkeep){ const id = S.boatRead; S.boatRead = null; if(id && S.meta.boats && S.meta.boats[id]){ S.meta.boats = Object.assign({}, S.meta.boats, {[id]: Object.assign({}, S.meta.boats[id], {read: new Date().toISOString()})}); saveMeta("boats"); } else render(true); }
+  else if(d.boatlist){ S.boatList = !S.boatList; render(true); }
+  else if(d.gardenpic){ saveGarden(d.gardenpic).catch(() => toast("Couldn't make the picture")); }
+  else if(d.water !== undefined){ const n = +d.water; saveLog(S.who, TODAY, L => { L.water = n; }); if(n >= WATER_GOAL + (S.wx && S.wx.max >= 30 ? 2 : 0)) celebrate(false, "Water goal reached 💧"); }
+  else if(d.lights){ saveLog(S.who, TODAY, L => { L.lights = toHM(toMin(nowHM())); }); celebrate(false, "Sleep well 🌙"); }
+  else if(d.lightsundo){ saveLog(S.who, TODAY, L => { delete L.lights; }); }
   else if(d.daymiss){ saveLog(S.who, d.daymiss, L => { L.missed = new Date().toISOString(); }); toast("Marked as missed ✓"); }
   else if(d.dayall){ const ds = d.dayall; saveLog(S.who, ds, L => { for(const sl of slotsFor(S.who, ds)) if(!L.done[sl.id]) L.done[sl.id] = isoAt(ds, slotTime(S.who, sl, ds)); }); toast("All taken ✓"); }
   else if(d.resform !== undefined){ S.resForm = d.resform ? {p: d.resform, date: TODAY} : null; render(true); }
@@ -1732,6 +1873,7 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target;
+  if(t.dataset.apptask){ const id = t.dataset.apptask; S.meta.appts = Object.assign({}, S.meta.appts, {[id]: Object.assign({}, (S.meta.appts || {})[id], {ask: t.value})}); save("meta/appts", S.meta.appts); toast("Saved ✓"); return; }
   if(t.dataset.skinf){ const [sl, i, f] = t.dataset.skinf.split("|"), R = skinClone(S.who); if(!R[sl][+i]) return; R[sl][+i][f] = t.value.trim(); saveSkin(S.who, R); return; }
   if(t.dataset.num){ const k = t.dataset.num, v = t.value.trim(); saveLog(S.who, TODAY, L => { if(v === "") delete L[k]; else L[k] = +v; }); toast("Saved ✓"); return; }
   if(t.dataset.stock){ const i = t.dataset.stock.indexOf("|"), q = t.dataset.stock.slice(0, i), nm = t.dataset.stock.slice(i+1); if(t.value === "") return;
