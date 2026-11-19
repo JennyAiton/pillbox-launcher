@@ -1,0 +1,99 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Well Together - our ponds</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@600;700;800&family=Caveat:wght@700&display=swap">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#cfe9fa;font:14px/1.4 Manrope,system-ui,sans-serif;color:#2c3e57;display:flex;justify-content:center}
+.page{position:relative;width:390px;min-height:844px;overflow:hidden;background:#cfe9fa}
+.scene{position:absolute;left:0;top:0;width:100%;height:auto}
+.scene .bob,.scene .rip{transform-box:fill-box;transform-origin:center}.scene .rays,.scene .birds{display:none}
+.top{position:relative;z-index:2;padding:26px 22px 0;text-align:center}
+.top h1{font:700 44px/1 Caveat,cursive;margin:0;color:#2c3e57;text-shadow:0 1px 0 rgba(255,255,255,.8)}
+.top p{margin:6px auto 0;font:800 12px Manrope;background:rgba(255,255,255,.85);display:inline-block;border-radius:12px;padding:3px 10px}
+.card{position:relative;z-index:2;margin:150px 14px 14px;background:rgba(255,255,255,.95);border-radius:26px;padding:14px 14px 10px;box-shadow:0 14px 34px rgba(20,40,70,.22)}
+.row{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(44,62,87,.08)}
+.row:last-child{border-bottom:0}
+.ic{display:grid;place-items:center;width:52px;height:46px}.ic svg{max-width:52px;max-height:46px}
+.row b{font:600 19px/1.1 "Cormorant Garamond",Georgia,serif}.row span{display:block;font:600 12px/1.35 Manrope;color:#4c5d72}
+.meet{margin-top:6px;background:linear-gradient(90deg,#ffe4ec,#e3f2fb);border-radius:18px;padding:10px 12px;text-align:center}
+.meet b{font:700 24px/1 Caveat,cursive;color:#d9668f}.meet span{display:block;font:700 12px Manrope;margin-top:3px}
+.foot{position:relative;z-index:2;text-align:center;font:700 26px/1 Caveat,cursive;color:#2c3e57;padding:4px 0 18px}
+</style></head><body><div class="page" id="pg"></div>
+<script>
+/* drawn scene, round 2 (19 Nov 2026, Jenny: "combine lotus and palm trees ... lively and inspiring"). i = time of day 1..5.
+   The scene is a fixed-height backdrop at the top; the pond sits in the strip between the day curve and the card. */
+const SKY = {6:["#cfe9fa","#fde4ee","#a8dcec","#79c2dc"], 7:["#141c43","#4a3f7d","#27507a","#14304f"], 1:["#ffd9b8","#f7b39a","#5fa8a3","#1f6466"], 2:["#bfe6f0","#e6f5e9","#4fb0a5","#16696a"], 3:["#9fd8ef","#dff3f4","#3fa79d","#126361"], 4:["#ffc58f","#f08f74","#3f8f93","#17505d"], 5:["#1c2a48","#33467a","#1d4f63","#0e2a3a"]};
+function frond(x, y, a, len, col){ // one palm frond: a curved rib with leaflets
+  let leaves = ""; const n = 12;
+  for(let k = 1; k <= n; k++){ const t = k/(n+1), px = t*len, py = Math.sin(t*Math.PI)*len*.12, l = len*(.36 - t*.2);
+    leaves += `<path d="M${px.toFixed(1)} ${py.toFixed(1)} q ${(l*.35).toFixed(1)} ${(l*.25).toFixed(1)} ${(l*.75).toFixed(1)} ${(l*.95).toFixed(1)} q ${(-l*.45).toFixed(1)} ${(-l*.35).toFixed(1)} ${(-l*.75).toFixed(1)} ${(-l*.95).toFixed(1)}z"/><path d="M${px.toFixed(1)} ${py.toFixed(1)} q ${(l*.35).toFixed(1)} ${(-l*.25).toFixed(1)} ${(l*.75).toFixed(1)} ${(-l*.95).toFixed(1)} q ${(-l*.45).toFixed(1)} ${(l*.35).toFixed(1)} ${(-l*.75).toFixed(1)} ${(l*.95).toFixed(1)}z"/>`; }
+  return `<g transform="translate(${x} ${y}) rotate(${a})" fill="${col}"><path d="M0 0 Q ${len*.5} ${len*.16} ${len} ${len*.02}" stroke="${col}" stroke-width="3" fill="none"/>${leaves}</g>`;
+}
+function palmTree(bx, by, tx, ty, scale, c1, c2, cls){ // trunk from the shore up to a crown of fronds
+  const mx = (bx + tx) / 2 + (tx > bx ? -30 : 30), my = (by + ty) / 2;
+  let rings = ""; for(let k = 1; k < 9; k++){ const t = k/9, x = (1-t)*(1-t)*bx + 2*(1-t)*t*mx + t*t*tx, y = (1-t)*(1-t)*by + 2*(1-t)*t*my + t*t*ty; rings += `<path d="M${(x-6).toFixed(1)} ${y.toFixed(1)} q 6 4 12 0" stroke="#5b3d28" stroke-width="1.6" fill="none" opacity=".5"/>`; }
+  const fr = [[200,1],[235,.92],[270,1.02],[305,.95],[340,1],[20,.9],[160,.88]].map(([a, k]) => frond(0, 0, a, 120*scale*k, a % 2 ? c1 : c2)).join("");
+  return `<path d="M${bx} ${by} Q ${mx} ${my} ${tx} ${ty}" stroke="#7a5638" stroke-width="${9*scale}" stroke-linecap="round" fill="none"/>${rings}<g class="crown ${cls}" style="transform-origin:${tx}px ${ty}px">${`<g transform="translate(${tx} ${ty})">${fr}<circle r="${6*scale}" fill="#6b4a2f"/><circle cx="${7*scale}" cy="${4*scale}" r="${5*scale}" fill="#7d5a36"/></g>`}</g>`;
+}
+function lotusFlower(x, y, sc, p, d){ // layered petals with a soft gradient, golden heart
+  const id = `lp${p[0]}${Math.round(x)}`;
+  const pet = (r, s, f) => `<path transform="rotate(${r}) scale(${s})" d="M0 0 C -11 -16 -9 -40 0 -52 C 9 -40 11 -16 0 0Z" fill="${f}"/>`;
+  return `<g transform="translate(${x} ${y}) scale(${sc})"><g class="bob" style="animation-delay:-${d}s"><defs><linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${p[0]}"/><stop offset="1" stop-color="${p[1]}"/></linearGradient></defs>
+    <ellipse cx="0" cy="4" rx="34" ry="8" fill="#000" opacity=".12"/>${[-72,72,-52,52].map(r => pet(r, .9, p[2])).join("")}${[-30,30,-14,14].map(r => pet(r, 1, `url(#${id})`)).join("")}${pet(0, 1.05, `url(#${id})`)}
+    <ellipse cx="0" cy="-8" rx="9" ry="5" fill="#f7cf5a"/><g fill="#e9a93a">${[-6,-2,2,6].map(dx => `<circle cx="${dx}" cy="-10" r="1.2"/>`).join("")}</g></g></g>`;
+}
+function bud(x, y, sc, p){ return `<g transform="translate(${x} ${y}) scale(${sc})"><g class="bob"><path d="M0 0 v 24" stroke="#3f7a52" stroke-width="2.5"/><path d="M0 0 C -9 -12 -6 -26 0 -32 C 6 -26 9 -12 0 0Z" fill="${p[1]}"/><path d="M0 0 C -4 -10 -3 -22 0 -28" stroke="${p[0]}" stroke-width="2" fill="none"/></g></g>`; }
+function lilyPad(x, y, rx, col, rot){ return `<g transform="translate(${x} ${y}) rotate(${rot})"><path d="M0 0 L ${rx} -${rx*.12} A ${rx} ${rx*.36} 0 1 1 ${rx} ${rx*.12} Z" fill="${col}"/><path d="M0 0 L ${-rx*.7} ${-rx*.12} M0 0 L ${-rx*.5} ${rx*.2} M0 0 L ${rx*.3} ${rx*.28}" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.2"/></g>`; }
+function butterfly(cls, c1, c2){ const w = `<path d="M0 0 C -10 -12 -18 -6 -14 2 C -12 8 -4 6 0 0Z" fill="${c1}"/><path d="M0 0 C -8 6 -12 14 -6 14 C -2 13 0 6 0 0Z" fill="${c2}"/>`;
+  return `<g class="bfly ${cls}"><g class="wing">${w}</g><g class="wing r">${w}</g><path d="M0 -4 v 10" stroke="#3b2a2a" stroke-width="1.6"/></g>`; }
+function scene(p, i, bloom){ if(bloom === undefined) bloom = 4; const starry = i === 5; i = i === 5 ? 7 : 6; // soft blue by day, soft lilac in the evening
+  const c = SKY[i] || SKY[2], night = starry, dusk = i === 4 || i === 1;
+  const petals = ["#fff4f2", "#f6b8bf", "#ee9fad"]; // same pond for both
+  const leaf = night ? "#1c4a3a" : "#2f7a4f", leaf2 = night ? "#255a45" : "#46955f", pad1 = night ? "#2a5e46" : "#4fa36a", pad2 = night ? "#234f3c" : "#3d8c58";
+  const sun = night ? `<circle cx="300" cy="160" r="20" fill="#fbf4dc"/><circle cx="292" cy="154" r="20" fill="${c[0]}" opacity=".0"/>`
+    : `<g class="rays" style="transform-origin:300px 205px">${[...Array(12)].map((_, k) => `<path transform="rotate(${k*30} 300 205)" d="M300 150 l 5 -26 l 5 26z" fill="#fff4c9" opacity=".55"/>`).join("")}</g><circle cx="300" cy="205" r="${dusk ? 34 : 28}" fill="${dusk ? "#ffd27a" : "#fff1b8"}"/>`;
+  const stars = night ? [...Array(22)].map((_, k) => `<circle class="tw" style="animation-delay:-${(k*.37)%3}s" cx="${(k*73)%400}" cy="${20 + (k*41)%170}" r="${k % 3 ? 1.1 : 1.8}" fill="#fff"/>`).join("") : "";
+  const birds = night ? "" : `<g class="birds" fill="none" stroke="#2c3e46" stroke-width="2" stroke-linecap="round"><path d="M0 0 q 6 -6 12 0 q 6 -6 12 0"/><path d="M30 14 q 5 -5 10 0 q 5 -5 10 0"/><path d="M-22 18 q 4 -4 8 0 q 4 -4 8 0"/></g>`;
+  const flyers = night ? [...Array(6)].map((_, k) => `<circle class="ffly" style="animation-delay:-${k*1.3}s" cx="${50 + k*55}" cy="${250 + (k%3)*22}" r="2.2" fill="#fff3a8"/>`).join("")
+    : butterfly("b1", "#f6a65a", "#f4c26a") + butterfly("b2", "#9fd0f0", "#c7a7e8");
+  return `<svg class="scene" viewBox="0 0 400 860" preserveAspectRatio="xMidYMin slice" aria-hidden="true"><defs><linearGradient id="sky${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient><linearGradient id="wat${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[2]}"/><stop offset=".5" stop-color="${c[3]}"/></linearGradient></defs>
+    <rect width="400" height="235" fill="url(#sky${i})"/>${stars}${sun}${birds}
+    <path d="M0 222 Q 50 196 110 214 T 230 206 T 330 210 T 400 204 V 240 H 0Z" fill="${leaf2}" opacity=".55"/><path d="M0 232 Q 80 214 170 228 T 400 222 V 240 H 0Z" fill="${leaf}" opacity=".6"/>
+    <rect y="234" width="400" height="626" fill="url(#wat${i})"/>
+    <g class="shim" stroke="#fff" stroke-linecap="round" stroke-width="1.6"><path d="M250 246 h40 M262 254 h22 M120 262 h30 M40 250 h26 M200 300 h34 M320 296 h28"/></g>
+    <g class="rip"><ellipse cx="190" cy="285" rx="34" ry="7" fill="none" stroke="#fff" stroke-opacity=".45"/></g><g class="rip r2"><ellipse cx="330" cy="318" rx="26" ry="6" fill="none" stroke="#fff" stroke-opacity=".45"/></g>
+    ${lilyPad(70, 262, 34, pad2, -6)}${lilyPad(165, 318, 46, pad1, 10)}${lilyPad(300, 268, 30, pad1, -14)}${lilyPad(345, 330, 40, pad2, 6)}${lilyPad(240, 345, 34, pad2, -4)}${lilyPad(30, 330, 30, pad1, 14)}
+    ${palmTree(26, 250, 74, 70, 1.05, leaf, leaf2, "cl")}${palmTree(392, 246, 336, 96, .9, leaf2, leaf, "cr")}
+    ${bud(118, 270, .8, petals)}${bud(268, 262, .7, petals)}
+    ${[[84, 262, .62, 0], [178, 290, .95, 1.2], [300, 268, .7, 2.1], [352, 300, .85, .6]].map(([x, y, sc, d], k) => k < bloom ? lotusFlower(x, y, sc, petals, d) : bud(x, y + 6, sc * .9, petals)).join("")}
+    <g class="fr fl">${frond(-24, -14, 34, 170, leaf)}${frond(-20, 10, 58, 140, leaf2)}</g><g class="fr frr">${frond(424, -14, 146, 170, leaf)}${frond(420, 12, 122, 140, leaf2)}</g>
+    ${flyers}
+    ${night ? "" : [[60,0],[200,4],[330,8]].map(([x, d]) => `<g transform="translate(${x} 0)"><path class="petal" style="animation-delay:-${d}s" d="M0 0 c 4 -6 10 -6 12 0 c -4 5 -9 5 -12 0z" fill="${petals[2]}"/></g>`).join("")}
+  </svg>`;
+}
+
+const DRAW = {
+  lotus: (on) => `<svg viewBox="-40 -62 80 72" width="${on ? 64 : 50}" aria-hidden="true"><ellipse cx="0" cy="4" rx="34" ry="8" fill="#4fa36a"/><path d="M0 4 L34 2" stroke="#3d8c58" stroke-width="2"/>${[-62,62,-36,36,0].map((r, k) => `<path transform="rotate(${r})" d="M0 0 C -9 -14 -7 -36 0 -46 C 7 -36 9 -14 0 0Z" fill="${k < 2 ? "#f6b8bf" : on ? "#ffd6e2" : "#fff4f2"}"/>`).join("")}<ellipse cx="0" cy="-5" rx="7" ry="4" fill="#f7cf5a"/></svg>`,
+  bud: (on) => `<svg viewBox="-24 -44 48 56" width="${on ? 44 : 34}" aria-hidden="true"><ellipse cx="0" cy="8" rx="20" ry="5" fill="#4fa36a"/><path d="M0 6 v-4" stroke="#3f7a52" stroke-width="2.5"/><path d="M0 2 C -10 -12 -7 -28 0 -36 C 7 -28 10 -12 0 2Z" fill="${on ? "#f19bb5" : "#f6b8bf"}"/><path d="M0 2 C -4 -10 -3 -24 0 -32" stroke="#fff" stroke-opacity=".6" stroke-width="2" fill="none"/></svg>`,
+  leaf: () => `<svg viewBox="-24 -10 48 20" width="38" aria-hidden="true"><ellipse cx="0" cy="0" rx="20" ry="6" fill="#7fb894"/><path d="M0 0 L20 -1" stroke="#5f9a74" stroke-width="1.5"/></svg>`,
+  bottle: (done) => `<svg viewBox="0 0 30 50" width="34" aria-hidden="true"><rect x="9" y="2" width="12" height="7" rx="2" fill="#2c3e57"/><rect x="4" y="9" width="22" height="38" rx="7" fill="${done ? "#ffd6e2" : "#fde4ee"}" stroke="#f19bb5" stroke-width="2"/><path d="M8 24 h14" stroke="#f19bb5" stroke-width="2"/><circle cx="15" cy="34" r="4" fill="#f19bb5" opacity=".6"/></svg>`,
+  jug: (lvl) => `<svg viewBox="0 0 34 46" width="36" aria-hidden="true"><clipPath id="jg"><path d="M6 6 h20 l-2 36 h-16z"/></clipPath><path d="M6 6 h20 l-2 36 h-16z" fill="#fff" fill-opacity=".75"/><rect x="0" y="${(42 - lvl * 36).toFixed(1)}" width="34" height="46" fill="#8fcbe8" clip-path="url(#jg)"/><path d="M6 6 h20 l-2 36 h-16z" fill="none" stroke="#5aa9c9" stroke-width="2"/><path d="M26 12 q 8 2 0 12" fill="none" stroke="#5aa9c9" stroke-width="2"/></svg>`,
+  boat: () => `<svg viewBox="0 0 64 40" width="50" aria-hidden="true"><path d="M6 24 L58 24 L48 36 L16 36Z" fill="#fff" stroke="#c9d6e6"/><path d="M32 4 L32 24 L14 24Z" fill="#ffe4ec" stroke="#f3b6c8"/><path d="M32 8 L32 24 L48 24Z" fill="#fff" stroke="#c9d6e6"/></svg>`,
+  lantern: (lit) => `<svg viewBox="-10 0 50 56" width="34" aria-hidden="true">${lit ? `<ellipse cx="15" cy="26" rx="22" ry="24" fill="#ffcf6e" opacity=".28"/>` : ""}<path d="M15 0 v6" stroke="#5b3d28" stroke-width="2"/><rect x="6" y="6" width="18" height="4" rx="2" fill="#8b5a3c"/><ellipse cx="15" cy="24" rx="11" ry="14" fill="${lit ? "#ffcf6e" : "#f6b8bf"}"/><path d="M15 10 v28 M8 14 q7 10 0 20 M22 14 q-7 10 0 20" stroke="#fff" stroke-opacity=".45" fill="none"/><rect x="6" y="37" width="18" height="4" rx="2" fill="#8b5a3c"/></svg>`,
+  koi: () => `<svg viewBox="0 0 60 24" width="46" aria-hidden="true"><ellipse cx="24" cy="12" rx="14" ry="6.5" fill="#f6a65a"/><path d="M10 12 l-9 -7 v14z" fill="#f6a65a"/><circle cx="20" cy="10" r="3.2" fill="#fff" opacity=".85"/><circle cx="33" cy="10.5" r="1.6" fill="#2c3e57"/><path d="M26 6 q 4 -4 8 0" fill="#f6a65a"/></svg>`
+};
+
+const pg = document.getElementById("pg");
+const rows = [
+  [DRAW.bud(true) , "What's due now", "glows pink, and a little koi swims to it. Just tap it."],
+  [DRAW.lotus(false), "Tablets taken", "each set opens a lotus. All open = your pond in full bloom."],
+  [DRAW.jug(.6), "Water", "tap the jug for every glass. The cloudy water clears as you drink."],
+  [DRAW.bottle(false), "Care routine", "your skin steps, one at a time. Finish and butterflies arrive."],
+  [DRAW.lantern(true), "Lights out", "after 21:00 the pond turns to night. Tap the lantern and fireflies come out."],
+  [DRAW.boat(), "Paper boats", "send a love note. It sails into the other one's pond."],
+  [`<svg viewBox="0 0 60 50" width="46"><ellipse cx="30" cy="40" rx="26" ry="7" fill="#4fa36a"/><g transform="translate(18 38) scale(.5)">${[-62,62,-36,36,0].map((r,k) => `<path transform="rotate(${r})" d="M0 0 C -9 -14 -7 -36 0 -46 C 7 -36 9 -14 0 0Z" fill="${k<2?"#f6b8bf":"#fff4f2"}"/>`).join("")}</g><g transform="translate(42 38) scale(.5)">${[-62,62,-36,36,0].map((r,k) => `<path transform="rotate(${r})" d="M0 0 C -9 -14 -7 -36 0 -46 C 7 -36 9 -14 0 0Z" fill="${k<2?"#f6b8bf":"#fff4f2"}"/>`).join("")}</g></svg>`, "Bloom garden", "every complete day plants a lotus. End of the month: a picture of the whole garden."]
+];
+pg.innerHTML = scene("jenny", 6, 4) + `<div class="top"><h1>Your pond, our pond</h1><p>Well Together · how the magic works</p></div>
+  <div class="card">${rows.map(([ic, t, d]) => `<div class="row"><div class="ic">${ic}</div><div><b>${t}</b><span>${d}</span></div></div>`).join("")}
+  <div class="meet"><b>Where our ponds meet</b><span>Your pond sits in a little round window on mine, and mine on yours. When we both finish the day, two koi swim together 🐟🐟</span></div></div>
+  <div class="foot">bloom together 💛</div>`;
+</script></body></html>
