@@ -181,6 +181,16 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .rowi.cur{background:var(--acc);border-color:transparent;color:var(--ink);box-shadow:0 0 0 4px rgba(255,255,255,.12)} .rowi.cur .s{color:rgba(0,0,0,.62)} .rowi.cur .st{background:var(--ink);color:#fff}
 .rowi.dn{opacity:.55}
 .skst{display:flex;gap:10px;align-items:center;justify-content:space-between}.skstn{min-width:0}
+.stk{border-left:4px solid var(--acc)}.stk.todo{border-left-color:var(--warn)}.stk .k{color:var(--acc)}.stk.todo .k{color:var(--warn)}
+.stkbar{height:10px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:8px}.stkbar i{display:block;height:100%;background:var(--acc)}
+.skst2.nolvl{border:2px dashed var(--warn)}
+.tagn{display:inline-block;font:800 9.5px var(--sans);letter-spacing:.5px;text-transform:uppercase;background:rgba(255,211,107,.18);color:var(--warn);border-radius:8px;padding:2px 7px;vertical-align:2px}
+.lvls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.lvls button{border:1px solid var(--edge);border-radius:12px;padding:9px 2px;background:rgba(255,255,255,.06);font:800 12.5px var(--sans);color:var(--text)}
+.lvls button.on.full{background:var(--acc);color:var(--ink);border-color:transparent}.lvls button.on.half{background:#9fd3a0;color:#10301a;border-color:transparent}
+.lvls button.on.low{background:var(--warn);color:#3a2a00;border-color:transparent}.lvls button.on.empty{background:var(--bad);color:#3a0000;border-color:transparent}
+.spr{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--edge);font:600 13px var(--sans)}
+.spr b{font:800 20px var(--sans);color:var(--acc)}.sprb{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.sprb .skbtn{flex:0 0 auto;padding:10px 12px;font-size:13px;margin:0}.sprb .skbtn:disabled{opacity:.4}
 .skstb{display:grid;gap:6px;flex:0 0 auto}.skstb .skbtn{padding:10px 12px;font-size:13px}.skstb .skbtn:disabled{opacity:.4}
 .rowi .th.skth{display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.1)}
 
@@ -871,6 +881,43 @@ function skinSlot(){ if(S.skinSlot) return S.skinSlot; const h = new Date().getH
 function skinSteps(p, slot, ds){ const w = parse(ds).getDay(); return (skinR(p)[slot]||[]).filter(x => !x.days || !x.days.length || x.days.includes(w)); }
 function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf(p, ds).skin||{})[slot]) || {}, need = st.filter(x => !x.opt);
   return {st, mk, n: need.length, done: need.filter(x => mk[x.id]).length, cur: st.find(x => !mk[x.id])}; }
+/* every product: the ones in the routine (in step order), then shelf-only ones (19 Nov 2026) */
+function skinShelf(p){
+  const R = skinR(p), st = ((S.meta.skinstock||{})[p]) || {}, out = [], seen = {};
+  for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key]) continue; seen[key] = 1; out.push({key, n: x.n, b: x.b}); }
+  for(const [key, r] of Object.entries(st)){ if(key[0] === "_" || seen[key]) continue; seen[key] = 1; out.push({key, n: r.name || key, b: r.b || "", shelf: 1}); }
+  return out;
+}
+/* Jenny's DermaFix delivery, 19 Nov 2026 (her photos): added once as unopened spares */
+const SKIN_DELIVERY = {id: "d19nov", p: "jenny", items: [
+  {m: "ferulic", name: "Vitamin C serum", b: "DermaFix Ferulic + C + E · 10 ml"},
+  {m: "vitamin b", name: "Moisturiser", b: "DermaFix Vitamin B Cream · 57 ml"},
+  {m: "dermashield", name: "Sunscreen", b: "DermaShield SPF50 · 125 ml"},
+  {m: "hydrasooth", name: "Calming cream", b: "DermaFix HydraSooth SOS · 15 ml"},
+  {m: "retinal", not: "eye", name: "Retinal", b: "DermaFix ACC Retinal + Complex · 57 ml"},
+  {name: "Retinal, small bottle", b: "DermaFix ACC Retinal + Complex · 15 ml"},
+  {name: "Gentle face wash", b: "DermaFix Gentle Cleansing Gel · 50 ml"},
+  {name: "Pigment cream", b: "DermaFix Melanoderm Pigment Reducing Complex · 57 ml"},
+  {name: "Eye cream", b: "DermaFix Corrective Eye Complex · 15 ml"},
+  {name: "Light sunscreen", b: "DermaFix DNA Defence SPF50 · 30 ml"},
+  {name: "Azelaic drops", b: "DermaFix Azelaic RX5 · 10 ml"},
+  {name: "Polish sample", b: "DermaFix DermaPolish · free sample sachet"},
+  {name: "Mandelic face wash sample", b: "DermaFix MD Mandelic Cleanser · free sample sachet"},
+  {name: "Face pads", b: "Microfibre heart pads (blue + purple)", n: 2}
+]};
+function skinImport(){
+  const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
+  if(mine["_" + D.id]) return;
+  const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
+  for(const it of D.items){
+    let key = it.b;
+    if(it.m){ const hit = steps.find(x => { const t = (x.b || x.n || "").toLowerCase(); return t.includes(it.m) && !(it.not && t.includes(it.not)); }); if(hit) key = hit.b || hit.n; }
+    const r = Object.assign({n: 0, got: []}, mine[key]); r.got = (r.got || []).slice(); r.n = (r.n || 0) + (it.n || 1); r.got.push(at);
+    if(key === it.b){ r.name = it.name; r.b = it.b; }
+    mine[key] = r;
+  }
+  mine["_" + D.id] = at; all[D.p] = mine; S.meta.skinstock = all; save("meta/skinstock", all);
+}
 function skinJump(){ requestAnimationFrame(() => { const c = document.querySelector(".skincur"); if(c) c.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}); }); }
 function skinToday(p){
   const ds = skinDay(), sl = skinSlot(), K = skinState(p, sl, ds), none = !(skinR(p).am||[]).length && !(skinR(p).pm||[]).length;
@@ -895,11 +942,19 @@ function pSkin(){
     const days = [...Array(7)].map((_, i) => { const d = parse(ds); d.setDate(d.getDate() - 6 + i); return ymd(d); }), f = x => x.n && x.done >= x.n ? "on" : x.done ? "part" : "";
     h += `<div class="card"><div class="k" style="color:var(--dim)">Last 7 days</div><div class="skwk">${days.map(d => `<div>${SK_DOW[parse(d).getDay()]}<i class="${f(skinState(p, "am", d))}"></i><i class="${f(skinState(p, "pm", d))}"></i></div>`).join("")}</div><div class="small">Top dot morning, bottom dot night.</div></div>`;
   }
-  // my products: what I have on the shelf; "Got one" when new stock arrives (19 Nov 2026)
-  { const prods = [], seen = {}; for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key]) continue; seen[key] = 1; prods.push({key, n: x.n, b: x.b}); }
-    const st = ((S.meta.skinstock||{})[p]) || {};
-    if(prods.length) h += `<div class="sec"><h3>My products</h3><div class="small">New stock arrived? Tap <b>+ Got one</b> for each bottle or tub. Tap <b>Finished one</b> when one runs out.</div>${prods.map(x => { const r = st[x.key] || {}, n = r.n || 0, last = (r.got||[]).slice(-1)[0];
-      return `<div class="card skst"><div class="skstn"><b>${esc(x.n)}</b>${x.b && x.b !== x.n ? `<div class="small">${esc(x.b)}</div>` : ""}<div class="small" style="margin-top:3px;color:${n ? "var(--acc)" : "var(--warn)"}">${n ? `${n} on the shelf` : "None on the shelf"}${last ? ` · last got ${fmt(last.slice(0,10))}` : ""}</div></div><div class="skstb"><button class="skbtn" data-skst="${esc(x.key)}|1">+ Got one</button><button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"}>Finished one</button></div></div>`; }).join("")}</div>`; }
+  // my products (19 Nov 2026): the one in use (Full / Half / Low / Empty) + spares; stock take; to order
+  { const prods = skinShelf(p), st = ((S.meta.skinstock||{})[p]) || {};
+    if(prods.length){
+      const counted = prods.filter(x => (st[x.key]||{}).lvl).length, order = prods.filter(x => { const r = st[x.key] || {}; return !r.n && ["low","empty"].includes(r.lvl); });
+      const LV = [["full","Full"],["half","Half"],["low","Low"],["empty","Empty"]];
+      h += `<div class="sec"><h3>My products</h3>
+        <div class="card stk ${counted < prods.length ? "todo" : ""}"><div class="k">${counted < prods.length ? "Stock take" : "Stock take done ✓"}</div><div class="stkbar"><i style="width:${Math.round(counted/prods.length*100)}%"></i></div><div class="small" style="margin-top:6px">${counted} of ${prods.length} products counted. For each one: how full is the one you're using, and how many unopened spares.</div></div>
+        ${order.length ? `<div class="card" style="border-left:4px solid var(--bad)"><div class="k" style="color:var(--bad)">To order · ${order.length}</div>${order.map(x => `<div style="margin-top:6px;font:700 14px var(--sans)">${esc(x.n)} <span class="small">${esc(x.b || "")}</span></div>`).join("")}</div>` : ""}
+        ${prods.map(x => { const r = st[x.key] || {}, n = r.n || 0, last = (r.got||[]).slice(-1)[0];
+          return `<div class="card skst2 ${r.lvl ? "" : "nolvl"}"><div class="skstn"><b>${esc(x.n)}</b>${x.shelf ? ` <span class="tagn">not in your routine yet</span>` : ""}${x.b && x.b !== x.n ? `<div class="small">${esc(x.b)}</div>` : ""}</div>
+            <div class="small" style="margin-top:8px">The one in use${r.lvlAt ? ` · checked ${fmt(r.lvlAt.slice(0,10))}` : ""}</div><div class="lvls">${LV.map(([k,l]) => `<button class="${r.lvl === k ? "on " + k : ""}" data-sklvl="${esc(x.key)}|${k}">${l}</button>`).join("")}</div>
+            <div class="spr"><span><b>${n}</b> unopened spare${n === 1 ? "" : "s"}${last ? `<br><span class="small">last got ${fmt(last.slice(0,10))}</span>` : ""}</span><span class="sprb">${r.lvl === "empty" && n ? `<button class="skbtn" data-skopen="${esc(x.key)}">Open a new one</button>` : ""}<button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One spare less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+ Got one</button></span></div></div>`; }).join("")}</div>`;
+    } }
   const ed = S.skinEdit;
   h += `<button class="ghostbtn ${ed ? "on" : ""}" style="margin-top:14px" data-skinedit="${ed ? "" : slot}">${ed ? "Close" : "✏️ Change my steps or add a new product"}</button>`;
   if(ed){ const list = R[ed] || [];
@@ -1204,10 +1259,15 @@ document.addEventListener("click", e => {
     if(!d.skintog && was){ S.skinJust = {n: was.n, skip: !!d.skinskip, at: Date.now()}; render(true); clearTimeout(S.skinJt); S.skinJt = setTimeout(() => { if((S.tab === "skin" || S.tab === "today") && !document.querySelector(".sked input:focus, .focus input:focus")) render(true); }, 6100); }
     if(!K.cur && !d.skintog){ toast("✨ " + (sl === "am" ? "Morning skin" : "Evening skin") + " done"); if(S.selSkin){ S.selSkin = null; render(true); } }
     skinJump(); }
+  else if(d.sklvl || d.skopen){ const v = d.sklvl || d.skopen, i = v.lastIndexOf("|"), key = d.sklvl ? v.slice(0, i) : v, lvl = d.sklvl ? v.slice(i+1) : "full", p = S.who;
+    const all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[p]), r = Object.assign({n:0, got:[]}, mine[key]);
+    if(d.skopen){ if(!r.n) return; r.n -= 1; }
+    r.lvl = d.sklvl && r.lvl === lvl ? "" : lvl; r.lvlAt = new Date().toISOString(); mine[key] = r; all[p] = mine; S.meta.skinstock = all; saveMeta("skinstock");
+    if(d.skopen) toast("New one opened ✓"); }
   else if(d.skst){ const i = d.skst.lastIndexOf("|"), key = d.skst.slice(0, i), by = +d.skst.slice(i+1), p = S.who;
     const all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[p]), r = Object.assign({n:0, got:[]}, mine[key]); r.got = (r.got||[]).slice();
     r.n = Math.max(0, (r.n||0) + by); r.at = new Date().toISOString(); if(by > 0) r.got.push(r.at);
-    mine[key] = r; all[p] = mine; S.meta.skinstock = all; saveMeta("skinstock"); toast(by > 0 ? "Added to your shelf ✓" : "Noted: one finished"); }
+    mine[key] = r; all[p] = mine; S.meta.skinstock = all; saveMeta("skinstock"); toast(by > 0 ? "Spare added ✓" : "One spare less"); }
   else if(d.skinedit !== undefined){ S.skinEdit = d.skinedit; S.skinRm = ""; render(true); }
   else if(d.skinmv){ const [sl, i, dir] = d.skinmv.split("|"), R = skinClone(S.who), a = R[sl], j = +i + +dir; if(j < 0 || j >= a.length) return; [a[+i], a[j]] = [a[j], a[+i]]; saveSkin(S.who, R); }
   else if(d.skinrm){ if(S.skinRm !== d.skinrm){ S.skinRm = d.skinrm; render(true); return; } const [sl, i] = d.skinrm.split("|"), R = skinClone(S.who); R[sl].splice(+i, 1); S.skinRm = ""; saveSkin(S.who, R); toast("Removed"); }
@@ -1376,7 +1436,7 @@ async function start(session){
   db.collection("meta").onSnapshot(snap => {
     for(const doc of snap.docs) S.meta[doc.id] = JSON.parse(JSON.stringify(doc.data()));
     for(const k of ["scripts","checks","settings","refill","pills","setup"]) S.meta[k] = S.meta[k] || {};
-    if(firstMeta){ firstMeta = false;
+    if(firstMeta){ firstMeta = false; skinImport();
       let seen = false; try { seen = !!localStorage.getItem("pillbox.setupSeen."+S.who); } catch(_){}
       if(!setupOf(S.who).done && !seen && !S.setup){ S.setup = {p:S.who, step:0}; try{localStorage.setItem("pillbox.setupSeen."+S.who,"1")}catch(_){} }
     }
