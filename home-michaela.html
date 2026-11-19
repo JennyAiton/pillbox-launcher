@@ -180,6 +180,21 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 /* Your day: the one you're on stands out, done ones step back */
 .rowi.cur{background:var(--acc);border-color:transparent;color:var(--ink);box-shadow:0 0 0 4px rgba(255,255,255,.12)} .rowi.cur .s{color:rgba(0,0,0,.62)} .rowi.cur .st{background:var(--ink);color:#fff}
 .rowi.dn{opacity:.55}
+.trows{display:grid;gap:6px;margin-top:10px}
+.trow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 8px 7px 7px;border-radius:16px;background:rgba(255,255,255,.55);color:var(--ink)}
+.trow.ok{background:rgba(255,255,255,.3)}.trow.no{background:rgba(0,0,0,.08);opacity:.8}
+.trow .tl{display:flex;align-items:center;gap:8px;min-width:0}.trow .tn{font:600 13px/1.25 var(--sans)}.trow .tn b{font-weight:800}
+.trow .ph{width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;font:800 13px var(--sans);background:rgba(255,255,255,.7) center/cover no-repeat;border:1.5px solid var(--ink)}
+.trow .x{font-weight:800}.trow .tr{display:flex;align-items:center;gap:6px;flex:none}
+.tst{font:800 12px var(--sans);white-space:nowrap}.tlnk{font:700 12px var(--sans);text-decoration:underline;padding:4px 2px;color:inherit}
+.tbtns{display:flex;gap:4px}.tb1{background:var(--ink);color:#fff;border-radius:12px;padding:8px 10px;font:800 12.5px var(--sans)}
+.tb2{background:#fff;color:var(--ink);border:1px solid rgba(0,0,0,.15);border-radius:12px;padding:7px 9px;font:800 13px var(--sans)}
+.cq{font:800 14px var(--sans);margin:16px 0 6px}.cq span{font-weight:600;opacity:.6}
+.symg.two{display:grid;grid-template-columns:1fr 1fr}.symg.three{display:grid;grid-template-columns:repeat(3,1fr)}
+.moodg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.moodg button{display:grid;justify-items:center;gap:2px;padding:10px 4px;border-radius:14px;border:1px solid var(--edge);background:rgba(255,255,255,.06);font:800 13px var(--sans);color:var(--text);text-align:center}
+.moodg button span{font-size:24px}.moodg button i{font:600 10.5px var(--sans);font-style:normal;opacity:.7}
+.moodg button.on{background:var(--acc);color:var(--ink);border-color:transparent}
 .skst{display:flex;gap:10px;align-items:center;justify-content:space-between}.skstn{min-width:0}
 .stk{border-left:4px solid var(--acc)}.stk.todo{border-left-color:var(--warn)}.stk .k{color:var(--acc)}.stk.todo .k{color:var(--warn)}
 .stkbar{height:10px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:8px}.stkbar i{display:block;height:100%;background:var(--acc)}
@@ -487,18 +502,25 @@ function chkDue(p){ if(!CHECKIN[p]) return ""; const L = logOf(p, TODAY), c = L.
 function chkKeep(k){ const v = id => (document.getElementById(id)||{}).value; k.hrs = v("chkHrs") ?? k.hrs; k.lat = v("chkLat") ?? k.lat; k.kg = v("chkKg") ?? k.kg; k.note = v("chkNote") ?? k.note; }
 function exSheet(){ if(!S.exOpen) return "";
   return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--acc)">With your morning tablets</div><h3>Morning moves</h3><div class="small">A few minutes: tick each one as you finish it.</div>${exCard(logOf("jenny", TODAY))}<div class="mbtns"><button data-exclose="1">Done for now</button></div></div></div>`; }
+/* check-ins, condensed (19 Nov 2026, Jenny: "too many options"): falling asleep, what kept you up, what helped, mood on waking */
+const FALLQ = ["Fell asleep easily", "Took long to fall asleep"];
+const UPQ = [["Mind racing at bedtime", "Mind racing"], ["Restless legs", "Restless legs"], ["Woke in the night", "Woke in the night"]];
+const HELPQ = ["Weighted blanket", "Sleeping tablet"];
+const MOODQ = [["😊", "Fine", "clear, calm"], ["🙂", "OK", ""], ["🌫", "Groggy", "foggy, slow"], ["😤", "Off", "irritable or low"]];
 function chkSheet(){
   const k = S.chk; if(!k) return "";
-  const rate = k.rate || {};
-  return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--warn)">${k.k === "am" ? "Good morning" : k.k === "ev" ? "Before bed" : "Afternoon check-in"}</div><h3>${k.k === "am" ? "How did you sleep?" : k.k === "ev" ? "How was today?" : "How are you feeling now?"}</h3>
-    ${k.k === "am" ? `<div class="small">Tap everything that fits last night.</div><div class="symg">${sleepOf(k.p).map(q => `<button class="${(k.sleep||[]).includes(q) ? "on" : ""}" data-chksleep="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-      <div class="nums"><label>Hours slept (about)<input type="number" step="0.5" inputmode="decimal" id="chkHrs" value="${esc(k.hrs||"")}"></label><label>Took to fall asleep (minutes)<input type="number" inputmode="numeric" id="chkLat" value="${esc(k.lat||"")}"></label>${k.p === "michaela" ? `<label>Weight this morning (kg)<input type="number" step="0.1" inputmode="decimal" id="chkKg" value="${esc(k.kg||logOf(k.p,TODAY).kg||"")}"></label>` : ""}</div>
-      ${k.p === "jenny" ? `<div class="rrow"><div class="rl">🍷 Drinks last night</div><div class="rsc" style="grid-template-columns:repeat(3,1fr)">${alcOpts(k.p).map(([v, t]) => `<button class="v${Math.min(v,3)} ${k.alcY === v ? "on" : ""}" data-chkalcy="${v}">${t}</button>`).join("")}</div></div>` : ""}
-      <div style="font:700 15px var(--sans);margin:16px 0 4px">And how do you feel this morning?</div>` : ""}
-    ${rateOf(k.p).map(([id, lab, sc]) => `<div class="rrow"><div class="rl">${lab}</div><div class="rsc">${RLAB[sc].map((t, v) => `<button class="v${v} ${rate[id] === v ? "on" : ""}" data-chkrate="${id}|${v}">${t}</button>`).join("")}</div></div>`).join("")}
-    ${(rate.irrit || rate.anx || rate.mood >= 2 || rate.fog >= 2) ? `<div style="font:700 14px var(--sans);margin:14px 0 4px">What might be behind it?</div><div class="symg">${WHYQ.map(q => `<button class="${(k.why||[]).includes(q) ? "on" : ""}" data-chkwhy="${esc(q)}">${esc(q)}</button>`).join("")}</div>` : ""}
-    ${k.k === "ev" ? `<div class="rrow"><div class="rl">🍷 Alcohol today</div><div class="rsc" style="grid-template-columns:repeat(${alcOpts(k.p).length},1fr)">${alcOpts(k.p).map(([v, t]) => `<button class="v${Math.min(v,3)} ${k.alc === v ? "on" : ""}" data-chkalc="${v}">${t}</button>`).join("")}</div></div>` : ""}
-    <div style="margin-top:10px"><input class="exin" style="width:100%" id="chkNote" placeholder="Anything else? (optional)" value="${esc(k.note||"")}"></div>
+  const sl = k.sleep || [], mood = (k.rate || {}).mood, help = k.help || [];
+  const one = (on, attr, lab) => `<button class="${on ? "on" : ""}" ${attr}>${lab}</button>`;
+  const moodRow = `<div class="cq">${k.k === "am" ? "Waking up, you feel" : "Right now you feel"}</div><div class="moodg">${MOODQ.map(([e, t, x], v) => `<button class="${mood === v ? "on" : ""}" data-chkrate="mood|${v}"><span>${e}</span>${t}${x ? `<i>${x}</i>` : ""}</button>`).join("")}</div>`;
+  return `<div class="sheet" role="dialog" aria-modal="true"><div class="in"><div class="k" style="color:var(--warn)">${k.k === "am" ? "Good morning" : k.k === "ev" ? "Before bed" : "Afternoon"}</div><h3>${k.k === "am" ? "How did you sleep?" : k.k === "ev" ? "How was today?" : "How are you now?"}</h3>
+    ${k.k === "am" ? `<div class="cq">Falling asleep</div><div class="symg two">${FALLQ.map(q => one(sl.includes(q), `data-chkone="${esc(q)}"`, esc(q.replace(" to fall asleep", "")))).join("")}</div>
+      <div class="cq">What kept you up? <span>(if anything)</span></div><div class="symg">${UPQ.map(([q, l]) => one(sl.includes(q), `data-chksleep="${esc(q)}"`, esc(l))).join("")}</div>
+      <div class="cq">What helped? <span>(if anything)</span></div><div class="symg">${HELPQ.map(q => one(help.includes(q), `data-chkhelp="${esc(q)}"`, esc(q))).join("")}</div>
+      ${moodRow}
+      ${k.p === "jenny" ? `<div class="cq">🍷 Drinks last night</div><div class="symg three">${alcOpts(k.p).map(([v, t]) => one(k.alcY === v, `data-chkalcy="${v}"`, esc(t))).join("")}</div>` : ""}
+      ${k.p === "michaela" ? `<div class="nums"><label>Weight this morning (kg, optional)<input type="number" step="0.1" inputmode="decimal" id="chkKg" value="${esc(k.kg||logOf(k.p,TODAY).kg||"")}"></label></div>` : ""}`
+    : `${moodRow}${k.k === "ev" ? `<div class="cq">🍷 Drinks today</div><div class="symg three">${alcOpts(k.p).map(([v, t]) => one(k.alc === v, `data-chkalc="${v}"`, esc(t))).join("")}</div>` : ""}`}
+    <div style="margin-top:12px"><input class="exin" style="width:100%" id="chkNote" placeholder="Anything else? (optional)" value="${esc(k.note||"")}"></div>
     <div class="mbtns"><button data-chksave="1">Save</button><button data-chkclose="1">Later</button></div></div></div>`;
 }
 /* doctor appointments: book, take a report, write down what was said */
@@ -513,9 +535,9 @@ function meCard(p){
 function todoCard(p){
   const due = [];
   for(const a of appts()){ if(a.p !== p || a.st === "cancelled") continue; const k = dayDiff(a.date, TODAY);
-    if(!a.out && k < 0) due.push(`<div class="logr"><span>📝 <b>How did ${esc(a.doc)} go?</b> <span class="small">${fmt(a.date)}</span></span><button class="lnk" data-apptout="${a.id}">write it down</button></div>`);
+    if(!a.out && k < 0 && a.date >= FRESH) due.push(`<div class="logr"><span>📝 <b>How did ${esc(a.doc)} go?</b> <span class="small">${fmt(a.date)}</span></span><button class="lnk" data-apptout="${a.id}">write it down</button></div>`);
     else if(k >= 0 && k <= 1) due.push(`<div class="logr"><span>🩺 <b>${esc(a.doc)} ${k === 0 ? "today" : "tomorrow"}</b>${a.time ? " at "+esc(a.time) : ""}</span><button class="lnk" data-report="${p}|${a.id}">report for the visit</button></div>`); }
-  for(const c of CHECKS){ if(c.w !== (p === "jenny" ? "j" : "m")) continue; const m = (S.meta.checks||{})[c.id] || {}, d = m.d || c.by; if(m.done || !d || dayDiff(d, TODAY) > 7) continue;
+  for(const c of CHECKS){ if(c.w !== (p === "jenny" ? "j" : "m")) continue; const m = (S.meta.checks||{})[c.id] || {}, d = m.d || c.by; if(m.done || !d || d < FRESH || dayDiff(d, TODAY) > 7) continue;
     due.push(`<div class="logr"><span>✅ <b>${esc(c.t)}</b> <span class="small">${dayDiff(d,TODAY) < 0 ? "overdue" : "by "+fmt(d)}</span></span><button class="lnk" data-kind="checks" data-ok="${c.id}">done</button></div>`); }
   return due.length ? `<div class="card" style="margin-top:14px;border-left:4px solid var(--acc)"><div class="k" style="color:var(--acc)">To do</div>${due.join("")}</div>` : "";
 }
@@ -549,7 +571,8 @@ function exSvg(e){ if(!e.a) return "";
     <path d="M128 95h40m-10-8 10 8-10 8" stroke="var(--acc)" stroke-width="3" fill="none"/>${exFig(e.b, 175, e.one)}<text x="235" y="186" text-anchor="middle" font-size="12" fill="currentColor" font-family="sans-serif">finish</text></svg>`; }
 function exCard(L){
   const ex = L.ex || {}, done = EXS.filter(e => ex[e.k]).length;
-  return `<div class="card"><div class="k" style="color:var(--acc)">💪 Arms &amp; body · ${done} of ${EXS.length} done</div><div class="small" style="margin-top:4px">Tap to tick. Tap "how" for the picture.</div>
+  if(L.exSkip) return `<div class="card"><div class="k" style="color:var(--acc)">💪 Arms &amp; body · skipped today</div><div class="chips" style="margin-top:8px"><button class="chipb" data-exskip="1">Undo: I'll do them</button></div></div>`;
+  return `<div class="card"><div class="k" style="color:var(--acc)">💪 Arms &amp; body · ${done} of ${EXS.length} done</div><div class="small" style="margin-top:4px">Tap to tick. Tap "how" for the picture.</div><div class="chips" style="margin-top:8px"><button class="chipb" data-exskip="1">Skip today</button></div>
     ${EXS.map(e => `<div class="logr" style="align-items:center"><button class="chipb" style="flex:1;text-align:left" aria-pressed="${!!ex[e.k]}" data-ex="${e.k}">${ex[e.k] ? "✓ " : ""}<b>${esc(e.t)}</b> · ${esc(e.n)}</button><button class="lnk" data-exhow="${e.k}">${S.exHow === e.k ? "close" : "how"}</button></div>
       ${S.exHow === e.k ? `<div style="padding:8px 0 4px">${exSvg(e)}<ol style="margin:6px 0 0;padding-left:18px;font:600 13px/1.45 var(--sans)">${e.how.map(h => `<li>${esc(h)}</li>`).join("")}</ol><button class="lnk" data-exhow="${e.k}" style="margin-top:6px">close ▲</button></div>` : ""}`).join("")}</div>`;
 }
@@ -569,6 +592,26 @@ const tooLate = (p, s, date) => !!latestOf(p, s) && !logOf(p, date).done[s.id] &
 const pastLatest = (p, s, date) => !!latestOf(p, s) && !logOf(p, date).done[s.id] && (slotTime(p, s, date) > latestOf(p, s) || (date === TODAY && nowHM() >= latestOf(p, s)));
 // every tablet in the slot marked "not today"
 const allSkipped = (p, s, date) => { const L = logOf(p, date), its = itemsFor(p, s, date); return its.length > 0 && its.every(([n]) => (L.skip||{})[s.id+"|"+n]); };
+/* fresh start (19 Nov 2026, Jenny): the app wasn't used for a while - nothing dated before this nags */
+const FRESH = "2026-11-19";
+/* a slot ticked the old way (one tap for all) gets a time per tablet before one tablet changes */
+function expandSlot(L, p, sl){ L.items = L.items || {}; L.skip = L.skip || {}; if(!L.done[sl.id]) return;
+  for(const [n] of itemsFor(p, sl, TODAY)){ const k = sl.id+"|"+n; if(!L.items[k] && !L.skip[k]) L.items[k] = L.done[sl.id]; } }
+/* the slot is done once every tablet is taken or marked not taken; its time = the last one taken */
+function settleSlot(L, p, sl){ const ks = itemsFor(p, sl, TODAY).map(([n]) => sl.id+"|"+n); if(!ks.length) return;
+  if(ks.every(k => L.items[k] || L.skip[k])){ const ts = ks.map(k => L.items[k]).filter(Boolean).sort(); L.done[sl.id] = ts.length ? ts[ts.length-1] : (L.done[sl.id] || new Date().toISOString()); }
+  else delete L.done[sl.id]; }
+function itemRows(p, s){
+  const L = logOf(p, TODAY), its = itemsFor(p, s, TODAY);
+  return `<div class="trows">${its.map(([nm, q, o]) => { const k = s.id+"|"+nm, sk = (L.skip||{})[k], why = (L.skipWhy||{})[k];
+    const t = (L.items||{})[k] || (L.done[s.id] && !sk ? L.done[s.id] : ""), im = pillImg(nm);
+    const qq = q === "1" ? "" : /^\d+$/.test(q) ? "×" + q : q;
+    const head = `<span class="ph" style="${im ? `background-image:url(${im})` : ""}">${im ? "" : sk ? "–" : t ? "✓" : "💊"}</span><span class="tn"><b>${esc(nm)}</b>${qq ? ` <span class="x">${esc(qq)}</span>` : ""}${o && o.food ? `<span class="food">${esc(o.food)}</span>` : ""}${o && o.confirm ? '<span class="tag">CONFIRM</span>' : ""}</span>`;
+    const right = sk ? `<span class="tst">Not taken${why ? " · " + esc(why) : ""}</span><button class="tlnk" data-skip="${esc(k)}">undo</button>`
+      : t ? `<span class="tst">✓ ${hmOf(t)}</span><button class="tlnk" data-whenopen="${esc(k)}">change</button>`
+      : `<span class="tbtns"><button class="tb1" data-tnow="${esc(k)}">✓ Now</button><button class="tb2" data-whenopen="${esc(k)}" aria-label="Taken at a time">🕐</button><button class="tb2" data-skip="${esc(k)}" aria-label="Not taken">✕</button></span>`;
+    return `<div class="trow ${sk ? "no" : t ? "ok" : ""}"><div class="tl">${head}</div><div class="tr">${right}</div></div>`; }).join("")}</div>`;
+}
 const SKIP_WHY = ["Forgot", "Ran out", "Felt sick", "Chose to skip", "Doctor said so", "Too late in the day", "Other"];
 const hmOf = iso => { const t = new Date(iso); return pad(t.getHours()) + ":" + pad(t.getMinutes()); };
 const isoAt = (date, hm) => { const d = parse(date), [h, m] = hm.split(":").map(Number); d.setHours(h, m, 0, 0); return d.toISOString(); };
@@ -609,7 +652,7 @@ const ICON = {
   skin:`<path d="M12 3.5c3 4 5.5 6.8 5.5 10.3a5.5 5.5 0 0 1-11 0c0-3.5 2.5-6.3 5.5-10.3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
   shop:`<path d="M5 8h14l-1.4 11.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8a3 3 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="1.5"/>`
 };
-function dueCount(){ let n = 0; for(const s of SCRIPTS){ const m = S.meta.scripts[s.id]||{}, d = m.d||s.d; if(d && !m.done && dayDiff(d,TODAY) <= 3) n++; } return n; }
+function dueCount(){ let n = 0; for(const s of SCRIPTS){ const m = S.meta.scripts[s.id]||{}, d = m.d||s.d; if(d && d >= FRESH && !m.done && dayDiff(d,TODAY) <= 3) n++; } return n; }
 function paintTabs(){
   const T = [["today","Today"],["fill","Stock"],["week","Week"],["skin","Skin"],["plan","Plan"],["shop","Shop"]];
   const n = dueCount();
@@ -661,14 +704,16 @@ function wakeSheet(){
 }
 function whenSheet(){
   if(!S.when || S.tab !== "today") return "";
-  const p = S.who, s = P[p].slots.find(x => x.id === S.when); if(!s) return "";
-  const L = logOf(p, TODAY), was = L.done[s.id], now = toMin(nowHM()), due = slotTime(p, s, TODAY);
-  const base = was ? hmOf(was) : toMin(due) < now ? due : toHM(Math.max(0, now - 30));
+  const p = S.who, key = S.when, i = key.indexOf("|"), slot = i < 0 ? key : key.slice(0, i), nm = i < 0 ? "" : key.slice(i+1);
+  const s = P[p].slots.find(x => x.id === slot); if(!s) return "";
+  const L = logOf(p, TODAY), was = nm ? ((L.items||{})[key] || (L.done[slot] && !(L.skip||{})[key] ? L.done[slot] : "")) : L.done[slot];
+  const now = toMin(nowHM()), due = slotTime(p, s, TODAY), base = was ? hmOf(was) : toMin(due) < now ? due : toHM(Math.max(0, now - 30));
   const opts = [[15,"15 min ago"],[30,"30 min ago"],[60,"1 hour ago"],[120,"2 hours ago"]].filter(([m]) => now - m >= 0);
-  return `<button class="winebg" data-whenclose="1" aria-label="Close"></button><div class="card winepick" role="dialog" aria-label="When did you take them?"><div class="k" style="color:var(--acc)">${esc(s.lab)}${was ? " · taken " + hmOf(was) : ""}</div><h3 class="sheeth">${was ? "Change the time you took them" : "When did you take them?"}</h3>
-    <div class="wakeg">${opts.map(([m,l]) => `<button data-whenset="${s.id}|${toHM(now-m)}">${l}<span>${toHM(now-m)}</span></button>`).join("")}</div>
-    <div class="whenrow"><label class="small">Or type the time<br><input type="time" id="whenT" value="${base}"></label><button class="skbtn" data-whenset="${s.id}|*" style="flex:1">Save this time</button></div>
-    <div class="mbtns"><button data-whenclose="1">Close</button>${was ? `<button data-undo="${s.id}">Undo: not taken yet</button>` : ""}</div></div>`;
+  const what = nm ? esc(nm) : "them";
+  return `<button class="winebg" data-whenclose="1" aria-label="Close"></button><div class="card winepick" role="dialog" aria-label="When did you take ${what}?"><div class="k" style="color:var(--acc)">${esc(s.lab)}${was ? " · taken " + hmOf(was) : ""}</div><h3 class="sheeth">${was ? "Change the time you took " + what : "When did you take " + what + "?"}</h3>
+    <div class="wakeg">${opts.map(([m,l]) => `<button data-whenset="${esc(key)}@${toHM(now-m)}">${l}<span>${toHM(now-m)}</span></button>`).join("")}</div>
+    <div class="whenrow"><label class="small">Or type the time<br><input type="time" id="whenT" value="${base}"></label><button class="skbtn" data-whenset="${esc(key)}@*" style="flex:1">Save this time</button></div>
+    <div class="mbtns"><button data-whenclose="1">Close</button>${was ? `<button data-tundo="${esc(key)}">Undo: not taken yet</button>` : ""}</div></div>`;
 }
 function pToday(){
   const p = S.who, L = logOf(p, TODAY), pr = progress(p), wk = L.wake;
@@ -700,19 +745,19 @@ function pToday(){
     const n = inJar.reduce((a,i) => a + ((i[2]||{}).n||0), 0);
     const tg = o => (o && o.confirm ? '<span class="tag">CONFIRM MON</span>' : "") + (o && o.food ? ` <span class="food">${esc(o.food)}</span>` : "");
     const lead = skAll ? `<span class="lchip">Not taken today</span>` : doneAt ? `<span class="lchip">Taken at ${hmOf(doneAt)}</span>` : st === "late" ? `<span class="lchip bad">Overdue · was due ${tm}</span>` : st === "now" ? `<span class="lchip now">Now · ${tm}</span>` : `<span class="lchip">Next · ${tm}</span>`;
-    const what = cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · fish out ${n}</div><div class="fish">${inJar.map(([nm,q,o]) => fishChip(nm, q, o, cur.id, (!!doneAt && !(L.skip||{})[cur.id+"|"+nm]) || !!(L.items||{})[cur.id+"|"+nm], !!(L.skip||{})[cur.id+"|"+nm])).join("")}</div>${doneAt ? "" : `<div class="fishtip">Tap each one as you take it, or use the button below for all of them</div>`}` : (cur.note ? esc(cur.note) : out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · "));
-    const also = cur.jar && out.length ? `<div class="also">Also: ${out.map(([nm,q,o]) => `${esc(nm)} (${esc(q)})${tg(o)}`).join(" · ")}</div>` : (cur.jar && cur.note ? `<div class="also">${esc(cur.note)}</div>` : "");
-    const skipBits = doneAt || cur.btn === "On my face" || !its.length ? "" : `<button class="skiplink" data-skipopen="${cur.id}">${S.skipOpen === cur.id ? "Close" : "✕ Not taking one or all of them today?"}</button>${S.skipOpen === cur.id ? `<div class="skipl">${its.length > 1 ? `<button data-skipall="${cur.id}"><b>All of them</b></button>` : ""}${its.map(([nm]) => `<button data-skip="${esc(cur.id+"|"+nm)}">${(L.skip||{})[cur.id+"|"+nm] ? "↩ " : ""}${esc(nm)}</button>`).join("")}</div>` : ""}`;
+    const what = `${cur.jar ? `<div class="fishhd">From the ${esc(cur.jl)} container · ${n} to fish out</div>` : ""}${itemRows(p, cur)}`;
+    const also = cur.note ? `<div class="also">${esc(cur.note)}</div>` : "";
+    const skipBits = doneAt || its.length < 2 ? "" : `<button class="skiplink" data-skipall="${cur.id}">✕ Not taking any of these today</button>`;
     const lt = latestOf(p, cur), warn = !doneAt && pastLatest(p, cur, TODAY) ? `<div class="fline warn">⚠ ${nowHM() >= lt ? `It's after ${esc(lt)}` : `It falls after ${esc(lt)} today`}: a dose now can keep you awake tonight. Take it if you need it, or mark it "not today".</div>` : "";
     const naT = noAlc(p, TODAY).filter(x => !L.done[x.s.id]); const naLine = naT.length ? `<div class="fline">🍷 ${esc(naT.map(x => x.nm.replace(/ \d.*$/, "")).join(" and "))} night: best not to drink today</div>` : "";
     const bt = bloodTest(p, TODAY), btLine = bt ? `<div class="fline">🩸 Blood test ${bt.k === 0 ? "today" : fmt(bt.d)}: no multivitamin until after</div>` : "";
     const cd = chkDue(p), chkLine = cd ? `<button class="chkbtn" data-chkopen="${cd}">📝 ${cd === "am" ? "How did you sleep? Morning check-in" : cd === "ev" ? "Before bed: evening check-in" : "Afternoon check-in"}</button>` : "";
-    const exN = EXS.filter(e => (L.ex||{})[e.k]).length, exLine = p === "jenny" && cur.id === "am" && exN < EXS.length ? `<button class="chkbtn alt" style="margin-left:6px" data-exopen="1">💪 Morning moves · ${exN} of ${EXS.length}</button>` : "";
+    const exN = EXS.filter(e => (L.ex||{})[e.k]).length, exLine = p === "jenny" && cur.id === "am" && exN < EXS.length && !L.exSkip ? `<button class="chkbtn alt" style="margin-left:6px" data-exopen="1">💪 Morning moves · ${exN} of ${EXS.length}</button>` : "";
     const doLab = cur.btn === "On my face" ? "On my face now" : cur.btn ? cur.btn + " now" : "Taken now";
     const act = skAll ? `<button class="pill done" data-skipundo="${cur.id}|*">↩ I'll take them after all</button>${bell}`
       : doneAt ? `<button class="pill done" data-whenopen="${cur.id}" id="when_${cur.id}">${tick} Taken ${hmOf(doneAt)} · change</button>${bell}`
       : st === "later" && toMin(tm) - toMin(nowHM()) > 45 ? `<button class="pill done" data-done="${cur.id}" id="done_${cur.id}">Took them early? Tap</button>${bell}`
-      : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(doLab)}</button><button class="pill2" data-whenopen="${cur.id}" id="earlier_${cur.id}">🕐 Earlier</button>${bell}`;
+      : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(its.length > 1 ? "All taken now" : doLab)}</button><button class="pill2" data-whenopen="${cur.id}" id="earlier_${cur.id}">🕐 ${its.length > 1 ? "All earlier" : "Earlier"}</button>${bell}`;
     card = `<div class="flead">${lead}</div>${cur.rel !== undefined ? wakeStrip : ""}${warn}${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}<div class="act">${act}</div>${chkLine}${exLine}`;
   }
   const hero = `<section class="hero fl"><div class="bg" style="background-image:url(${bg})"></div><div class="shade"></div>${top}${arc(p, showSkin ? null : cur)}${banner(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
@@ -763,8 +808,8 @@ function pTodayMore(p, curKey){
     <div style="display:flex;gap:8px;margin-top:10px"><input class="exin" id="exIn" placeholder="Something else? Name it"><button class="ghostbtn" data-extratxt="1">Add</button></div>
     ${ex.length ? `<div class="k" style="margin-top:12px;color:var(--warn)">Taken today</div>${ex.map((e,i) => { const w = (av.find(a => a[0] === e.n)||[])[1]; return `<div class="exr"><b>${esc(e.n)}</b> <span class="small">${new Date(e.at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</span><button class="lnk" data-extrarm="${i}">remove</button>${w ? `<div class="small" style="margin-top:3px">${esc(w)}</div>` : ""}</div>`; }).join("")}` : ""}</div></div>`;
   const walks = [10,15,20,30];
-  h += `<div class="sec"><h3>Move</h3><div class="card"><div class="k" style="color:var(--acc)">Walk today · 10–15 minutes</div><div class="chips" style="margin-top:8px">${walks.map(m => `<button class="chipb" aria-pressed="${L.walk===m}" data-walk="${m}" id="walk_${m}">${m} min</button>`).join("")}</div><div class="small" style="margin-top:6px">${L.walk ? "Logged. Lovely." : "Any pace counts. Tap again to clear."}</div></div>
-    <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div>${p === "jenny" ? exCard(L) : ""}</div>`;
+  h += `<div class="sec"><h3>Move</h3><div class="card"><div class="k" style="color:var(--acc)">Walk today · 10–15 minutes</div><div class="chips" style="margin-top:8px">${walks.map(m => `<button class="chipb" aria-pressed="${L.walk===m}" data-walk="${m}" id="walk_${m}">${m} min</button>`).join("")}<button class="chipb" aria-pressed="${!!L.walkSkip}" data-walkskip="1">${L.walkSkip ? "✓ Skipped today" : "Skip today"}</button></div><div class="small" style="margin-top:6px">${L.walk ? "Logged. Lovely." : L.walkSkip ? "No walk today. Tap again to undo." : "Any pace counts. Tap again to clear."}</div></div>
+    <div class="card"><div class="k" style="color:var(--acc)">${p==="michaela"?"Back exercises · 10 minutes":"Hair foam · once a day"}</div><div class="chips" style="margin-top:8px"><button class="chipb" aria-pressed="${!!L.physio}" data-physio="1" id="physio">${L.physio?"Done ✓":"Mark as done"}</button><button class="chipb" aria-pressed="${!!L.physioSkip}" data-physioskip="1">${L.physioSkip ? "✓ Skipped today" : "Skip today"}</button></div><div class="small" style="margin-top:6px">${p==="michaela"?"Gentle core and stretches until the physio gives you your own plan.":"Hair care takes 3–6 months. This keeps the streak."}</div></div>${p === "jenny" ? exCard(L) : ""}</div>`;
   const lateS = P[p].slots.find(x => latestOf(p, x) && tooLate(p, x, TODAY)), lateRit = !!lateS;
   h += `<div class="sec"><h3>Wake-up time</h3><div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="small">${L.wake?`Up at ${L.wake} today. Forgot to tap? Fix the time here.`:`Not up yet today (usually ${usualWake(p,TODAY)}). Your usual times are on the Plan tab.`}</div><input type="time" id="wakeIn" data-wake="1" aria-label="Woke up at" value="${L.wake||""}"></div>${lateRit?`<div class="card small" style="border-color:var(--warn)">A late start today would put your second dose after ${lateS ? latestOf(p, lateS) : "17:00"}, so it's left out today. Nothing after 5.</div>`:""}</div>`;
   if(p === "michaela"){
@@ -830,8 +875,9 @@ function pWeek(){
 }
 function listItem(it, kind){
   const m = S.meta[kind][it.id] || {}, d = m.d || it.d || it.by, left = d ? dayDiff(d, TODAY) : null;
-  const cls = m.done ? "ok" : left !== null && left <= 0 ? "due" : left !== null && left <= 7 ? "soon" : "";
-  const due = m.done ? `Done ${fmt(m.done.slice(0,10))}` : left === null ? "No date yet" : left < 0 ? `${-left} days overdue` : left === 0 ? "Today" : `In ${left} days`;
+  const old = !m.done && d && d < FRESH; // before the fresh start: listed, never red
+  const cls = m.done ? "ok" : old ? "" : left !== null && left <= 0 ? "due" : left !== null && left <= 7 ? "soon" : "";
+  const due = m.done ? `Done ${fmt(m.done.slice(0,10))}` : old ? "Date has passed: tick it or set a new date" : left === null ? "No date yet" : left < 0 ? `${-left} days overdue` : left === 0 ? "Today" : `In ${left} days`;
   const T = THEMES[themeOf(it.w==="j"?"jenny":"michaela")];
   return `<div class="it ${cls}"><div class="dd">${d?`<b>${parse(d).getDate()}</b><span>${fmt(d,{month:"short"}).toUpperCase()}</span>`:`<span>DATE?</span>`}</div>
     <div><div class="t"><span class="wtag" style="background:${T.acc};color:${T.ink}">${it.w==="j"?"Jenny":"Michaela"}</span>${esc(it.t)}</div><div class="x">${esc(it.x)} · <b style="color:${cls==="due"?"var(--bad)":"var(--text)"}">${due}</b></div></div>
@@ -879,7 +925,21 @@ const skinClone = p => { const R = JSON.parse(JSON.stringify(skinR(p))); R.am = 
 function saveSkin(p, R){ S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); saveMeta("skin"); }
 function skinDay(){ const d = new Date(); if(d.getHours() < 5) d.setDate(d.getDate()-1); return ymd(d); }
 function skinSlot(){ if(S.skinSlot) return S.skinSlot; const h = new Date().getHours(); return h >= 5 && h < 15 ? "am" : "pm"; }
-function skinSteps(p, slot, ds){ const w = parse(ds).getDay(); return (skinR(p)[slot]||[]).filter(x => !x.days || !x.days.length || x.days.includes(w)); }
+function skinSteps(p, slot, ds){ const w = parse(ds).getDay(); return (skinR(p)[slot]||[]).filter(x => (!x.days || !x.days.length || x.days.includes(w)) && (!x.alt || (dayDiff(ds, x.alt) >= 0 && (dayDiff(ds, x.alt) >= (x.altDays || 14) || dayDiff(ds, x.alt) % 2 === 0)))); }
+/* new DermaFix products into the routine, once (19 Nov 2026; directions from dermafix.co.za) */
+const SKIN_ADD = {id: "k19nov", p: "jenny", add: [
+  {slot: "am", before: "vitamin b", step: {id: "k_mel_am", n: "Pigment cream", b: "DermaFix Melanoderm", how: "On clean skin, a thin layer over your face. DermaFix: twice a day, and sunscreen after it in the morning is a must."}},
+  {slot: "am", last: 1, step: {id: "k_bb", n: "BB cream", b: "DermaFix BB Cream SPF20", how: "Office days only. Last step, over your sunscreen: on the blemishes and under the eyes, then blend. It has SPF20, so the SPF50 under it still stays.", days: [1,2,3,4,5]}},
+  {slot: "pm", before: "vitamin b", step: {id: "k_mel_pm", n: "Pigment cream", b: "DermaFix Melanoderm", how: "A thin layer over your face, on clean skin."}},
+  {slot: "pm", before: "vitamin b", step: {id: "k_eye", n: "Eye cream", b: "DermaFix Corrective Eye Complex", how: "A rice-grain amount for both eyes: tap it under the eye and out towards the temples. DermaFix: every second day for the first 2 weeks, then every day.", alt: "2026-11-19", altDays: 14}}
+]};
+function skinAdd(){
+  const A = SKIN_ADD, R = skinClone(A.p); if((R.done || {})[A.id]) return false;
+  for(const a of A.add){ const list = R[a.slot]; if(list.some(x => x.id === a.step.id)) continue;
+    let i = a.last ? list.length : list.findIndex(x => ((x.b || "") + " " + x.n).toLowerCase().includes(a.before)); if(i < 0) i = list.length;
+    list.splice(i, 0, a.step); }
+  R.done = Object.assign({}, R.done, {[A.id]: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[A.p]: R}); save("meta/skin", S.meta.skin); return true;
+}
 function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf(p, ds).skin||{})[slot]) || {}, need = st.filter(x => !x.opt);
   return {st, mk, n: need.length, done: need.filter(x => mk[x.id]).length, cur: st.find(x => !mk[x.id])}; }
 /* every product: the ones in the routine (in step order), then shelf-only ones (19 Nov 2026) */
@@ -907,6 +967,7 @@ const SKIN_DELIVERY = {id: "d19nov", p: "jenny", items: [
   {name: "Face pads", b: "Microfibre heart pads (blue + purple)", n: 2}
 ]};
 function skinImport(){
+  skinAdd();
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
   if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
@@ -1215,19 +1276,27 @@ document.addEventListener("click", e => {
   else if(d.wakeclose){ S.wakeOpen = false; render(true); }
   else if(d.wakeset !== undefined){ let v = d.wakeset; if(v === "*"){ v = (document.getElementById("wakeT")||{}).value || ""; if(!v){ toast("Type a time first"); return; } }
     if(v && v > nowHM()){ toast("That time is still to come"); return; }
-    const had = logOf(S.who, TODAY).wake; saveLog(S.who, TODAY, L => { if(v) L.wake = v; else delete L.wake; }); S.wakeOpen = false;
+    const had = logOf(S.who, TODAY).wake; saveLog(S.who, TODAY, L => { if(v) L.wake = v; else delete L.wake; delete L.wakeAuto; }); S.wakeOpen = false;
     if(v && !had && !logOf(other(S.who), TODAY).wake){ S.upNote = true; render(true); } else { render(true); toast(v ? "Up at " + v + " ✓" : "Cleared"); } }
   /* taken earlier, or change the time it was taken */
   else if(d.whenopen){ S.when = S.when === d.whenopen ? null : d.whenopen; render(true); }
   else if(d.whenclose){ S.when = null; render(true); }
-  else if(d.whenset){ const i = d.whenset.indexOf("|"), slot = d.whenset.slice(0, i); let v = d.whenset.slice(i+1);
+  else if(d.whenset || d.tnow){ const raw = d.whenset || (d.tnow + "@" + nowHM()), at = raw.lastIndexOf("@"), key = raw.slice(0, at); let v = raw.slice(at+1);
     if(v === "*") v = (document.getElementById("whenT")||{}).value || ""; if(!v){ toast("Type a time first"); return; }
     if(v > nowHM()){ toast("That time is still to come"); return; }
-    const sl = P[S.who].slots.find(x => x.id === slot), iso = isoAt(TODAY, v); let auto = false;
-    saveLog(S.who, TODAY, L => { L.done[slot] = iso; L.items = L.items || {};
-      for(const [n] of itemsFor(S.who, sl, TODAY)){ const k = slot+"|"+n; if(!(L.skip||{})[k]) L.items[k] = iso; }
-      if(!L.wake && sl && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(v) - sl.rel)); auto = true; } });
-    S.when = null; delete S.sel[S.who]; render(true); toast(auto ? `Taken at ${v} ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : `Taken at ${v} ✓`); }
+    const i = key.indexOf("|"), slot = i < 0 ? key : key.slice(0, i), nm = i < 0 ? "" : key.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); if(!sl) return;
+    const iso = d.tnow ? new Date().toISOString() : isoAt(TODAY, v); let auto = false;
+    saveLog(S.who, TODAY, L => { expandSlot(L, S.who, sl);
+      const names = nm ? [nm] : itemsFor(S.who, sl, TODAY).map(x => x[0]).filter(n => !L.skip[slot+"|"+n]);
+      for(const n of names){ L.items[slot+"|"+n] = iso; delete L.skip[slot+"|"+n]; }
+      settleSlot(L, S.who, sl);
+      const w = toHM(Math.max(0, toMin(v) - sl.rel));
+      if(sl.rel !== undefined && (!L.wake || (L.wakeAuto && w < L.wake))){ L.wake = w; L.wakeAuto = 1; auto = true; } });
+    S.when = null; if(logOf(S.who, TODAY).done[slot]) delete S.sel[S.who]; render(true);
+    toast((nm ? nm.replace(/ \d.*$/, "") + " t" : "T") + "aken at " + v + " ✓" + (auto ? " · counted you up at " + logOf(S.who, TODAY).wake : "")); }
+  else if(d.tundo){ const key = d.tundo, i = key.indexOf("|"), slot = i < 0 ? key : key.slice(0, i), nm = i < 0 ? "" : key.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); if(!sl) return;
+    S.when = null; saveLog(S.who, TODAY, L => { expandSlot(L, S.who, sl);
+      if(nm){ delete L.items[key]; settleSlot(L, S.who, sl); } else { delete L.done[slot]; for(const k of Object.keys(L.items)) if(k.startsWith(slot+"|")) delete L.items[k]; } }); }
   else if(d.skipall){ const slot = d.skipall, sl = P[S.who].slots.find(x => x.id === slot), at = new Date().toISOString();
     saveLog(S.who, TODAY, L => { L.skip = L.skip || {}; L.items = L.items || {}; for(const [n] of itemsFor(S.who, sl, TODAY)){ const k = slot+"|"+n; if(!L.items[k]) L.skip[k] = at; } if(!L.done[slot]) L.done[slot] = at; });
     S.skipOpen = ""; S.skipInfo = slot + "|*"; render(true); }
@@ -1235,7 +1304,7 @@ document.addEventListener("click", e => {
     saveLog(S.who, TODAY, L => { L.skipWhy = Object.assign({}, L.skipWhy); const names = nm === "*" ? itemsFor(S.who, sl, TODAY).map(x => x[0]).filter(n => (L.skip||{})[slot+"|"+n]) : [nm];
       for(const n of names){ const kk = slot+"|"+n; if(L.skipWhy[kk] === d.skipwhy) delete L.skipWhy[kk]; else L.skipWhy[kk] = d.skipwhy; } }); }
   else if(d.done){ const sl = P[S.who].slots.find(x => x.id === d.done); let auto = false; S.when = null;
-    saveLog(S.who, TODAY, L => { L.done[d.done] = new Date().toISOString();
+    saveLog(S.who, TODAY, L => { const now = new Date().toISOString(); expandSlot(L, S.who, sl); for(const [n] of itemsFor(S.who, sl, TODAY)){ const k = d.done+"|"+n; if(!L.items[k] && !L.skip[k]) L.items[k] = now; } L.done[d.done] = now;
       // forgot "I'm up"? ticking a morning container counts as getting up
       if(!L.wake && sl && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); auto = true; } });
     delete S.sel[S.who]; render(true); toast(auto ? `Taken ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : "Taken ✓"); }
@@ -1250,15 +1319,17 @@ document.addEventListener("click", e => {
     const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
     if(M[mp][nm]) delete M[mp][nm]; else M[mp][nm] = new Date().toISOString();
     S.meta.settings = Object.assign({}, S.meta.settings, {missing: M}); saveMeta("settings"); toast(M[mp][nm] ? "Hidden until you buy it" : "Back on your list ✓"); }
-  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(); S.chk = {p:S.who, k:d.chkopen, alcY:logOf(S.who, yd).alc || 0, sleep:(was.sleep||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
+  else if(d.chkopen){ const L = logOf(S.who, TODAY), was = (L.chk||{})[d.chkopen] || {}; const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(); S.chk = {p:S.who, k:d.chkopen, alcY:logOf(S.who, yd).alc || 0, sleep:(was.sleep||[]).slice(), help:(was.help||[]).slice(), why:(was.why||[]).slice(), rate:Object.assign({}, was.rate), hrs:was.hrs||"", lat:was.lat||"", note:was.note||"", alc:L.alc}; render(true); }
   else if(d.chkalcy !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); k.alcY = +d.chkalcy; render(true); }
   else if(d.chkwhy || d.chkalc !== undefined){ const k = S.chk; if(!k) return; chkKeep(k); if(d.chkwhy){ const q = d.chkwhy; k.why = k.why.includes(q) ? k.why.filter(x => x !== q) : k.why.concat(q); } else k.alc = k.alc === +d.chkalc ? undefined : +d.chkalc; render(true); }
+  else if(d.chkone){ const k = S.chk; if(!k) return; chkKeep(k); const q = d.chkone, had = (k.sleep||[]).includes(q); k.sleep = (k.sleep||[]).filter(x => !FALLQ.includes(x)); if(!had) k.sleep.push(q); render(true); }
+  else if(d.chkhelp){ const k = S.chk; if(!k) return; chkKeep(k); const q = d.chkhelp; k.help = (k.help||[]).includes(q) ? k.help.filter(x => x !== q) : (k.help||[]).concat(q); render(true); }
   else if(d.chksleep){ const k = S.chk; if(!k) return; const q = d.chksleep; chkKeep(k); k.sleep = k.sleep.includes(q) ? k.sleep.filter(x => x !== q) : k.sleep.concat(q); render(true); }
   else if(d.chkrate){ const k = S.chk; if(!k) return; const [id, v] = d.chkrate.split("|"); chkKeep(k); if(k.rate[id] === +v) delete k.rate[id]; else k.rate[id] = +v; render(true); }
   else if(d.chkclose){ S.chk = null; render(true); }
   else if(d.chksave){ const k = S.chk; if(!k) return; const hrs = (document.getElementById("chkHrs")||{}).value || "", kg = (document.getElementById("chkKg")||{}).value || "", note = ((document.getElementById("chkNote")||{}).value || "").trim();
     const lat = (document.getElementById("chkLat")||{}).value || "";
-    saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, why:k.why, rate:k.rate, hrs:hrs ? +hrs : "", lat:lat ? +lat : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; if(k.k === "ev" && k.alc !== undefined) L.alc = k.alc; });
+    saveLog(k.p, TODAY, L => { L.chk = Object.assign({}, L.chk, {[k.k]: {sleep:k.sleep, help:k.help||[], why:k.why, rate:k.rate, hrs:hrs ? +hrs : "", lat:lat ? +lat : "", note, at:new Date().toISOString()}}); if(kg) L.kg = +kg; if(k.k === "ev" && k.alc !== undefined) L.alc = k.alc; });
     if(k.k === "am" && k.p === "jenny" && k.alcY !== undefined){ const x = parse(TODAY); x.setDate(x.getDate()-1); saveLog(k.p, ymd(x), L => { if(k.alcY) L.alc = k.alcY; else delete L.alc; }); }
     const wasAm = k.k === "am" && k.p === "jenny"; S.chk = null; if(wasAm && EXS.some(e => !(logOf("jenny", TODAY).ex||{})[e.k])) S.exOpen = true; render(true); toast("Saved ✓ Thank you"); }
   else if(d.apptform !== undefined){ S.apptForm = d.apptform ? {p:d.apptform} : null; render(true); }
@@ -1324,11 +1395,9 @@ document.addEventListener("click", e => {
   else if(d.print){ window.print(); }
   else if(d.skipopen){ S.skipOpen = S.skipOpen === d.skipopen ? "" : d.skipopen; render(true); }
   else if(d.skip){ const i = d.skip.indexOf("|"), slot = d.skip.slice(0, i), sl = P[S.who].slots.find(x => x.id === slot); let was = false;
-    saveLog(S.who, TODAY, L => { L.skip = L.skip || {}; L.items = L.items || {};
-      if(L.skip[d.skip]){ delete L.skip[d.skip]; was = true; return; }
-      L.skip[d.skip] = new Date().toISOString(); delete L.items[d.skip];
-      const res = itemsFor(S.who, sl, TODAY).every(([n]) => L.skip[slot+"|"+n] || L.items[slot+"|"+n] || (L.done[slot] && !L.skip[slot+"|"+n]));
-      if(res && !L.done[slot]) L.done[slot] = new Date().toISOString(); });
+    saveLog(S.who, TODAY, L => { expandSlot(L, S.who, sl);
+      if(L.skip[d.skip]){ delete L.skip[d.skip]; if(L.skipWhy) delete L.skipWhy[d.skip]; was = true; settleSlot(L, S.who, sl); return; }
+      L.skip[d.skip] = new Date().toISOString(); delete L.items[d.skip]; settleSlot(L, S.who, sl); });
     S.skipOpen = ""; if(!was) S.skipInfo = d.skip; render(true); if(was) toast("Back on today's list"); }
   else if(d.skipok){ S.skipInfo = ""; render(true); }
   else if(d.skipundo){ const k = d.skipundo, i = k.indexOf("|"), slot = k.slice(0, i), nm = k.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot);
@@ -1345,7 +1414,10 @@ document.addEventListener("click", e => {
   else if(d.copyweek){ const t = weekText(); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied: paste it to Claude"), () => { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); toast("Copied: paste it to Claude"); }catch(_){ toast("Couldn't copy"); } ta.remove(); }); }
   else if(d.undo){ S.when = null; saveLog(S.who, TODAY, L => { delete L.done[d.undo]; if(L.items) for(const k of Object.keys(L.items)) if(k.startsWith(d.undo+"|")) delete L.items[k]; }); }
   else if(d.up){ saveLog(S.who, TODAY, L => { L.wake = nowHM(); }); if(!logOf(other(S.who), TODAY).wake){ S.upNote = true; render(true); } else toast("Good morning ☀ " + P[other(S.who)].name + " is up too"); }
-  else if(d.walk){ const m = +d.walk; saveLog(S.who, TODAY, L => { L.walk = L.walk === m ? 0 : m; }); }
+  else if(d.walkskip){ saveLog(S.who, TODAY, L => { if(L.walkSkip) delete L.walkSkip; else { L.walkSkip = new Date().toISOString(); L.walk = 0; } }); }
+  else if(d.physioskip){ saveLog(S.who, TODAY, L => { if(L.physioSkip) delete L.physioSkip; else { L.physioSkip = new Date().toISOString(); L.physio = ""; } }); }
+  else if(d.exskip){ saveLog(S.who, TODAY, L => { if(L.exSkip) delete L.exSkip; else L.exSkip = new Date().toISOString(); }); S.exOpen = false; render(true); }
+  else if(d.walk){ const m = +d.walk; saveLog(S.who, TODAY, L => { L.walk = L.walk === m ? 0 : m; delete L.walkSkip; }); }
   else if(d.physio){ saveLog(S.who, TODAY, L => { L.physio = L.physio ? "" : new Date().toISOString(); }); }
   else if(d.remind){ const [p, slot] = d.remind.split("|"); remind(p, slot); }
   else if(d.remindnext){ const o = other(S.who), c = current(o) || slotsFor(o,TODAY).slice(-1)[0]; if(c) remind(o, c.id); }
