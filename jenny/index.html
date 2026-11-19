@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#3a0d22"><link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#13201f"><link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>const HOME_WHO="jenny", SB_URL="https://hwchltuzbdkcqzijwbqp.supabase.co", SB_KEY="sb_publishable_VqExX9IllGKx017kfqXPDg_yrBGzwEY", EMAILS={"jenny@cmvas.co.za": "jenny", "michaela@cmvas.co.za": "michaela"};
@@ -9,33 +9,33 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch
 
 <div id="login" style="position:fixed;inset:0;z-index:99;display:none;place-items:center;padding:24px;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.75)),url(t/lotus/1.jpg) center/cover">
  <form id="loginForm" style="width:100%;max-width:340px;background:rgba(20,20,20,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:24px;color:#fff;font-family:Manrope,system-ui,sans-serif">
-  <div style="font:600 40px 'Cormorant Garamond',Georgia,serif;line-height:1">Pillbox</div>
+  <div style="font:600 40px 'Cormorant Garamond',Georgia,serif;line-height:1">Well Together</div>
   <p style="opacity:.8;margin:6px 0 18px">Sign in once on this phone.</p>
   <input id="lEmail" type="email" autocomplete="username" placeholder="Email" value="jenny@cmvas.co.za" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:10px;font:16px system-ui">
   <input id="lPass" type="password" autocomplete="current-password" placeholder="Password" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:14px;font:16px system-ui">
-  <button style="width:100%;padding:14px;border:0;border-radius:999px;background:#ff8fbf;color:#3a0d22;font:800 17px system-ui">Sign in</button>
+  <button style="width:100%;padding:14px;border:0;border-radius:999px;background:#f3e6d3;color:#43283a;font:800 17px system-ui">Sign in</button>
   <div id="loginMsg" style="min-height:20px;margin-top:10px;font-size:14px"></div>
   <button type="button" id="lForgot" style="background:none;border:0;color:#fff;opacity:.85;text-decoration:underline;font:600 14px system-ui;padding:6px 0">Forgot password?</button>
  </form>
 </div>
 <div id="pwBox" style="position:fixed;inset:0;z-index:100;display:none;place-items:center;padding:24px;background:rgba(0,0,0,.7)">
- <form id="pwForm" style="width:100%;max-width:340px;background:#1b1d22;border:2px solid #ff8fbf;border-radius:24px;padding:24px;color:#fff;font-family:Manrope,system-ui,sans-serif">
+ <form id="pwForm" style="width:100%;max-width:340px;background:#1b1d22;border:2px solid #f3e6d3;border-radius:24px;padding:24px;color:#fff;font-family:Manrope,system-ui,sans-serif">
   <div style="font:600 32px 'Cormorant Garamond',Georgia,serif;line-height:1">New password</div>
   <p style="opacity:.8;margin:6px 0 16px">At least 8 characters. Save it in your password manager.</p>
   <input id="pw1" type="password" autocomplete="new-password" placeholder="New password" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:10px;font:16px system-ui;box-sizing:border-box">
   <input id="pw2" type="password" autocomplete="new-password" placeholder="Type it again" required style="width:100%;padding:13px;border-radius:12px;border:0;margin-bottom:14px;font:16px system-ui;box-sizing:border-box">
-  <button style="width:100%;padding:14px;border:0;border-radius:999px;background:#ff8fbf;color:#3a0d22;font:800 17px system-ui">Save my password</button>
+  <button style="width:100%;padding:14px;border:0;border-radius:999px;background:#f3e6d3;color:#43283a;font:800 17px system-ui">Save my password</button>
   <button type="button" id="pwCancel" style="width:100%;margin-top:8px;padding:10px;border:0;background:none;color:#fff;opacity:.8;font:600 14px system-ui">Cancel</button>
   <div id="pwMsg" style="min-height:20px;margin-top:8px;font-size:14px"></div>
  </form>
 </div>
-<title>Our Pillbox</title>
+<title>Well Together</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@500;600;700;800&display=swap">
 <style>
 /* Layout: the photo is the screen. One theme per person (Michaela: jungle, Jenny: lotus), photos move from dawn to night.
    Deliberately dark, single-look design so the photographs carry the colour. */
 :root{
-  --night:#0d1115; --panel:rgba(255,255,255,.07); --edge:rgba(255,255,255,.14); --text:#f4f6f5; --dim:rgba(244,246,245,.68);
+  --night:#13201f; --panel:rgba(255,255,255,.07); --edge:rgba(255,255,255,.14); --text:#f4f6f5; --dim:rgba(244,246,245,.68);
   --acc:#c3f26b; --ink:#1b3006; --bad:#ff7b7b; --warn:#ffd36b;
   --serif:"Cormorant Garamond",Georgia,serif; --sans:"Manrope",system-ui,sans-serif; color-scheme:dark;
 }
@@ -189,6 +189,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .tst{font:800 12px var(--sans);white-space:nowrap}.tlnk{font:700 12px var(--sans);text-decoration:underline;padding:4px 2px;color:inherit}
 .tbtns{display:flex;gap:4px}.tb1{background:var(--ink);color:#fff;border-radius:12px;padding:8px 10px;font:800 12.5px var(--sans)}
 .tb2{background:#fff;color:var(--ink);border:1px solid rgba(0,0,0,.15);border-radius:12px;padding:7px 9px;font:800 13px var(--sans)}
+.drow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.55);font:700 12.5px var(--sans)}
+.drow div{display:flex;gap:4px}.drow button{border:1px solid rgba(0,0,0,.15);border-radius:10px;padding:6px 8px;background:#fff;color:var(--ink);font:700 11.5px var(--sans)}.drow button.on{background:var(--ink);color:#fff}
 .cq{font:800 14px var(--sans);margin:16px 0 6px}.cq span{font-weight:600;opacity:.6}
 .symg.two{display:grid;grid-template-columns:1fr 1fr}.symg.three{display:grid;grid-template-columns:repeat(3,1fr)}
 .moodg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -209,6 +211,27 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .spr b{font:800 20px var(--sans);color:var(--acc)}.sprb{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.sprb .skbtn{flex:0 0 auto;padding:10px 12px;font-size:13px;margin:0}.sprb .skbtn:disabled{opacity:.4}
 .skstb{display:grid;gap:6px;flex:0 0 auto}.skstb .skbtn{padding:10px 12px;font-size:13px}.skstb .skbtn:disabled{opacity:.4}
 .rowi .th.skth{display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.1)}
+
+/* the drawn scene and its gentle motion */
+.hero .bg,.head .bg{background:none}
+.scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene .fr{transform-box:view-box}
+.scene .fl{transform-origin:0 0}.scene .frr{transform-origin:400px 0}
+.scene .bob,.scene .rip{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){
+  .scene .fl{animation:sway 7s ease-in-out infinite alternate}.scene .frr{animation:sway 8.5s ease-in-out infinite alternate-reverse}
+  .scene .bob{animation:bob 4s ease-in-out infinite alternate}
+  .scene .rip{animation:ripple 6s ease-out infinite}.scene .r2{animation-delay:-3s}
+  .scene .petal{animation:fall 13s linear infinite}
+}
+@keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+@keyframes ripple{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+@keyframes fall{0%{transform:translate(0,-20px) rotate(0);opacity:0}8%{opacity:.85}100%{transform:translate(70px,620px) rotate(300deg);opacity:0}}
+.hero .shade{background:linear-gradient(180deg,rgba(10,20,18,.38) 0%,rgba(10,20,18,0) 24%)}
+.head .shade{background:linear-gradient(180deg,rgba(10,20,18,.35),rgba(10,20,18,0) 40%,var(--night) 100%)}
+.focus{box-shadow:0 18px 40px rgba(10,30,25,.35),0 0 0 1px rgba(255,255,255,.4)}
+.focus .pill{box-shadow:0 6px 16px rgba(0,0,0,.18)}
 
 /* tab bar */
 .tb{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(452px,calc(100% - 28px));display:flex;justify-content:space-around;padding:8px 4px;font:700 9.5px var(--sans);background:rgba(10,12,14,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--edge);border-radius:24px;z-index:20}
@@ -369,8 +392,8 @@ input[type=date],input[type=time]{font:600 12.5px var(--sans);color:var(--text);
 /* ---------------- the plan (same as before) ---------------- */
 const START = "2026-11-07";
 const THEMES = {
-  jungle:{name:"Jungle", acc:"#c3f26b", ink:"#1b3006"},
-  lotus:{name:"Lotus pond", acc:"#ff8fbf", ink:"#3a0d22"}
+  jungle:{name:"Palm & sage", acc:"#d9e8cf", ink:"#22361f"},
+  lotus:{name:"Lotus & cream", acc:"#f3e6d3", ink:"#43283a"}
 };
 const P = {jenny:{name:"Jenny", theme:"lotus", slots:[]}, michaela:{name:"Michaela", theme:"jungle", slots:[]}};
 const STOPPED = {}, SCRIPTS = [], CHECKS = [], FLAGS = {}, SHOP = [], SKIP = {}, AVOID = {}, DOCS = {michaela:[], jenny:[]};
@@ -401,7 +424,45 @@ if(!whoChosen){ try { const w = localStorage.getItem("pillbox.who"); if(w && P[w
 let db = null;
 const other = p => p === "jenny" ? "michaela" : "jenny";
 const themeOf = p => THEMES[(S.meta.settings.theme||{})[p] || P[p].theme] ? ((S.meta.settings.theme||{})[p] || P[p].theme) : P[p].theme;
-const photo = (p, i) => `t/${themeOf(p)}/${i}.jpg`;
+const photo = (p, i) => miniScene(p, i);
+/* drawn scene (19 Nov 2026, Jenny: "lotus and palm leaves, but animated", not photos). i = time of day 1..5 */
+const SKY = {1:["#f6dccb","#eab9ab","#7fa7a0","#3f6f6a"], 2:["#e3f0e9","#c4e0d6","#6fa396","#2f6457"], 3:["#e9f3e4","#d2e8d5","#5d9886","#285a4c"], 4:["#f3d7bb","#dfa58e","#5d8183","#2b4b52"], 5:["#2a3a55","#41557a","#24405a","#13283a"]};
+function frond(x, y, a, len, col){ // one palm frond: a curved rib with leaflets
+  let leaves = ""; const n = 13;
+  for(let k = 1; k <= n; k++){ const t = k/(n+1), px = t*len, py = Math.sin(t*Math.PI)*len*.12, l = len*(.34 - t*.18);
+    leaves += `<path d="M${px.toFixed(1)} ${py.toFixed(1)} q ${(l*.35).toFixed(1)} ${(l*.25).toFixed(1)} ${(l*.75).toFixed(1)} ${(l*.95).toFixed(1)} q ${(-l*.45).toFixed(1)} ${(-l*.35).toFixed(1)} ${(-l*.75).toFixed(1)} ${(-l*.95).toFixed(1)}z"/><path d="M${px.toFixed(1)} ${py.toFixed(1)} q ${(l*.35).toFixed(1)} ${(-l*.25).toFixed(1)} ${(l*.75).toFixed(1)} ${(-l*.95).toFixed(1)} q ${(-l*.45).toFixed(1)} ${(l*.35).toFixed(1)} ${(-l*.75).toFixed(1)} ${(l*.95).toFixed(1)}z"/>`; }
+  return `<g transform="translate(${x} ${y}) rotate(${a})" fill="${col}"><path d="M0 0 Q ${len*.5} ${len*.16} ${len} ${len*.02}" stroke="${col}" stroke-width="3" fill="none"/>${leaves}</g>`;
+}
+function lotusFlower(x, y, sc, c1, c2){
+  const pet = (r, c) => `<path transform="rotate(${r})" d="M0 0 C -9 -14 -7 -34 0 -44 C 7 -34 9 -14 0 0Z" fill="${c}"/>`;
+  return `<g class="bob" transform="translate(${x} ${y}) scale(${sc})"><g>${[-62,62,-40,40].map(r => pet(r, c2)).join("")}${[-18,18,0].map(r => pet(r, c1)).join("")}<ellipse cx="0" cy="-4" rx="7" ry="4" fill="#f4d58d"/></g></g>`;
+}
+function lilyPad(x, y, rx, col, rot){ return `<path transform="translate(${x} ${y}) rotate(${rot})" d="M0 0 L ${rx} -${rx*.12} A ${rx} ${rx*.42} 0 1 1 ${rx} ${rx*.12} Z" fill="${col}"/>`; }
+function scene(p, i){
+  const c = SKY[i] || SKY[2], night = i === 5, leaf = night ? "#1d3a36" : "#2f5e4f", leaf2 = night ? "#244640" : "#3f7562";
+  const rose = p === "michaela" ? ["#f6efe1", "#e4d9bf"] : ["#f2cdd3", "#e1a9b5"];
+  const sun = night ? `<circle cx="285" cy="330" r="24" fill="#f1ecd8" opacity=".9"/>` : `<circle cx="290" cy="${i === 4 ? 470 : 330}" r="${i === 4 ? 46 : 34}" fill="#fff6dc" opacity=".75"/>`;
+  return `<svg class="scene" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient><linearGradient id="wat${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[2]}"/><stop offset="1" stop-color="${c[3]}"/></linearGradient></defs>
+    <rect width="400" height="540" fill="url(#sky${i})"/>${sun}
+    <path d="M0 520 Q 60 470 130 505 T 260 495 T 400 500 V 545 H 0Z" fill="${leaf2}" opacity=".35"/>
+    <rect y="535" width="400" height="325" fill="url(#wat${i})"/>
+    <g stroke="#fff" stroke-opacity=".18" stroke-width="1.2" fill="none"><path d="M30 600 h70 M210 585 h90 M80 690 h60 M260 720 h100 M40 800 h80"/></g>
+    <g class="rip"><ellipse cx="120" cy="705" rx="38" ry="9" fill="none" stroke="#fff" stroke-opacity=".35"/></g><g class="rip r2"><ellipse cx="290" cy="640" rx="30" ry="7" fill="none" stroke="#fff" stroke-opacity=".35"/></g>
+    ${lilyPad(70, 650, 46, "#4d8a66", -8)}${lilyPad(250, 700, 58, "#457f5e", 12)}${lilyPad(330, 600, 34, "#5a9670", -20)}${lilyPad(150, 790, 52, "#3f7657", 4)}
+    ${lotusFlower(250, 690, 1.15, rose[0], rose[1])}${lotusFlower(84, 640, .8, rose[0], rose[1])}${lotusFlower(160, 780, .95, rose[0], rose[1])}
+    <g class="fr fl">${frond(-20, -10, 38, 300, leaf)}${frond(-30, 30, 62, 260, leaf2)}${frond(-10, -30, 14, 240, leaf2)}</g>
+    <g class="fr frr">${frond(420, -10, 142, 300, leaf)}${frond(430, 40, 118, 250, leaf2)}${frond(415, -25, 166, 230, leaf2)}</g>
+    ${night ? "" : [[60,0],[200,3],[330,6],[130,9]].map(([x, d]) => `<path class="petal" style="animation-delay:-${d}s" transform="translate(${x} 0)" d="M0 0 c 4 -6 10 -6 12 0 c -4 5 -9 5 -12 0z" fill="${rose[1]}"/>`).join("")}
+  </svg>`;
+}
+/* small round picture per time of day, used wherever a photo used to be */
+function miniScene(p, i){
+  const c = SKY[i] || SKY[2], rose = p === "michaela" ? ["#f6efe1", "#e4d9bf"] : ["#f2cdd3", "#e1a9b5"];
+  const pet = (r, col) => `<path transform="rotate(${r})" d="M0 0 C -6 -9 -5 -22 0 -28 C 5 -22 6 -9 0 0Z" fill="${col}"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset=".56" stop-color="${c[2]}"/><stop offset="1" stop-color="${c[3]}"/></linearGradient></defs><rect width="80" height="80" fill="url(#g)"/><ellipse cx="40" cy="62" rx="26" ry="8" fill="#4d8a66"/><g transform="translate(40 60)">${[-55,55,-30,30].map(r => pet(r, rose[1])).join("")}${[-12,12,0].map(r => pet(r, rose[0])).join("")}</g></svg>`;
+  return "data:image/svg+xml," + encodeURIComponent(svg).replace(/\(/g, "%28").replace(/\)/g, "%29");
+}
+
 const RX_SLOTS = [["bfast","Breakfast"],["aft","15:00"],["bed","In bed"]], RX_DOSES = 15, RX_TABS = 2;
 function rxCourse(){ const st = S.meta.settings || {}; if(st.rifax && st.rifax.from) return st.rifax; return st.rifaxFrom ? {from: st.rifaxFrom, dose: "bfast"} : null; }
 function rxDoses(){ const c = rxCourse(); if(!c) return []; const out = []; let i = Math.max(0, RX_SLOTS.findIndex(x => x[0] === c.dose)), d = c.from;
@@ -659,7 +720,7 @@ function paintTabs(){
   document.getElementById("tabs").innerHTML = T.map(([id,l]) => `<button role="tab" id="tab_${id}" aria-selected="${S.tab===id}" data-tab="${id}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[id]}</svg>${l}${id==="plan"&&n?` <b style="color:var(--bad)">•${n}</b>`:""}</button>`).join("");
 }
 function whoSwitch(){
-  return `<div class="who" role="group" aria-label="Whose pillbox">${["michaela","jenny"].map(p => { const T = THEMES[themeOf(p)]; return `<button style="--wacc:${T.acc};--wink:${T.ink}" aria-pressed="${S.who===p}" data-who="${p}" id="who_${p}">${P[p].name}</button>`; }).join("")}</div>`;
+  return `<div class="who" role="group" aria-label="Whose day">${["michaela","jenny"].map(p => { const T = THEMES[themeOf(p)]; return `<button style="--wacc:${T.acc};--wink:${T.ink}" aria-pressed="${S.who===p}" data-who="${p}" id="who_${p}">${P[p].name}</button>`; }).join("")}</div>`;
 }
 function arc(p, cur){
   const sl = slotsFor(p, TODAY), n = sl.length;
@@ -725,22 +786,24 @@ function pToday(){
   const wakeStrip = !wk && new Date().getHours() < 14 ? `<button class="wakestrip" data-wakeopen="1" id="wakestrip">☀ <span>Not marked up yet</span><b>I'm up · set the time</b></button>` : "";
   let card, bg, curKey = "";
   if(showSkin){
-    const {sl, K} = skd, lab = sl === "am" ? "Morning skin" : "Evening skin"; curKey = "skin:" + sl;
-    bg = photo(p, sl === "am" ? 2 : 5);
+    const {sl, K} = skd, lab = sl === "am" ? "Morning care" : "Evening care"; curKey = "skin:" + sl;
+    bg = sl === "am" ? 2 : 5;
     const back = S.selSkin && S.selSkin.p === p ? `<button class="skiplink" data-selskin="">Back to my tablets</button>` : "";
-    if(!K.cur) card = `<div class="flead"><span class="lchip">${lab}</span></div><div class="big sk">✨ All done</div><div class="what">${sl === "am" ? "Lovely. See you tonight." : "Lovely. Sleep well."}</div>${back}`;
+    const yd = (() => { const x = parse(TODAY); x.setDate(x.getDate()-1); return ymd(x); })(), dDay = sl === "pm" ? skinDay() : yd, dv = logOf(p, dDay).alc;
+    const drinks = p === "jenny" ? `<div class="drow"><span>🍷 ${sl === "pm" ? "Drinks today" : "Drinks last night"}</span><div>${alcOpts(p).map(([v, t]) => `<button class="${dv === v ? "on" : ""}" data-alcdayset="${dDay}|${v}">${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div></div>` : "";
+    if(!K.cur) card = `<div class="flead"><span class="lchip">${lab}</span></div><div class="big sk">✨ All done</div><div class="what">${sl === "am" ? "Lovely. See you tonight." : "Lovely. Sleep well."}</div>${drinks}${back}`;
     else { const i = K.st.indexOf(K.cur);
       const bar = `<div class="skinbar" style="margin-top:10px">${K.st.map(x => `<i class="${K.mk[x.id] === "skip" ? "sk" : K.mk[x.id] ? "on" : ""}${K.cur.id === x.id ? " now" : ""}"></i>`).join("")}</div>`;
       const J = S.skinJust && Date.now() - S.skinJust.at < 6000 ? S.skinJust : null;
       card = `${J ? `<div class="skjust">✓ ${esc(J.n)} ${J.skip ? "skipped" : "done"} · next up 👇</div>` : ""}<div class="flead"><span class="lchip now">${lab} · step ${i+1} of ${K.st.length}${K.cur.opt ? " · only if needed" : ""}</span></div>${bar}<div class="big sk">${esc(K.cur.n)}</div>${K.cur.b ? `<div class="what"><b>${esc(K.cur.b)}</b></div>` : ""}${K.cur.how ? `<div class="skinhow">${esc(K.cur.how)}</div>` : ""}
-        <div class="act"><button class="pill" data-skindo="${sl}|${K.cur.id}" id="skdo">${tick} Done</button><button class="pill2" data-skinskip="${sl}|${K.cur.id}">${K.cur.opt ? "Not needed" : "Skip today"}</button></div>${back}`; }
+        ${drinks}<div class="act"><button class="pill" data-skindo="${sl}|${K.cur.id}" id="skdo">${tick} Done</button><button class="pill2" data-skinskip="${sl}|${K.cur.id}">${K.cur.opt ? "Not needed" : K.cur.teeth ? "Not today" : "Skip today"}</button></div>${back}`; }
   } else if(!cur){
-    bg = photo(p, 5);
+    bg = 5;
     card = `<div class="flead"><span class="lchip">${pr.n} of ${pr.n} · today</span></div><div class="big">All done</div><div class="what">Everything for today is ticked. Well done${p === "michaela" ? ", my love" : ""} 💛</div><div class="act"><button class="pill" data-tab="week" id="seeweek">See this week</button>${bell}</div>`;
   } else {
     curKey = cur.id;
     const tm = slotTime(p, cur, TODAY), st = curSt, its = itemsFor(p, cur, TODAY), doneAt = L.done[cur.id], skAll = allSkipped(p, cur, TODAY);
-    bg = photo(p, phIdx(tm));
+    bg = phIdx(tm);
     const inJar = its.filter(i => !(i[2]||{}).out), out = its.filter(i => (i[2]||{}).out);
     const n = inJar.reduce((a,i) => a + ((i[2]||{}).n||0), 0);
     const tg = o => (o && o.confirm ? '<span class="tag">CONFIRM MON</span>' : "") + (o && o.food ? ` <span class="food">${esc(o.food)}</span>` : "");
@@ -760,7 +823,7 @@ function pToday(){
       : `<button class="pill" data-done="${cur.id}" id="done_${cur.id}">${tick}${esc(its.length > 1 ? "All taken now" : doLab)}</button><button class="pill2" data-whenopen="${cur.id}" id="earlier_${cur.id}">🕐 ${its.length > 1 ? "All earlier" : "Earlier"}</button>${bell}`;
     card = `<div class="flead">${lead}</div>${cur.rel !== undefined ? wakeStrip : ""}${warn}${naLine}${btLine}<div class="big">${esc(cur.big)}</div><div class="what">${what}</div>${also}${skipBits}<div class="act">${act}</div>${chkLine}${exLine}`;
   }
-  const hero = `<section class="hero fl"><div class="bg" style="background-image:url(${bg})"></div><div class="shade"></div>${top}${arc(p, showSkin ? null : cur)}${banner(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
+  const hero = `<section class="hero fl"><div class="bg">${scene(p, bg)}</div><div class="shade"></div>${top}${arc(p, showSkin ? null : cur)}${banner(p)}<div class="focus-wrap pad"><div class="focus" id="focus">${card}</div></div><div class="scroll">${pr.d} of ${pr.n} today · scroll ↓</div></section>`;
   return hero + `<div class="pad">${pTodayMore(p, curKey)}</div>`;
 }
 const pillImg = nm => (S.pimg||{})[nm] || "";
@@ -779,7 +842,7 @@ function pTodayMore(p, curKey){
   const ds = skinDay(), firstM = sl.filter(x => x.rel !== undefined).sort((a,b) => a.rel - b.rel)[0], bedS = sl.find(x => x.id === "bed");
   for(const k of ["am","pm"]){ const K = skinState(p, k, ds); if(!K.st.length) continue;
     const done = K.n ? K.done >= K.n : !K.cur, tm = k === "am" ? toHM(toMin(firstM ? slotTime(p, firstM, TODAY) : "07:00") + 1) : toHM(toMin(bedS ? slotTime(p, bedS, TODAY) : "21:00") - 1);
-    rows.push([tm, `<button class="rowi ${curKey === "skin:"+k ? "cur" : ""} ${done ? "dn" : ""}" data-selskin="${k}" data-top="1" id="row_skin_${k}"><div class="th skth">🧴</div><div><div class="t">${k === "am" ? "Morning skin" : "Evening skin"}</div><div class="s">${k === "am" ? "after your morning tablets" : "before bed"} · ${K.done} of ${K.n} steps</div></div><span class="st ${done ? "done" : K.done ? "now" : "later"}">${done ? "Done" : K.done ? "Busy" : "Later"}</span></button>`]); }
+    rows.push([tm, `<button class="rowi ${curKey === "skin:"+k ? "cur" : ""} ${done ? "dn" : ""}" data-selskin="${k}" data-top="1" id="row_skin_${k}"><div class="th skth">🧴</div><div><div class="t">${k === "am" ? "Morning care" : "Evening care"}</div><div class="s">${k === "am" ? "after your morning tablets" : "before bed"} · ${K.done} of ${K.n} steps</div></div><span class="st ${done ? "done" : K.done ? "now" : "later"}">${done ? "Done" : K.done ? "Busy" : "Later"}</span></button>`]); }
   rows.sort((a,b) => a[0].localeCompare(b[0]));
   let h = goCard(p) + `<div class="sec"><h3>Your day</h3>${rows.map(r => r[1]).join("")}</div>`;
   h = meCard(p) + todoCard(p) + bloodCard(p) + noAlcCard(p) + h;
@@ -834,7 +897,7 @@ function pTodayMore(p, curKey){
   }
   return h + `<div class="status" id="status">Connecting…</div>`;
 }
-function head(p, idx, eyebrow, title){ return `<div class="head"><div class="bg" style="background-image:url(${photo(p,idx)})"></div><div class="shade"></div><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
+function head(p, idx, eyebrow, title){ return `<div class="head"><div class="bg">${scene(p, idx)}</div><div class="shade"></div><div class="topbar pad">${whoSwitch()}</div><div class="tt pad"><div class="k" style="color:var(--acc)">${eyebrow}</div><h2>${title}</h2></div></div>`; }
 function orderHtml(){
   const rows = [], uncounted = [];
   for(const q of ["michaela","jenny"]) for(const r of stockRows(q)){ if(missing(q, r.nm)) continue; if(r.left === null) uncounted.push(q); else if(r.days !== null && r.days <= 14) rows.push([q, r]); }
@@ -945,7 +1008,7 @@ function skinState(p, slot, ds){ const st = skinSteps(p, slot, ds), mk = ((logOf
 /* every product: the ones in the routine (in step order), then shelf-only ones (19 Nov 2026) */
 function skinShelf(p){
   const R = skinR(p), st = ((S.meta.skinstock||{})[p]) || {}, out = [], seen = {};
-  for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key]) continue; seen[key] = 1; out.push({key, n: x.n, b: x.b}); }
+  for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key] || x.noStock) continue; seen[key] = 1; out.push({key, n: x.n, b: x.b}); }
   for(const [key, r] of Object.entries(st)){ if(key[0] === "_" || seen[key]) continue; seen[key] = 1; out.push({key, n: r.name || key, b: r.b || "", shelf: 1, travel: !!r.travel}); }
   return out;
 }
@@ -966,8 +1029,29 @@ const SKIN_DELIVERY = {id: "d19nov", p: "jenny", items: [
   {name: "Mandelic face wash sample", b: "DermaFix MD Mandelic Cleanser · free sample sachet"},
   {name: "Face pads", b: "Microfibre heart pads (blue + purple)", n: 2}
 ]};
+/* round 2 (19 Nov 2026): teeth for Jenny morning + night (no judging), eye cream to mornings (RetinEye has the nights),
+   azelaic drops in the morning, gentle cleansing gel as the evening face wash (her skin is dry at night) */
+function skinAdd2(){
+  const p = "jenny", R = skinClone(p); if((R.done || {}).k19nov2) return;
+  const at = (list, word) => list.findIndex(x => ((x.b || "") + " " + x.n).toLowerCase().includes(word));
+  // eye cream: from the night list to the morning, before the moisturiser
+  let eye = R.pm.find(x => x.id === "k_eye") || {id: "k_eye", n: "Eye cream", b: "DermaFix Corrective Eye Complex", alt: "2026-11-19", altDays: 14};
+  R.pm = R.pm.filter(x => x.id !== "k_eye");
+  eye = Object.assign({}, eye, {how: "A rice-grain amount for both eyes: tap it under the eye and out towards the temples. Mornings, so it never meets your RetinEye at night. Every second morning for the first 2 weeks, then every day."});
+  if(!R.am.some(x => x.id === "k_eye")){ let i = at(R.am, "vitamin b"); if(i < 0) i = R.am.length; R.am.splice(i, 0, eye); }
+  // azelaic drops: morning, right after the vitamin C
+  if(!R.am.some(x => x.id === "k_aze")){ let i = at(R.am, "ferulic"); i = i < 0 ? 0 : i + 1;
+    R.am.splice(i, 0, {id: "k_aze", n: "Azelaic drops", b: "DermaFix Azelaic RX5", how: "2–3 drops pressed into your face after the vitamin C. It can tingle a little. Every second morning for the first 2 weeks.", alt: "2026-11-20", altDays: 14}); }
+  // evening face wash: the gentle gel
+  const fw = R.pm.find(x => /face wash/i.test(x.n)); if(fw){ fw.b = "DermaFix Gentle Cleansing Gel"; fw.how = "Wet your face, lather a pea-sized amount, massage for 30 seconds, rinse and pat dry. Gentler for your drier evening skin."; }
+  // teeth first, morning and night
+  const T = (id, n, how) => ({id, n, how, teeth: 1, noStock: 1});
+  if(!R.am.some(x => x.id === "t_am")) R.am.unshift(T("t_am", "Brush teeth", "Two minutes."));
+  if(!R.pm.some(x => x.id === "t_pm")) R.pm.unshift(T("t_pm", "Brush teeth", "Two minutes."), T("t_floss", "Water floss", "Along the gum line, every gap."), T("t_mouth", "Mouthwash", "Swish for 30 seconds, then spit. Nothing to eat or drink after."));
+  R.done = Object.assign({}, R.done, {k19nov2: new Date().toISOString()}); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
+}
 function skinImport(){
-  skinAdd();
+  skinAdd(); skinAdd2();
   const D = SKIN_DELIVERY, all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[D.p]);
   if(mine["_" + D.id]) return skinFixes();
   const R = skinR(D.p), steps = (R.am||[]).concat(R.pm||[]), at = new Date().toISOString();
@@ -1070,7 +1154,7 @@ function shrinkTo(file, max){
   return new Promise((ok, bad) => { const img = new Image(); img.onload = () => { const s = Math.min(1, max/Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : bad(new Error("no image")), "image/jpeg", .8); URL.revokeObjectURL(img.src); }; img.onerror = bad; img.src = URL.createObjectURL(file); });
 }
 async function foodAsk(file){
-  if(!window.foodAI) throw {msg: "Food photos only work in the Pillbox app on your phone."};
+  if(!window.foodAI) throw {msg: "Food photos only work in the Well Together app on your phone."};
   const blob = await shrinkTo(file, 1024);
   const b64 = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = bad; r.readAsDataURL(blob); });
   return window.foodAI(b64);
@@ -1178,7 +1262,7 @@ function reportHtml(){
   const A = sm(grp.d), B = sm(grp.n);
   const alcSleep = A.n && B.n ? `<div style="background:#f3f6f1;border-radius:12px;padding:10px 12px;font-size:12.5px"><b>Drinks and sleep</b> (the night after)<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:6px"><div>🍷 After drinks (${A.n} nights): ${A.h !== null ? A.h.toFixed(1)+" h" : "–"}${A.l !== null ? ", asleep in "+Math.round(A.l)+" min" : ""}</div><div>💧 No drinks (${B.n} nights): ${B.h !== null ? B.h.toFixed(1)+" h" : "–"}${B.l !== null ? ", asleep in "+Math.round(B.l)+" min" : ""}</div></div></div>` : "";
   return `<div class="report"><div class="rb"><button data-print="1">Print or save as PDF</button><button data-report="">Close</button></div>
-    <h1>${esc(P[p].name)}: how things have been</h1><div style="color:#555">${appt ? `For ${esc(appt.doc)} · ${fmt(appt.date)}${appt.time ? " "+esc(appt.time) : ""} · ` : ""}${fmt(start)} to ${fmt(end)} (${days.length} days), from Our Pillbox</div>
+    <h1>${esc(P[p].name)}: how things have been</h1><div style="color:#555">${appt ? `For ${esc(appt.doc)} · ${fmt(appt.date)}${appt.time ? " "+esc(appt.time) : ""} · ` : ""}${fmt(start)} to ${fmt(end)} (${days.length} days), from Well Together</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;align-items:stretch;margin:10px 0">${tiles.map(t => tile(...t)).join("")}</div>${alcSleep}
     ${ranked.length ? h2("What was felt, and how often") + bars + h2("Day by day") + heat + `<div style="font-size:11px;color:#555;margin-top:2px"><span style="background:#ffe28a;padding:0 6px">a bit</span> <span style="background:#ffad5c;padding:0 6px">bad</span> <span style="background:#e5533d;color:#fff;padding:0 6px">very bad</span></div>` : "<p>Nothing logged in this period yet. Tap check-ins and symptoms on the Today screen.</p>"}
     ${mood}
@@ -1203,7 +1287,7 @@ function skipModal(){
     <div class="small" style="margin-top:12px">General guidance, not medical advice. If you're unsure, ask your doctor or pharmacist.</div><div class="mbtns"><button data-skipok="1">${why ? "Saved: " + esc(why) : "Done"}</button><button data-skipundo="${esc(k)}">Undo, I'll take ${names.length > 1 ? "them" : "it"}</button></div></div></div>`;
 }
 function weekText(){
-  const out = [`Our Pillbox, copied ${new Date().toLocaleString("en-ZA")}`];
+  const out = [`Well Together, copied ${new Date().toLocaleString("en-ZA")}`];
   for(const p of ["jenny","michaela"]){
     out.push("", `== ${P[p].name} ==`);
     for(let i = 6; i >= 0; i--){ const d = new Date(); d.setDate(d.getDate()-i); const ds = ymd(d), L = logOf(p, ds);
@@ -1290,8 +1374,7 @@ document.addEventListener("click", e => {
       const names = nm ? [nm] : itemsFor(S.who, sl, TODAY).map(x => x[0]).filter(n => !L.skip[slot+"|"+n]);
       for(const n of names){ L.items[slot+"|"+n] = iso; delete L.skip[slot+"|"+n]; }
       settleSlot(L, S.who, sl);
-      const w = toHM(Math.max(0, toMin(v) - sl.rel));
-      if(sl.rel !== undefined && (!L.wake || (L.wakeAuto && w < L.wake))){ L.wake = w; L.wakeAuto = 1; auto = true; } });
+    });
     S.when = null; if(logOf(S.who, TODAY).done[slot]) delete S.sel[S.who]; render(true);
     toast((nm ? nm.replace(/ \d.*$/, "") + " t" : "T") + "aken at " + v + " ✓" + (auto ? " · counted you up at " + logOf(S.who, TODAY).wake : "")); }
   else if(d.tundo){ const key = d.tundo, i = key.indexOf("|"), slot = i < 0 ? key : key.slice(0, i), nm = i < 0 ? "" : key.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); if(!sl) return;
@@ -1305,15 +1388,14 @@ document.addEventListener("click", e => {
       for(const n of names){ const kk = slot+"|"+n; if(L.skipWhy[kk] === d.skipwhy) delete L.skipWhy[kk]; else L.skipWhy[kk] = d.skipwhy; } }); }
   else if(d.done){ const sl = P[S.who].slots.find(x => x.id === d.done); let auto = false; S.when = null;
     saveLog(S.who, TODAY, L => { const now = new Date().toISOString(); expandSlot(L, S.who, sl); for(const [n] of itemsFor(S.who, sl, TODAY)){ const k = d.done+"|"+n; if(!L.items[k] && !L.skip[k]) L.items[k] = now; } L.done[d.done] = now;
-      // forgot "I'm up"? ticking a morning container counts as getting up
-      if(!L.wake && sl && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); auto = true; } });
+    });
     delete S.sel[S.who]; render(true); toast(auto ? `Taken ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : "Taken ✓"); }
   else if(d.take){ const i = d.take.indexOf("|"), slot = d.take.slice(0, i), nm = d.take.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); let all = false, auto = false;
     saveLog(S.who, TODAY, L => { L.items = L.items || {}; const k = slot+"|"+nm;
       if(L.done[slot]){ delete L.done[slot]; for(const [n] of itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out)) L.items[slot+"|"+n] = L.items[slot+"|"+n] || new Date().toISOString(); delete L.items[k]; return; }
       if(L.skip && L.skip[k]){ delete L.skip[k]; L.items[k] = new Date().toISOString(); } else if(L.items[k]) delete L.items[k]; else L.items[k] = new Date().toISOString();
       all = itemsFor(S.who, sl, TODAY).filter(it => !(it[2]||{}).out).every(([n]) => L.items[slot+"|"+n] || (L.skip||{})[slot+"|"+n]);
-      if(all){ L.done[slot] = new Date().toISOString(); if(!L.wake && sl.rel !== undefined){ L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); auto = true; } } });
+      if(all){ L.done[slot] = new Date().toISOString(); } });
     if(all){ delete S.sel[S.who]; render(true); toast(auto ? `All taken ✓ · counted you up at ${logOf(S.who,TODAY).wake}` : "All taken ✓"); } }
   else if(d.miss){ const i = d.miss.indexOf("|"), mp = d.miss.slice(0, i), nm = d.miss.slice(i+1);
     const M = Object.assign({}, (S.meta.settings||{}).missing); M[mp] = Object.assign({}, M[mp]);
@@ -1376,6 +1458,7 @@ document.addEventListener("click", e => {
   else if(d.pwchange){ if(window.pwChange) window.pwChange(); }
   else if(d.alcopen){ S.alcOpen = !S.alcOpen; render(true); }
   else if(d.alcset !== undefined){ const v = +d.alcset; saveLog(S.who, TODAY, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); S.alcOpen = false; render(true); toast(v ? "Noted 🍷" : "No drinks today ✓"); }
+  else if(d.alcdayset){ const [ds, v0] = d.alcdayset.split("|"), v = +v0; saveLog(S.who, ds, L => { if(L.alc === v) delete L.alc; else L.alc = v; }); toast(v ? "Noted 🍷" : "No drinks ✓"); }
   else if(d.alcday){ const ds = d.alcday; const o = alcOpts(S.who).map(x => x[0]); saveLog(S.who, ds, L => { const n = o[(o.indexOf(L.alc||0) + 1) % o.length]; if(n) L.alc = n; else delete L.alc; }); }
   else if(d.sym){ const k = S.symPick && S.symPick.p === S.who ? S.symPick : {p:S.who, list:[], lv:{}, food:[]}; const el = document.getElementById("symNote"); if(el) k.note = el.value;
     k.list = k.list.includes(d.sym) ? k.list.filter(x => x !== d.sym) : k.list.concat(d.sym); S.symPick = k.list.length ? k : null; render(true); }
@@ -1421,7 +1504,7 @@ document.addEventListener("click", e => {
   else if(d.physio){ saveLog(S.who, TODAY, L => { L.physio = L.physio ? "" : new Date().toISOString(); }); }
   else if(d.remind){ const [p, slot] = d.remind.split("|"); remind(p, slot); }
   else if(d.remindnext){ const o = other(S.who), c = current(o) || slotsFor(o,TODAY).slice(-1)[0]; if(c) remind(o, c.id); }
-  else if(d.nudgeok){ const [p, slot] = d.nudgeok.split("|"); const sl = P[p].slots.find(x => x.id === slot); S.nudge[p] = Object.assign({}, S.nudge[p], {ok: new Date().toISOString()}); save("nudge/"+p, S.nudge[p]); saveLog(p, TODAY, L => { L.done[slot] = new Date().toISOString(); if(!L.wake && sl && sl.rel !== undefined) L.wake = toHM(Math.max(0, toMin(nowHM()) - sl.rel)); }); toast("Taken ✓"); }
+  else if(d.nudgeok){ const [p, slot] = d.nudgeok.split("|"); const sl = P[p].slots.find(x => x.id === slot); S.nudge[p] = Object.assign({}, S.nudge[p], {ok: new Date().toISOString()}); save("nudge/"+p, S.nudge[p]); saveLog(p, TODAY, L => { L.done[slot] = new Date().toISOString(); }); toast("Taken ✓"); }
   else if(d.rifax){ if(!S.rxStop){ S.rxStop = 1; render(true); setTimeout(() => { S.rxStop = 0; render(true); }, 5000); return; } S.rxStop = 0; S.meta.settings = Object.assign({}, S.meta.settings, {rifax: null, rifaxFrom: ""}); saveMeta("settings"); toast("Course stopped"); }
   else if(d.rxdose){ const f = S.rxForm || {d: TODAY, dose: "bfast"}; const el = document.getElementById("rxFrom"); if(el && el.value) f.d = el.value; f.dose = d.rxdose; S.rxForm = f; render(true); }
   else if(d.rxedit){ const c = rxCourse(); S.rxForm = {d: c.from, dose: c.dose}; S.meta.settings = Object.assign({}, S.meta.settings, {rifax: null, rifaxFrom: ""}); render(true); toast("Pick the new start, then Start"); }

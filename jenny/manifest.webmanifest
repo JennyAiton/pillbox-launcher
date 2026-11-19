@@ -1,12 +1,12 @@
 {
- "name": "Pillbox",
- "short_name": "Pillbox",
- "description": "Jenny's pillbox",
+ "name": "Well Together",
+ "short_name": "Well Together",
+ "description": "Jenny's health: medicine, skin, sleep, doctors",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "background_color": "#3a0d22",
- "theme_color": "#3a0d22",
+ "background_color": "#13201f",
+ "theme_color": "#13201f",
  "icons": [
   {
    "src": "icon-192.png",

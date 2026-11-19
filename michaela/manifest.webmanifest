@@ -1,12 +1,12 @@
 {
- "name": "Pillbox",
- "short_name": "Pillbox",
- "description": "Michaela's pillbox",
+ "name": "Well Together",
+ "short_name": "Well Together",
+ "description": "Michaela's health: medicine, skin, sleep, doctors",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "background_color": "#1b3006",
- "theme_color": "#1b3006",
+ "background_color": "#13201f",
+ "theme_color": "#13201f",
  "icons": [
   {
    "src": "icon-192.png",
