@@ -432,8 +432,11 @@ const dayDiff = (a,b) => Math.round((parse(a)-parse(b))/864e5);
 const fmt = (s,o) => parse(s).toLocaleDateString("en-ZA", o || {weekday:"short", day:"numeric", month:"short"});
 const toMin = s => { const [h,m] = s.split(":").map(Number); return h*60+m; };
 const toHM = n => pad(Math.floor(n/60)%24) + ":" + pad(n%60);
-const nowHM = () => { const n = new Date(); return pad(n.getHours())+":"+pad(n.getMinutes()); };
-let TODAY = ymd(new Date());
+const toHM24 = n => pad(Math.floor(n/60)) + ":" + pad(n%60);
+const LATE_H = 5; // before 05:00 still counts as the day before
+const nowHM = () => { const n = new Date(), h = n.getHours(); return pad(h < LATE_H ? h + 24 : h)+":"+pad(n.getMinutes()); };
+const dayNow = () => { const d = new Date(); if(d.getHours() < LATE_H) d.setDate(d.getDate() - 1); return ymd(d); };
+let TODAY = dayNow();
 const WAKE = {jenny:"08:00", michaela:"07:30"};
 
 /* ---------------- state ---------------- */
@@ -599,8 +602,8 @@ const pmChk = p => p !== "jenny" || slotsFor(p, TODAY).some(s => s.id === "noon"
 function wineSheet(){ const p = S.who; if(p !== "jenny" || !S.alcOpen || S.tab !== "today") return ""; const L = logOf(p, TODAY);
   return `<button class="winebg" data-alcopen="1" aria-label="Close"></button><div class="card winepick"><div class="k" style="color:var(--acc)">🍷 Drinks today · tap one</div><div class="wineg">${alcOpts(p).map(([v,t]) => `<button class="${(L.alc ?? -1) === v ? "on" : ""}" data-alcset="${v}"><span>${t.split(" ")[0]}</span>${esc(t.replace(/^\S+ /, ""))}</button>`).join("")}</div><div class="small" style="margin-top:8px">Just a note next to your sleep. No judging, ever. Tap again to change it.</div></div>`; }
 function chkDue(p){ if(!CHECKIN[p]) return ""; const L = logOf(p, TODAY), c = L.chk || {}, now = toMin(nowHM());
-  if(!c.am && (L.wake || now >= toMin(usualWake(p, TODAY)))) return "am";
   if(now >= toMin("20:30")) return c.ev ? "" : "ev";
+  if(!c.am && (L.wake || now >= toMin(usualWake(p, TODAY)))) return "am";
   if(!c.pm && pmChk(p) && now >= toMin("14:00")) return "pm"; return ""; }
 function chkKeep(k){ const v = id => (document.getElementById(id)||{}).value; k.hrs = v("chkHrs") ?? k.hrs; k.lat = v("chkLat") ?? k.lat; k.kg = v("chkKg") ?? k.kg; k.note = v("chkNote") ?? k.note; }
 function exSheet(){ if(!S.exOpen) return "";
@@ -826,7 +829,7 @@ function pToday(){
   const showSkin = !!skd && (!cur || curSt === "later" || cur.id === "bed" || !!(S.selSkin && S.selSkin.p === p));
   const bell = `<button class="bell" data-remindnext="1" id="bell" aria-label="Remind ${P[other(p)].name}">🔔</button>`;
   const top = `<div class="topbar pad">${whoSwitch()}${p === "jenny" ? `<button class="chip wine ${L.alc ? "up" : ""}" data-alcopen="1" id="alcbtn" aria-label="Drinks today">🍷 ${L.alc ? esc(alcLab(p, L.alc)) : L.alc === 0 ? "None" : "Drinks?"}</button>` : ""}<button class="chip ${wk?"":"up"}" data-wakeopen="1" id="upbtn">${wk ? `☀ Up ${wk} · change` : "☀ I'm up"}</button></div>`;
-  const wakeStrip = !wk && new Date().getHours() < 14 ? `<button class="wakestrip" data-wakeopen="1" id="wakestrip">☀ <span>Not marked up yet</span><b>I'm up · set the time</b></button>` : "";
+  const wakeStrip = !wk && toMin(nowHM()) < 14*60 ? `<button class="wakestrip" data-wakeopen="1" id="wakestrip">☀ <span>Not marked up yet</span><b>I'm up · set the time</b></button>` : "";
   let card, bg, curKey = "";
   if(showSkin){
     const {sl, K} = skd, lab = sl === "am" ? "Morning care" : "Evening care"; curKey = "skin:" + sl;
@@ -1396,7 +1399,7 @@ function weekText(){
   return out.join("\n");
 }
 function render(keepScroll){
-  TODAY = ymd(new Date());
+  TODAY = dayNow();
   const T = THEMES[themeOf(S.who)];
   document.documentElement.style.setProperty("--acc", T.acc); document.documentElement.style.setProperty("--ink", T.ink);
   const y = window.scrollY;
@@ -1452,9 +1455,9 @@ document.addEventListener("click", e => {
   else if(d.whenclose){ S.when = null; render(true); }
   else if(d.whenset || d.tnow){ const raw = d.whenset || (d.tnow + "@" + nowHM()), at = raw.lastIndexOf("@"), key = raw.slice(0, at); let v = raw.slice(at+1);
     if(v === "*") v = (document.getElementById("whenT")||{}).value || ""; if(!v){ toast("Type a time first"); return; }
-    if(v > nowHM()){ toast("That time is still to come"); return; }
+    if((new Date().getHours() < LATE_H && toMin(v) < LATE_H*60 ? toHM24(toMin(v) + 1440) : v) > nowHM()){ toast("That time is still to come"); return; }
     const i = key.indexOf("|"), slot = i < 0 ? key : key.slice(0, i), nm = i < 0 ? "" : key.slice(i+1), sl = P[S.who].slots.find(x => x.id === slot); if(!sl) return;
-    const iso = d.tnow ? new Date().toISOString() : isoAt(TODAY, v); let auto = false;
+    const iso = d.tnow ? new Date().toISOString() : isoAt(TODAY, new Date().getHours() < LATE_H && toMin(v) < LATE_H*60 ? toHM24(toMin(v) + 1440) : v); let auto = false;
     saveLog(S.who, TODAY, L => { expandSlot(L, S.who, sl);
       const names = nm ? [nm] : itemsFor(S.who, sl, TODAY).map(x => x[0]).filter(n => !L.skip[slot+"|"+n]);
       for(const n of names){ L.items[slot+"|"+n] = iso; delete L.skip[slot+"|"+n]; }
