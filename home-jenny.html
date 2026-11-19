@@ -217,6 +217,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .rdgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.rdgrid label{display:grid;gap:3px}.rdgrid input{width:100%}
 .plat{font:800 10.5px var(--sans);background:#ffe4ec;color:#d9668f;border-radius:99px;padding:3px 9px;white-space:nowrap}
 .installbar{display:block;width:100%;margin-top:14px;padding:13px;border-radius:16px;background:#2c3e57;color:#fff;font:800 14px var(--sans)}
+.wishr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(44,62,87,.08)}
 .cq{font:800 14px var(--sans);margin:16px 0 6px}.cq span{font-weight:600;opacity:.6}
 .symg.two{display:grid;grid-template-columns:1fr 1fr}.symg.three{display:grid;grid-template-columns:repeat(3,1fr)}
 .moodg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -1439,6 +1440,14 @@ const SHELF_HOW = {
   "Microfibre heart pads (blue + purple)": "In your evening face wash: wet with warm water and wipe the wash off. Rinse, hang to dry, swap colours each night.",
   "DermaFix Gentle Cleansing Gel · 50 ml": "Now your evening face wash: a pea-sized amount, massage 30 seconds, rinse."
 };
+/* products wanted but not owned yet: a To buy list (Jenny 20 Nov: "if I don't have them yet, keep them on as to buy") */
+const WISH_INFO = {
+  "DermaFix Regenerate Rx (redness repair serum)": {price: "R767 incl. VAT · 57 ml", url: "https://dermafix.co.za/products/regenerate-rx-copy", why: "For red, dry, blotchy patches"},
+  "DermaFix RetinEye (retinal eye cream)": {price: "R590 incl. VAT · 15 ml", url: "https://dermafix.co.za/products/retineye", why: "Retinal for fine lines around the eyes, at night"}
+};
+function toBuyCard(p){ const W = (skinR(p).wish || []); if(!W.length) return "";
+  return `<div class="sec"><h3>To buy</h3><div class="small">Products you want but don't have yet. Tap Bought it when it arrives and it moves onto your shelf.</div><div class="card">${W.map((n, i) => { const I = WISH_INFO[n] || {};
+    return `<div class="wishr"><div><b>${esc(n)}</b>${I.why ? `<div class="small">${esc(I.why)}</div>` : ""}${I.price ? `<div class="small" style="color:#d9668f;font-weight:800">${esc(I.price)}</div>` : ""}${I.url ? `<a class="tlnk" href="${I.url}" target="_blank" rel="noopener">see it on dermafix.co.za</a>` : ""}</div><button class="ghostbtn on" data-wishgot="${i}">Bought it</button></div>`; }).join("")}</div></div>`; }
 function skinShelf(p){
   const R = skinR(p), st = ((S.meta.skinstock||{})[p]) || {}, out = [], seen = {};
   for(const x of (R.am||[]).concat(R.pm||[])){ const key = x.b || x.n; if(!key || seen[key] || x.noStock) continue; seen[key] = 1; out.push({key, n: x.n, b: x.b}); }
@@ -1593,6 +1602,7 @@ function pSkin(){
             <div class="spr"><span><b>${n}</b> unopened spare${n === 1 ? "" : "s"}${last ? `<br><span class="small">last got ${fmt(last.slice(0,10))}</span>` : ""}</span><span class="sprb">${r.lvl === "empty" && n ? `<button class="skbtn" data-skopen="${esc(x.key)}">Open a new one</button>` : ""}<button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One spare less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+ Got one</button></span></div></div>`; }).join("")}
         ${trav.length ? `<div class="card trav"><div class="k">🧳 Travel bag · kept for trips</div><div class="small" style="margin-top:4px">Small bottles of products you use. They don't count as spares at home.</div>${trav.map(x => { const n = (st[x.key]||{}).n || 0; return `<div class="spr"><span><b>${n}</b> ${esc(x.n.replace(/, travel size$/, ""))}<br><span class="small">${esc(x.b)}</span>${SHELF_HOW[x.key] ? `<br><span class="howto">💡 ${esc(SHELF_HOW[x.key])}</span>` : ""}</span><span class="sprb"><button class="skbtn alt" data-skst="${esc(x.key)}|-1" ${n ? "" : "disabled"} aria-label="One less">−</button><button class="skbtn" data-skst="${esc(x.key)}|1">+</button></span></div>`; }).join("")}</div>` : ""}</div>`;
     } }
+  h += toBuyCard(p);
   const ed = S.skinEdit;
   h += `<button class="ghostbtn ${ed ? "on" : ""}" style="margin-top:14px" data-skinedit="${ed ? "" : slot}">${ed ? "Close" : "✏️ Change my steps or add a new product"}</button>`;
   if(ed){ const list = R[ed] || [];
@@ -1634,7 +1644,7 @@ function pShop(){
 }
 /* Health = appointments, results, medicines + our progress (garden, patterns, the week); Lists = refill radar, stock, shopping */
 function pHealth(){ const a = pPlan(); S.noHead = true; const b = pWeek(); S.noHead = false; return a + b; }
-function pLists(){ const p = S.who; S.noHead = false; const a = pFill(); S.noHead = true; const b = pShop(); S.noHead = false; return a + `<div class="pad">${watchSec()}</div>` + b; }
+function pLists(){ const p = S.who; S.noHead = false; const a = pFill(); S.noHead = true; const b = pShop(); S.noHead = false; return a + `<div class="pad">${toBuyCard(p)}${watchSec()}</div>` + b; }
 /* ---------------- let's get going ---------------- */
 function setupSteps(p){ return ["hi","wake", ...P[p].slots.map(s => "slot:"+s.id), "flags", "done"]; }
 function goCard(p){
@@ -1787,7 +1797,7 @@ function paintScene(){
   const p = S.who, pr = progress(p), i = S.sceneIdx || phIdx(nowHM().replace(/^2(\d)/, (m, d) => +d >= 4 ? "0" + (+d - 4) : m)), bloom = pr.n ? Math.round(4 * pr.d / pr.n) : 4, key = p + "|" + i + "|" + bloom;
   if(el.dataset.k !== key){ el.innerHTML = scene(p, i, bloom); el.dataset.k = key; }
 }
-const BUILD = "1795129731"; // stamped by the build; the phone checks for a newer one each time the app opens
+const BUILD = "1795129838"; // stamped by the build; the phone checks for a newer one each time the app opens
 async function checkUpdate(){ if(BUILD.startsWith("__")) return;
   try { const t = await (await fetch(location.pathname + "?v=" + Date.now(), {cache: "no-store"})).text(); const m = /const BUILD = "(\d+)"/.exec(t);
     if(m && m[1] !== BUILD && !document.querySelector(".sheet,.modal,.winepick,input:focus,textarea:focus")) location.replace(location.pathname + "?u=" + m[1] + location.hash); } catch(_){} }
@@ -2044,6 +2054,10 @@ document.addEventListener("click", e => {
   else if(d.wall !== undefined){ S.watchAll = d.wall === "1"; render(true); }
   else if(d.wdel){ if(S.wDel !== d.wdel){ S.wDel = d.wdel; render(true); return; } const W = Object.assign({}, S.meta.watch); W[d.wdel] = Object.assign({}, W[d.wdel], {del: new Date().toISOString()}); S.meta.watch = W; S.wDel = ""; saveMeta("watch"); }
   else if(d.install){ if(installEv){ installEv.prompt(); installEv.userChoice.finally(() => { installEv = null; render(true); }); } }
+  else if(d.wishgot !== undefined){ const p = S.who, R = skinClone(p), i = +d.wishgot, n = (R.wish || [])[i]; if(!n) return;
+    R.wish = R.wish.filter((_, k) => k !== i); S.meta.skin = Object.assign({}, S.meta.skin, {[p]: R}); save("meta/skin", S.meta.skin);
+    const all = Object.assign({}, S.meta.skinstock), mine = Object.assign({}, all[p]); mine[n] = {n: 1, got: [new Date().toISOString()], name: n.replace(/^DermaFix /, "").replace(/ \(.*\)$/, ""), b: n};
+    all[p] = mine; S.meta.skinstock = all; saveMeta("skinstock"); toast("On your shelf ✓ Tell me when to add it to your steps"); }
   else if(d.logopen){ S.logOpen = true; render(true); }
   else if(d.logclose){ S.logOpen = false; render(true); }
   else if(d.daymiss){ saveLog(S.who, d.daymiss, L => { L.missed = new Date().toISOString(); }); toast("Marked as missed ✓"); }
