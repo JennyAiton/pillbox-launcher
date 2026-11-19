@@ -269,7 +269,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .rowi .t{font:600 19px/1.1 var(--serif)}
 .rowi .s{font:600 11.5px var(--sans);color:var(--dim)}
 .st{font:800 10px var(--sans);border-radius:10px;padding:3px 8px;white-space:nowrap}
-.st.done{background:var(--acc);color:var(--ink)} .st.late{background:var(--bad);color:#3a0000} .st.now{background:var(--warn);color:#3a2a00} .st.later{background:rgba(255,255,255,.1);color:var(--dim)}
+.st.gone{background:rgba(127,127,127,.15);color:var(--dim)} .st.done{background:var(--acc);color:var(--ink)} .st.late{background:var(--bad);color:#3a0000} .st.now{background:var(--warn);color:#3a2a00} .st.later{background:rgba(255,255,255,.1);color:var(--dim)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chipb{border:1px solid var(--edge);background:rgba(255,255,255,.05);border-radius:20px;padding:8px 13px;font:700 13px var(--sans)}
 .chipb[aria-pressed="true"]{background:var(--acc);color:var(--ink);border-color:transparent}
@@ -576,7 +576,7 @@ function bloodCard(p){ const b = bloodTest(p, TODAY); if(!b) return "";
 /* symptom diary: what she feels, how bad, when; bloating asks what came before */
 const SYMS = [["bloated","Bloated","🎈"],["ankles","Swollen ankles","🦶"],["heart","Heart racing","💓"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["cramps","Cramps","⚡"],["constip","Constipated","🚫"],["nausea","Nauseous","🤢"],["hot","Feeling hot","🔥"],["anxious","Anxious","🌀"],["head","Headache / migraine","🤕"],["back","Back pain","🦴"],["irrit","Irritable","😤"],["foggy","Foggy / flat","🌫"],["legs","Restless legs","🦵"]];
 const LVL = ["", "A bit", "Bad", "Very bad"];
-const SYMS_J = [["irrit","Irritable","😤"],["anxious","Anxious","🌀"],["foggy","Foggy / flat","🌫"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["legs","Restless legs","🦵"],["head","Headache","🤕"]];
+const SYMS_J = [["psor","Psoriasis flare (scalp)","🧴"],["eczema","Eczema flare (where? add a note)","🩹"],["irrit","Irritable","😤"],["anxious","Anxious","🌀"],["foggy","Foggy / flat","🌫"],["tired","Tired","🥱"],["sleep","Slept badly","🌙"],["legs","Restless legs","🦵"],["head","Headache","🤕"]];
 const symsOf = p => p === "jenny" ? SYMS_J : SYMS;
 const symLab = id => (SYMS.concat(SYMS_J).find(x => x[0] === id) || [id, id])[1];
 /* drinks: Michaela counts them, Jenny just says moderate or a big night */
@@ -696,7 +696,7 @@ const pastLatest = (p, s, date) => !!latestOf(p, s) && !logOf(p, date).done[s.id
 // every tablet in the slot marked "not today"
 const allSkipped = (p, s, date) => { const L = logOf(p, date), its = itemsFor(p, s, date); return its.length > 0 && its.every(([n]) => (L.skip||{})[s.id+"|"+n]); };
 /* fresh start (19 Nov 2026, Jenny): the app wasn't used for a while - nothing dated before this nags */
-const FRESH = "2026-11-19";
+const FRESH = "2026-11-19", FRESH_AT = "2026-11-19 18:00"; // Jenny 19 Nov 23:45: "start clean from right now, tonight"
 /* a slot ticked the old way (one tap for all) gets a time per tablet before one tablet changes */
 function expandSlot(L, p, sl){ L.items = L.items || {}; L.skip = L.skip || {}; if(!L.done[sl.id]) return;
   for(const [n] of itemsFor(p, sl, TODAY)){ const k = sl.id+"|"+n; if(!L.items[k] && !L.skip[k]) L.items[k] = L.done[sl.id]; } }
@@ -726,6 +726,7 @@ function slotsFor(p, date){
 }
 function slotState(p, s, date){
   if(logOf(p, date).done[s.id]) return "done";
+  if(date + " " + slotTime(p, s, date) < FRESH_AT) return "gone";
   if(date < TODAY) return "late"; if(date > TODAY) return "later";
   if(s.rel !== undefined && !isUp(p, date)){
     if(toMin(nowHM()) - toMin(usualWake(p, date)) > GRACE) return "late";
@@ -740,9 +741,9 @@ function phIdx(hm){ const m = toMin(hm); return m < 480 ? 1 : m < 630 ? 2 : m < 
 function current(p){
   const sl = slotsFor(p, TODAY);
   if(S.sel[p] && sl.find(s => s.id === S.sel[p])) return sl.find(s => s.id === S.sel[p]);
-  return sl.find(s => ["late","now"].includes(slotState(p,s,TODAY))) || sl.find(s => slotState(p,s,TODAY) !== "done") || null;
+  return sl.find(s => ["late","now"].includes(slotState(p,s,TODAY))) || sl.find(s => !["done","gone"].includes(slotState(p,s,TODAY))) || null;
 }
-const progress = p => { const sl = slotsFor(p, TODAY); return {d: sl.filter(s => logOf(p,TODAY).done[s.id]).length, n: sl.length, late: sl.filter(s => slotState(p,s,TODAY)==="late").length}; };
+const progress = p => { const sl = slotsFor(p, TODAY).filter(s => slotState(p, s, TODAY) !== "gone"); return {d: sl.filter(s => logOf(p,TODAY).done[s.id]).length, n: sl.length, late: sl.filter(s => slotState(p,s,TODAY)==="late").length}; };
 
 /* ---------------- render ---------------- */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -783,7 +784,7 @@ function banner(p){
   if(!isUp(o, TODAY) && toMin(nowHM()) < toMin(usualWake(o,TODAY)) + GRACE) return "";
   const ls0 = slotsFor(o, TODAY).find(s => slotState(o,s,TODAY)==="late" && !pastLatest(o,s,TODAY) && !allSkipped(o,s,TODAY));
   if(ls0){ const ls = ls0; const sent = S.nudge[o] && S.nudge[o].slot===ls.id && (S.nudge[o].at||"").slice(0,10)===TODAY && !S.nudge[o].ok;
-    return `<div class="banner pad"><div class="in other">⏰ <span>${P[o].name}: ${esc(ls.lab)} not ticked yet</span><button class="sb ${sent?"ghost":""}" data-remind="${o}|${ls.id}" id="rm_late">${sent?"Sent · again":"Remind"}</button></div></div>`; }
+    return `<div class="banner pad"><div class="in other">⏰ <span>${P[o].name}: ${esc(ls.lab)} not ticked yet</span><button class="sb ${sent?"ghost":""}" data-remind="${o}|${ls.id}" id="rm_late">${sent?"Sent · again":"Remind"}</button><button class="sb ghost" data-bskip="${o}|${ls.id}">Skip</button></div></div>`; }
   return "";
 }
 /* which skin routine is due on Today (19 Nov 2026, Jenny: skin care follows my morning and evening routine) */
@@ -879,7 +880,7 @@ function pTodayMore(p, curKey){
   const L = logOf(p, TODAY), sl = slotsFor(p, TODAY);
   // Your day: tablets and skin in time order; the one you're on is solid in your colour, done ones step back (19 Nov 2026)
   const rows = sl.map(s => { const tm = slotTime(p,s,TODAY), st = slotState(p,s,TODAY), its = itemsFor(p,s,TODAY), sk = allSkipped(p,s,TODAY);
-    const lab = sk ? "Not today" : {done:"Taken",late:"Overdue",now:"Now",later:"Later"}[st];
+    const lab = sk ? "Not today" : {done:"Taken",late:"Overdue",now:"Now",later:"Later",gone:"Before the fresh start"}[st];
     return [tm, `<button class="rowi ${curKey === s.id ? "cur" : ""} ${st === "done" ? "dn" : ""}" data-sel="${s.id}" data-top="1" id="row_${s.id}"><div class="th"><i class="${st==="done"?"":"grey"}" style="position:absolute;inset:0;background:center/cover url(${photo(p,phIdx(tm))})"></i></div><div><div class="t">${esc(s.lab)}</div><div class="s">${st === "done" && L.done[s.id] && !sk ? "taken " + hmOf(L.done[s.id]) : tm} · ${its.map(i=>esc(i[0])).join(", ")}</div></div><span class="st ${sk ? "later" : st}">${lab}</span></button>`]; });
   const ds = skinDay(), firstM = sl.filter(x => x.rel !== undefined).sort((a,b) => a.rel - b.rel)[0], bedS = sl.find(x => x.id === "bed");
   for(const k of ["am","pm"]){ const K = skinState(p, k, ds); if(!K.st.length) continue;
@@ -1608,6 +1609,9 @@ document.addEventListener("click", e => {
   else if(d.exskip){ saveLog(S.who, TODAY, L => { if(L.exSkip) delete L.exSkip; else L.exSkip = new Date().toISOString(); }); S.exOpen = false; render(true); }
   else if(d.walk){ const m = +d.walk; saveLog(S.who, TODAY, L => { L.walk = L.walk === m ? 0 : m; delete L.walkSkip; }); }
   else if(d.physio){ saveLog(S.who, TODAY, L => { L.physio = L.physio ? "" : new Date().toISOString(); }); }
+  else if(d.bskip){ const [p, slot] = d.bskip.split("|"), sl = P[p].slots.find(x => x.id === slot); if(!sl) return; const at = new Date().toISOString();
+    saveLog(p, TODAY, L => { L.items = L.items || {}; L.skip = L.skip || {}; L.skipWhy = Object.assign({}, L.skipWhy); for(const [n] of itemsFor(p, sl, TODAY)){ const k = slot+"|"+n; if(!L.items[k]){ L.skip[k] = at; L.skipWhy[k] = "Skipped today"; } } if(!L.done[slot]) L.done[slot] = at; });
+    toast(sl.lab + ": skipped for today"); }
   else if(d.remind){ const [p, slot] = d.remind.split("|"); remind(p, slot); }
   else if(d.remindnext){ const o = other(S.who), c = current(o) || slotsFor(o,TODAY).slice(-1)[0]; if(c) remind(o, c.id); }
   else if(d.nudgeok){ const [p, slot] = d.nudgeok.split("|"); const sl = P[p].slots.find(x => x.id === slot); S.nudge[p] = Object.assign({}, S.nudge[p], {ok: new Date().toISOString()}); save("nudge/"+p, S.nudge[p]); saveLog(p, TODAY, L => { L.done[slot] = new Date().toISOString(); }); toast("Taken ✓"); }
